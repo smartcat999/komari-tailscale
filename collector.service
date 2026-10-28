@@ -9,11 +9,7 @@ ExecStart=/usr/bin/python3 /usr/local/libexec/komari-tailscale-collector.py --da
 Restart=always
 RestartSec=2
 UMask=0077
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/opt/komari/data/plugin-data/tailscale-status /var/lib/headscale /etc/headscale /etc/sysctl.d
 
 [Install]
 WantedBy=multi-user.target

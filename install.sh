@@ -80,11 +80,7 @@ ExecStart=/usr/bin/python3 ${COLLECTOR_DST} --daemon
 Restart=always
 RestartSec=2
 UMask=0077
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=${STORAGE_DIR} /var/lib/headscale /etc/headscale /etc/sysctl.d
 
 [Install]
 WantedBy=multi-user.target
