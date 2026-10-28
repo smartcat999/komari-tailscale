@@ -93,5 +93,8 @@ systemctl restart komari-tailscale-collector.service
 
 echo "==> [4/4] 生成初始状态快照 ..."
 KOMARI_DATA_DIR="${DATA_DIR}" KOMARI_TS_CONTROL_PORT="${CONTROL_PORT}" /usr/bin/python3 "$COLLECTOR_DST" || true
+if systemctl is-active --quiet komari.service 2>/dev/null; then
+  systemctl restart komari.service || true
+fi
 
 echo "安装完成！请在 Komari 后台「外观与插件 -> 插件」中启用「Tailscale 管理」，或直接从左侧导航栏进入。"
