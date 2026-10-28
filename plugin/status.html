@@ -1,0 +1,5306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Tailscale 管理</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --surface: #f7f8fa;
+    --surface-hover: #f0f2f6;
+    --surface-raised: #ffffff;
+    --text: #181b22;
+    --text-secondary: #4a5262;
+    --muted: #646d7e;
+    --line: #e3e6ed;
+    --line-strong: #cfd5e2;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-fg: #ffffff;
+    --accent-tint: #eff4ff;
+    --accent-border: #bfdbfe;
+    --ok: #15803d;
+    --ok-tint: #eefbf3;
+    --ok-border: #bbf7d0;
+    --warn: #9a5206;
+    --warn-tint: #fff8eb;
+    --warn-border: #fde68a;
+    --bad: #b42318;
+    --bad-tint: #fef2f2;
+    --bad-border: #fecaca;
+    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+    --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.16);
+    --scrollbar-thumb: #c1c7d4;
+    --scrollbar-track: #f2f4f8;
+    accent-color: var(--accent);
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101217;
+      --surface: #171a21;
+      --surface-hover: #1f242d;
+      --surface-raised: #1a1e26;
+      --text: #eef1f7;
+      --text-secondary: #b4bccb;
+      --muted: #8c95a6;
+      --line: #282d38;
+      --line-strong: #363d4c;
+      --accent: #609bff;
+      --accent-hover: #7db0ff;
+      --accent-fg: #0b111e;
+      --accent-tint: #19243b;
+      --accent-border: #2a406c;
+      --ok: #5ce08a;
+      --ok-tint: #132a1d;
+      --ok-border: #214d33;
+      --warn: #f5b963;
+      --warn-tint: #2d2212;
+      --warn-border: #543d1b;
+      --bad: #ff8f87;
+      --bad-tint: #2f1919;
+      --bad-border: #5c2828;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+      --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.52);
+      --scrollbar-thumb: #3c4353;
+      --scrollbar-track: #15181f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101217;
+    --surface: #171a21;
+    --surface-hover: #1f242d;
+    --surface-raised: #1a1e26;
+    --text: #eef1f7;
+    --text-secondary: #b4bccb;
+    --muted: #8c95a6;
+    --line: #282d38;
+    --line-strong: #363d4c;
+    --accent: #609bff;
+    --accent-hover: #7db0ff;
+    --accent-fg: #0b111e;
+    --accent-tint: #19243b;
+    --accent-border: #2a406c;
+    --ok: #5ce08a;
+    --ok-tint: #132a1d;
+    --ok-border: #214d33;
+    --warn: #f5b963;
+    --warn-tint: #2d2212;
+    --warn-border: #543d1b;
+    --bad: #ff8f87;
+    --bad-tint: #2f1919;
+    --bad-border: #5c2828;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.52);
+    --scrollbar-thumb: #3c4353;
+    --scrollbar-track: #15181f;
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  @supports not (scrollbar-color: auto) {
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--scrollbar-track);
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background: var(--accent-tint);
+    color: var(--accent);
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 22px 20px 44px;
+  }
+
+  /* Header */
+  .page-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Buttons & Inputs: strictly either icon-only or short-text */
+  button, input, select {
+    font: inherit;
+    color: inherit;
+  }
+
+  .btn {
+    cursor: pointer;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0 12px;
+    height: 32px;
+    font-size: 13px;
+    font-weight: 550;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    color: var(--text);
+    white-space: nowrap;
+    transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--line-strong);
+  }
+
+  .btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+
+  .btn-danger {
+    background: var(--bad-tint);
+    border-color: var(--bad-border);
+    color: var(--bad);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--bad);
+    border-color: var(--bad);
+    color: #ffffff;
+  }
+
+  .btn-sm {
+    padding: 4px 11px;
+    height: 30px;
+    font-size: 12.5px;
+    border-radius: 6px;
+  }
+
+  .btn-icon {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+
+  .btn-icon.btn-sm {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+  }
+
+  button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinning svg {
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 550;
+    line-height: 1.35;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .badge-ok {
+    background: var(--ok-tint);
+    border-color: var(--ok-border);
+    color: var(--ok);
+  }
+
+  .badge-warn {
+    background: var(--warn-tint);
+    border-color: var(--warn-border);
+    color: var(--warn);
+  }
+
+  .badge-bad {
+    background: var(--bad-tint);
+    border-color: var(--bad-border);
+    color: var(--bad);
+  }
+
+  .badge-accent {
+    background: var(--accent-tint);
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* Summary Strip */
+  .summary-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+
+  .metric-btn {
+    appearance: none;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background-color 0.14s ease;
+  }
+
+  .metric-btn:last-child {
+    border-right: 0;
+  }
+
+  .metric-btn:hover {
+    background: var(--surface-hover);
+  }
+
+  .metric-btn[aria-pressed="true"] {
+    background: var(--accent-tint);
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 650;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .metric-btn[aria-pressed="true"] .metric-value {
+    color: var(--accent);
+  }
+
+  .metric-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Banners */
+  .banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    border-radius: 8px;
+    border: 1px solid var(--warn-border);
+    background: var(--warn-tint);
+    color: var(--warn);
+    font-size: 13px;
+  }
+
+  .banner.error {
+    border-color: var(--bad-border);
+    background: var(--bad-tint);
+    color: var(--bad);
+  }
+
+  .banner.key-created {
+    border-color: var(--ok-border);
+    background: var(--ok-tint);
+    color: var(--ok);
+    flex-wrap: wrap;
+  }
+
+  .key-secret-box {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--ok-border);
+    user-select: all;
+    overflow-wrap: anywhere;
+  }
+
+  /* Tabs */
+  .tabs-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+
+  .tab-list {
+    display: flex;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    padding: 9px 14px;
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .tab-btn[aria-selected="true"] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 620;
+  }
+
+  .tab-count {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+  }
+
+  .tab-btn[aria-selected="true"] .tab-count {
+    background: var(--accent-tint);
+    color: var(--accent);
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .search-box {
+    position: relative;
+    flex: 1 1 240px;
+    max-width: 340px;
+  }
+
+  .search-box svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 32px;
+    padding: 5px 10px 5px 32px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 13px;
+  }
+
+  .search-input::placeholder {
+    color: var(--muted);
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pill-btn {
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 12px;
+    font-weight: 550;
+    cursor: pointer;
+  }
+
+  .pill-btn:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .pill-btn[aria-pressed="true"] {
+    background: var(--accent-tint);
+    border-color: var(--accent-border);
+    color: var(--accent);
+  }
+
+  /* Compact Table without Horizontal Scroll */
+  .table-wrap {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: left;
+  }
+
+  th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--surface);
+    padding: 10px 14px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+  }
+
+  td {
+    padding: 11px 14px;
+    border-top: 1px solid var(--line);
+    vertical-align: middle;
+  }
+
+  tbody tr:first-child td {
+    border-top: 0;
+  }
+
+  tbody tr.interactive-row {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+  }
+
+  tbody tr.interactive-row:hover {
+    background: var(--surface);
+  }
+
+  .node-primary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .node-name {
+    font-size: 14px;
+    font-weight: 620;
+    color: var(--text);
+  }
+
+  .sub-line {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+
+  .copy-chip {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 1px 5px;
+    margin: -1px -5px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text);
+    text-align: left;
+  }
+
+  .copy-chip:hover {
+    background: var(--surface-hover);
+    color: var(--accent);
+  }
+
+  .copy-chip.secondary {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .copy-chip svg {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    flex-shrink: 0;
+  }
+
+  .copy-chip:hover svg, .copy-chip:focus-visible svg {
+    opacity: 1;
+  }
+
+  .muted-dash {
+    color: var(--muted);
+  }
+
+  .col-right {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .col-act {
+    width: 52px;
+    text-align: right;
+    padding-right: 12px;
+  }
+
+  .latency-val {
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  .unit {
+    font-size: 11px;
+    margin-left: 3px;
+    color: var(--muted);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 38px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state p {
+    margin: 0 0 8px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+  }
+
+  /* Floating Action Dropdown Menu */
+  .action-menu {
+    position: fixed;
+    z-index: 9000;
+    min-width: 128px;
+    padding: 4px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .menu-item {
+    appearance: none;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    padding: 7px 11px;
+    font-size: 13px;
+    text-align: left;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .menu-item:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  .menu-item.danger {
+    color: var(--bad);
+  }
+
+  .menu-item.danger:hover:not(:disabled) {
+    background: var(--bad-tint);
+  }
+
+  .menu-item:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  .menu-sep {
+    height: 1px;
+    background: var(--line);
+    margin: 3px 4px;
+  }
+
+  /* Native Dialogs & Slide-over Drawer */
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background: rgba(9, 12, 18, 0.44);
+    backdrop-filter: blur(2px);
+  }
+
+  dialog.drawer-dialog {
+    margin: 0 0 0 auto;
+    width: min(460px, 94vw);
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 12px 0 0 12px;
+    padding: 0;
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+  }
+
+  dialog.drawer-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  dialog.modal-dialog {
+    margin: auto;
+    width: min(520px, 94vw);
+    max-height: 90dvh;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0;
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+  }
+
+  dialog.modal-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dialog-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.3;
+  }
+
+  .dialog-body {
+    padding: 16px 18px 22px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dialog-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background: var(--surface);
+  }
+
+  .modal-tab-stack {
+    display: grid;
+  }
+
+  .modal-tab-pane {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-tab-pane.is-inactive {
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+    user-select: none;
+  }
+
+  .drawer-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .inline-panel {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .inline-panel.danger {
+    border-color: var(--bad-border);
+    background: var(--bad-tint);
+  }
+
+  .inline-panel label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .inline-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .text-input, .select-input {
+    height: 32px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    font-size: 13px;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .detail-section h3 {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .kv-list {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 13px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  .kv-row:first-child {
+    border-top: 0;
+  }
+
+  .kv-key {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .kv-val {
+    text-align: right;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  .cmd-box {
+    border: 1px solid var(--line-strong);
+    border-radius: 7px;
+    background: var(--surface);
+    padding: 10px 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text);
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-field label {
+    font-size: 12px;
+    font-weight: 550;
+    color: var(--text-secondary);
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 2px 0;
+  }
+
+  .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .textarea-input {
+    width: 100%;
+    min-height: 76px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text);
+    resize: vertical;
+  }
+
+  .dns-card {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .dns-meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 28px;
+  }
+
+  .dns-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .dns-meta-label {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .dns-meta-value {
+    font-size: 13.5px;
+    font-weight: 560;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 18px 0 10px;
+  }
+
+  .section-bar h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 620;
+    color: var(--text);
+  }
+
+  .editor-card {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .code-editor {
+    width: 100%;
+    min-height: 280px;
+    padding: 14px;
+    border: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    resize: vertical;
+    display: block;
+  }
+
+  .code-editor:focus {
+    outline: none;
+  }
+
+  .pick-box {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pick-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .pick-group-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .pick-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pick-pill {
+    appearance: none;
+    border: 1px solid var(--line-strong);
+    background: var(--bg);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 540;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+
+  .pick-pill:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .pick-pill[aria-pressed="true"] {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .advanced-details {
+    margin-top: 14px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  .advanced-details > summary {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 560;
+    color: var(--text-secondary);
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .advanced-details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .advanced-details[open] > summary {
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+  }
+
+  .advanced-details .editor-card {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translateX(-50%);
+    margin: 0;
+    z-index: 99999;
+    max-width: min(480px, 90vw);
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+    font-size: 13px;
+    font-weight: 550;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* Responsive Mobile Layout */
+  @media (max-width: 720px) {
+    main {
+      padding: 14px 12px 32px;
+      overflow-x: hidden;
+    }
+    .search-box {
+      flex: 1 1 100%;
+      max-width: 100%;
+    }
+    .copy-chip {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    .summary-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .metric-btn:nth-child(2), .metric-btn:nth-child(4) {
+      border-right: 0;
+    }
+    .metric-btn:nth-child(-n+4) {
+      border-bottom: 1px solid var(--line);
+    }
+    .metric-btn:last-child {
+      grid-column: 1 / -1;
+    }
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .table-wrap {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    table, tbody {
+      display: block;
+    }
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      clip-path: inset(50%);
+      overflow: hidden;
+    }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 13px;
+      margin-bottom: 10px;
+      background: var(--bg);
+    }
+    td {
+      border: 0;
+      padding: 0;
+      min-width: 0;
+    }
+    td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    td.cell-primary {
+      grid-column: 1 / 2;
+    }
+    td.cell-primary::before, td.col-act::before {
+      display: none;
+    }
+    td.col-act {
+      grid-column: 2 / 3;
+      grid-row: 1;
+      width: auto;
+      padding: 0;
+      justify-self: end;
+    }
+    td.col-right {
+      text-align: left;
+    }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="page-header">
+    <div class="title-group">
+      <h1>Tailscale 管理</h1>
+      <span id="control-badge" class="badge badge-ok"><span class="dot"></span><span id="control-text">运行中</span></span>
+    </div>
+    <div class="header-actions">
+      <button id="btn-open-add" type="button" class="btn btn-primary">添加设备</button>
+      <button id="btn-open-local-setup" type="button" class="btn">本机配置</button>
+      <button id="btn-export-config" type="button" class="btn">配置备份</button>
+      <button id="refresh" type="button" class="btn btn-icon" aria-label="刷新状态" title="刷新状态">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1.1L20 9M4 15l2.3 3.1A7 7 0 0 0 17.9 17"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="summary-strip" aria-label="组网统计">
+    <button type="button" class="metric-btn" data-metric-filter="all" aria-pressed="true">
+      <strong id="m-total" class="metric-value">—</strong>
+      <span class="metric-label">总设备</span>
+    </button>
+    <button type="button" class="metric-btn" data-metric-filter="online" aria-pressed="false">
+      <strong id="m-online" class="metric-value">—</strong>
+      <span class="metric-label">在线</span>
+    </button>
+    <button type="button" class="metric-btn" data-metric-filter="direct" aria-pressed="false">
+      <strong id="m-direct" class="metric-value">—</strong>
+      <span class="metric-label">直连</span>
+    </button>
+    <button type="button" class="metric-btn" data-metric-filter="relay" aria-pressed="false">
+      <strong id="m-relay" class="metric-value">—</strong>
+      <span class="metric-label">中继</span>
+    </button>
+    <button type="button" class="metric-btn" id="metric-keys-btn" aria-pressed="false">
+      <strong id="m-keys" class="metric-value">—</strong>
+      <span class="metric-label">有效密钥</span>
+    </button>
+  </section>
+
+  <div id="notice" class="banner" role="status" hidden></div>
+  <div id="error" class="banner error" role="alert" hidden></div>
+  <div id="created-key-banner" class="banner key-created" role="status" hidden>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <strong>新生成的密钥（仅显示一次）：</strong>
+      <code id="created-key-value" class="key-secret-box"></code>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button type="button" id="btn-copy-created-key" class="btn btn-sm">复制</button>
+      <button type="button" id="btn-use-created-key" class="btn btn-sm btn-primary">接入命令</button>
+      <button type="button" id="btn-dismiss-created-key" class="btn btn-icon btn-sm" aria-label="关闭提示" title="关闭提示">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs-bar">
+    <div class="tab-list" role="tablist" aria-label="功能导航">
+      <button type="button" role="tab" class="tab-btn" id="tab-machines" aria-selected="true" aria-controls="panel-machines" data-tab="machines">
+        <span>节点</span>
+        <span id="count-machines" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-users" aria-selected="false" aria-controls="panel-users" data-tab="users">
+        <span>用户</span>
+        <span id="count-users" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-keys" aria-selected="false" aria-controls="panel-keys" data-tab="keys">
+        <span>授权密钥</span>
+        <span id="count-keys" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-routes" aria-selected="false" aria-controls="panel-routes" data-tab="routes">
+        <span>子网路由</span>
+        <span id="count-routes" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-dns" aria-selected="false" aria-controls="panel-dns" data-tab="dns">
+        <span>DNS 解析</span>
+        <span id="count-dns" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-acl" aria-selected="false" aria-controls="panel-acl" data-tab="acl">
+        <span>访问控制</span>
+        <span id="count-acl" class="tab-count">0</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-diag" aria-selected="false" aria-controls="panel-diag" data-tab="diag">
+        <span>网络诊断</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Panel 1: Machines -->
+  <section id="panel-machines" role="tabpanel" aria-labelledby="tab-machines">
+    <div class="toolbar">
+      <div style="display:flex;gap:8px;align-items:center;flex:1 1 320px;flex-wrap:wrap">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="node-search" type="search" class="search-input" placeholder="搜索节点、IP、系统或标签…" aria-label="搜索节点">
+        </div>
+        <select id="node-user-filter" class="select-input" style="flex:0 0 auto;min-width:120px" aria-label="按用户筛选">
+          <option value="all">全部用户</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="filter-pills" role="group" aria-label="状态筛选">
+          <button type="button" class="pill-btn" data-filter="all" aria-pressed="true">全部</button>
+          <button type="button" class="pill-btn" data-filter="online" aria-pressed="false">在线</button>
+          <button type="button" class="pill-btn" data-filter="offline" aria-pressed="false">离线</button>
+          <button type="button" class="pill-btn" data-filter="direct" aria-pressed="false">直连</button>
+          <button type="button" class="pill-btn" data-filter="relay" aria-pressed="false">中继</button>
+        </div>
+        <button type="button" id="btn-ping-all-nodes" class="btn btn-sm">全网测速</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">节点</th>
+            <th scope="col">系统</th>
+            <th scope="col">内网 IP</th>
+            <th scope="col">状态</th>
+            <th scope="col">连接方式</th>
+            <th scope="col" class="col-right">延迟</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="nodes-tbody">
+          <tr><td colspan="7" class="empty-state">正在读取组网状态…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel: Users -->
+  <section id="panel-users" role="tabpanel" aria-labelledby="tab-users" hidden>
+    <div class="toolbar">
+      <div class="sub-line" style="font-size:13px">管理组网用户及名下设备与授权密钥</div>
+      <button type="button" id="btn-open-create-user" class="btn btn-primary btn-sm">新建用户</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" style="width:72px">ID</th>
+            <th scope="col">用户名</th>
+            <th scope="col">备注与邮箱</th>
+            <th scope="col">关联设备</th>
+            <th scope="col">有效密钥</th>
+            <th scope="col">创建时间</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="7" class="empty-state">正在读取用户列表…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel 2: PreAuth Keys -->
+  <section id="panel-keys" role="tabpanel" aria-labelledby="tab-keys" hidden>
+    <div class="toolbar">
+      <div class="filter-pills" role="group" aria-label="密钥状态筛选">
+        <button type="button" class="pill-btn" data-key-filter="all" aria-pressed="true">全部</button>
+        <button type="button" class="pill-btn" data-key-filter="active" aria-pressed="false">有效</button>
+        <button type="button" class="pill-btn" data-key-filter="used" aria-pressed="false">已使用</button>
+        <button type="button" class="pill-btn" data-key-filter="expired" aria-pressed="false">已过期</button>
+      </div>
+      <button type="button" id="btn-create-key-inline" class="btn btn-primary btn-sm">新建密钥</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">密钥</th>
+            <th scope="col">用户</th>
+            <th scope="col">属性</th>
+            <th scope="col">状态</th>
+            <th scope="col">创建时间</th>
+            <th scope="col">到期时间</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="keys-tbody">
+          <tr><td colspan="8" class="empty-state">正在读取密钥列表…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel 3: Routes -->
+  <section id="panel-routes" role="tabpanel" aria-labelledby="tab-routes" hidden>
+    <div class="toolbar">
+      <div class="filter-pills" role="group" aria-label="路由筛选">
+        <button type="button" class="pill-btn" data-route-filter="all" aria-pressed="true">全部</button>
+        <button type="button" class="pill-btn" data-route-filter="exit" aria-pressed="false">出口节点</button>
+        <button type="button" class="pill-btn" data-route-filter="subnet" aria-pressed="false">子网路由</button>
+        <button type="button" class="pill-btn" data-route-filter="pending" aria-pressed="false">待批准</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button type="button" id="btn-routes-local-exit" class="btn btn-sm">开启本机出口</button>
+        <button type="button" id="btn-open-route-guide" class="btn btn-primary btn-sm">路由配置指南</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">节点</th>
+            <th scope="col">路由网段</th>
+            <th scope="col">类型</th>
+            <th scope="col">状态</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="routes-tbody">
+          <tr><td colspan="5" class="empty-state">正在读取路由列表…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel 4: DNS & Custom Records -->
+  <section id="panel-dns" role="tabpanel" aria-labelledby="tab-dns" hidden>
+    <div class="dns-card">
+      <div class="dns-meta-grid">
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">MagicDNS</span>
+          <div class="dns-meta-value">
+            <span id="dns-magic-badge" class="badge badge-ok">已启用</span>
+          </div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">内网域名后缀</span>
+          <div id="dns-base-domain-wrap" class="dns-meta-value mono">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">全局 DNS</span>
+          <div id="dns-global-ns" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">覆盖本地 DNS</span>
+          <div id="dns-override-state" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">分流 DNS</span>
+          <div id="dns-split-summary" class="dns-meta-value">—</div>
+        </div>
+      </div>
+      <div class="inline-row">
+        <button type="button" id="btn-open-dns-config" class="btn btn-sm">配置 DNS</button>
+        <button type="button" id="btn-open-add-record" class="btn btn-primary btn-sm">添加记录</button>
+      </div>
+    </div>
+
+    <div class="section-bar" style="margin-top:0">
+      <h3>自定义解析记录</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">域名</th>
+            <th scope="col">类型</th>
+            <th scope="col">指向地址</th>
+            <th scope="col">对应节点</th>
+            <th scope="col">状态</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="dns-records-tbody">
+          <tr><td colspan="6" class="empty-state">正在读取解析记录…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-bar">
+      <h3>节点内网域名（MagicDNS 自动分配）</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">节点</th>
+            <th scope="col">内网域名</th>
+            <th scope="col">IPv4 地址</th>
+            <th scope="col">IPv6 地址</th>
+            <th scope="col">状态</th>
+          </tr>
+        </thead>
+        <tbody id="dns-nodes-tbody">
+          <tr><td colspan="5" class="empty-state">正在读取节点域名…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel 5: ACL Access Control -->
+  <section id="panel-acl" role="tabpanel" aria-labelledby="tab-acl" hidden>
+    <div class="dns-card">
+      <div class="dns-meta-grid">
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">当前模式</span>
+          <div class="dns-meta-value">
+            <span id="acl-mode-badge" class="badge badge-ok">全网互通</span>
+          </div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">放行规则</span>
+          <div id="acl-rules-count" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">管理员组</span>
+          <div id="acl-groups-summary" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">可用标签</span>
+          <div id="acl-tags-summary" class="dns-meta-value">—</div>
+        </div>
+      </div>
+      <div class="inline-row">
+        <select id="acl-template-select" class="select-input" style="min-width:175px" aria-label="快捷切换访问模式">
+          <option value="">快捷切换预设模式…</option>
+          <option value="allow_all">全网互通（所有设备自由互访）</option>
+          <option value="tiered">分层受控（管理员全通 + 客户端访服务器）</option>
+          <option value="guest_isolation">访客隔离（限制 guest 仅访问网页）</option>
+        </select>
+        <button type="button" id="btn-load-acl-template" class="btn btn-sm">应用模式</button>
+        <button type="button" id="btn-open-acl-meta" class="btn btn-sm">分组与标签</button>
+        <button type="button" id="btn-open-acl-raw" class="btn btn-sm">策略源码</button>
+        <button type="button" id="btn-open-acl-rule" class="btn btn-primary btn-sm">添加规则</button>
+      </div>
+    </div>
+
+    <div class="section-bar" style="margin-top:0">
+      <h3>访问放行规则（未匹配规则的连接默认拒绝）</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" style="width:60px">序号</th>
+            <th scope="col">允许访问方（来源）</th>
+            <th scope="col">可访问目标</th>
+            <th scope="col">开放端口 / 服务</th>
+            <th scope="col" style="width:90px">协议</th>
+            <th scope="col" class="col-act">操作</th>
+          </tr>
+        </thead>
+        <tbody id="acl-rules-tbody">
+          <tr><td colspan="6" class="empty-state">正在读取访问规则…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab Panel 6: Network Diagnostics & DERP Relay -->
+  <section id="panel-diag" role="tabpanel" aria-labelledby="tab-diag" hidden>
+    <div class="dns-card">
+      <div class="dns-meta-grid">
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">UDP 通信</span>
+          <div class="dns-meta-value">
+            <span id="diag-udp-badge" class="badge badge-ok">正常</span>
+          </div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">IP 协议</span>
+          <div id="diag-ip-stack" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">NAT 类型</span>
+          <div id="diag-nat-type" class="dns-meta-value">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">公网出口地址</span>
+          <div id="diag-global-v4" class="dns-meta-value mono">—</div>
+        </div>
+        <div class="dns-meta-item">
+          <span class="dns-meta-label">首选中继</span>
+          <div id="diag-pref-derp" class="dns-meta-value">—</div>
+        </div>
+      </div>
+      <div class="inline-row">
+        <button type="button" id="btn-run-netcheck" class="btn btn-sm">运行诊断</button>
+        <button type="button" id="btn-diag-ping-all" class="btn btn-primary btn-sm">全网测速</button>
+      </div>
+    </div>
+
+    <div class="section-bar" style="margin-top:0">
+      <h3>DERP 中继服务器</h3>
+    </div>
+    <div class="table-wrap" style="margin-bottom:18px">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col" style="width:90px">区域 ID</th>
+            <th scope="col">区域名称</th>
+            <th scope="col">服务地址</th>
+            <th scope="col">端口 (STUN / DERP)</th>
+            <th scope="col">客户端校验</th>
+            <th scope="col">当前中继节点</th>
+            <th scope="col" class="col-right">本地延迟</th>
+            <th scope="col">状态</th>
+          </tr>
+        </thead>
+        <tbody id="diag-derp-tbody">
+          <tr><td colspan="8" class="empty-state">正在读取 DERP 中继信息…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-bar">
+      <h3>节点链路与流量明细</h3>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">节点</th>
+            <th scope="col">内网 IP</th>
+            <th scope="col">公网端点</th>
+            <th scope="col">连接方式</th>
+            <th scope="col" class="col-right">延迟</th>
+            <th scope="col">累计流量 (收 / 发)</th>
+            <th scope="col">最近握手</th>
+          </tr>
+        </thead>
+        <tbody id="diag-peers-tbody">
+          <tr><td colspan="7" class="empty-state">正在读取节点链路明细…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- Floating Action Dropdown Menu -->
+<div id="action-dropdown" class="action-menu" role="menu" hidden></div>
+
+<!-- Slide-over Node Detail & Management Drawer -->
+<dialog id="node-drawer" class="drawer-dialog" closedby="any" aria-labelledby="drawer-title">
+  <div class="dialog-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <h2 id="drawer-title">节点详情</h2>
+        <span id="drawer-online-badge" class="badge"></span>
+      </div>
+      <div id="drawer-subtitle" class="sub-line mono"></div>
+    </div>
+    <button type="button" id="drawer-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div class="drawer-action-bar">
+      <button type="button" id="drawer-btn-ping" class="btn btn-sm">测速</button>
+      <button type="button" id="drawer-btn-rename" class="btn btn-sm">改名</button>
+      <button type="button" id="drawer-btn-ip" class="btn btn-sm">修改 IP</button>
+      <button type="button" id="drawer-btn-routes" class="btn btn-sm">路由审批</button>
+      <button type="button" id="drawer-btn-user" class="btn btn-sm">迁移用户</button>
+      <button type="button" id="drawer-btn-tags" class="btn btn-sm">标签</button>
+      <button type="button" id="drawer-btn-expire" class="btn btn-sm">下线</button>
+      <button type="button" id="drawer-btn-delete" class="btn btn-sm btn-danger">移除</button>
+    </div>
+
+    <!-- Inline Rename Box -->
+    <form id="drawer-rename-box" class="inline-panel" hidden>
+      <label for="drawer-rename-input">节点名称</label>
+      <div class="inline-row">
+        <input id="drawer-rename-input" type="text" class="text-input" maxlength="62" required placeholder="输入新节点名称">
+        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+        <button type="button" id="drawer-rename-cancel" class="btn btn-sm">取消</button>
+      </div>
+    </form>
+
+    <!-- Inline IP Box -->
+    <form id="drawer-ip-box" class="inline-panel" hidden>
+      <label for="drawer-ip-input">节点内网 IPv4 地址（100.64.0.0/10）</label>
+      <div class="inline-row">
+        <input id="drawer-ip-input" type="text" class="text-input mono" required placeholder="如 100.88.0.10">
+        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+        <button type="button" id="drawer-ip-cancel" class="btn btn-sm">取消</button>
+      </div>
+    </form>
+
+    <!-- Inline Routes & Exit Node Approval Box -->
+    <form id="drawer-routes-box" class="inline-panel" hidden>
+      <label class="checkbox-label" style="color:var(--text)"><input type="checkbox" id="drawer-routes-exit"> 批准作为出口节点 (0.0.0.0/0, ::/0)</label>
+      <label for="drawer-routes-input">批准的子网路由网段（多个用逗号分隔，留空则仅保存上方出口设置）</label>
+      <div class="inline-row">
+        <input id="drawer-routes-input" type="text" class="text-input mono" placeholder="如 192.168.1.0/24">
+        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+        <button type="button" id="drawer-routes-cancel" class="btn btn-sm">取消</button>
+      </div>
+    </form>
+
+    <!-- Inline Move User Box -->
+    <form id="drawer-user-box" class="inline-panel" hidden>
+      <label for="drawer-user-select">迁移所属用户</label>
+      <div class="inline-row">
+        <select id="drawer-user-select" class="select-input"></select>
+        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+        <button type="button" id="drawer-user-cancel" class="btn btn-sm">取消</button>
+      </div>
+    </form>
+
+    <!-- Inline Tags Box -->
+    <form id="drawer-tags-box" class="inline-panel" hidden>
+      <label for="drawer-tags-input">节点标签（多个用逗号分隔）</label>
+      <div class="inline-row">
+        <input id="drawer-tags-input" type="text" class="text-input" placeholder="如 tag:server, tag:prod">
+        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+        <button type="button" id="drawer-tags-cancel" class="btn btn-sm">取消</button>
+      </div>
+    </form>
+
+    <!-- Inline Delete Confirmation -->
+    <div id="drawer-delete-box" class="inline-panel danger" hidden>
+      <div style="font-size:13px;font-weight:550">确定移除此节点？移除后该设备将断开内网连接。</div>
+      <div class="inline-row" style="justify-content:flex-end">
+        <button type="button" id="drawer-delete-cancel" class="btn btn-sm">取消</button>
+        <button type="button" id="drawer-delete-confirm" class="btn btn-sm btn-danger">确认移除</button>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>网络信息</h3>
+      <div id="drawer-kv-net" class="kv-list"></div>
+    </div>
+
+    <div class="detail-section">
+      <h3>基本信息</h3>
+      <div id="drawer-kv-meta" class="kv-list"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Add Device / Create Key Modal Dialog -->
+<dialog id="modal-guide" class="modal-dialog" closedby="any" aria-labelledby="modal-guide-title">
+  <div class="dialog-header">
+    <div>
+      <h2 id="modal-guide-title">添加设备</h2>
+      <div class="sub-line">通过授权密钥命令或免密钥审批接入客户端</div>
+    </div>
+    <button type="button" id="modal-guide-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div class="filter-pills">
+      <button type="button" id="tab-guide-cmd" class="pill-btn" aria-pressed="true">密钥接入</button>
+      <button type="button" id="tab-guide-approve" class="pill-btn" aria-pressed="false">审批接入</button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="guide-user">所属用户</label>
+        <select id="guide-user" class="select-input"></select>
+      </div>
+      <div id="guide-exp-field" class="form-field">
+        <label for="guide-exp">密钥有效期</label>
+        <select id="guide-exp" class="select-input">
+          <option value="1h">1 小时</option>
+          <option value="24h" selected>24 小时</option>
+          <option value="7d">7 天</option>
+          <option value="30d">30 天</option>
+          <option value="90d">90 天</option>
+          <option value="365d">365 天</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-tab-stack">
+      <div id="guide-pane-cmd" class="modal-tab-pane">
+        <div class="form-field">
+          <label for="guide-authkey">授权密钥</label>
+          <div class="inline-row">
+            <input id="guide-authkey" type="text" class="text-input mono" placeholder="点击右侧生成或粘贴已有密钥">
+            <button type="button" id="btn-generate-key-now" class="btn btn-primary btn-sm">生成密钥</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="guide-hostname">节点名称（可选）</label>
+            <input id="guide-hostname" type="text" class="text-input" placeholder="如 edge-node-1">
+          </div>
+          <div class="form-field">
+            <label for="guide-routes">子网路由（可选）</label>
+            <input id="guide-routes" type="text" class="text-input mono" placeholder="如 192.168.1.0/24">
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" id="guide-reusable" checked> 可复用</label>
+          <label class="checkbox-label"><input type="checkbox" id="guide-ephemeral"> 临时节点</label>
+          <label class="checkbox-label"><input type="checkbox" id="guide-accept-routes" checked> 接收路由</label>
+          <label class="checkbox-label"><input type="checkbox" id="guide-exit-node"> 出口节点</label>
+        </div>
+
+        <div class="form-field">
+          <label>客户端接入命令与方式</label>
+          <div class="filter-pills" style="margin-bottom:6px">
+            <button type="button" class="pill-btn" data-guide-os="linux-auto" aria-pressed="true">Linux</button>
+            <button type="button" class="pill-btn" data-guide-os="cli" aria-pressed="false">macOS</button>
+            <button type="button" class="pill-btn" data-guide-os="windows" aria-pressed="false">Windows</button>
+            <button type="button" class="pill-btn" data-guide-os="docker" aria-pressed="false">Docker</button>
+            <button type="button" class="pill-btn" data-guide-os="gui" aria-pressed="false">图形界面</button>
+          </div>
+          <div id="guide-cmd-preview" class="cmd-box"></div>
+        </div>
+      </div>
+
+      <div id="guide-pane-approve" class="modal-tab-pane is-inactive">
+        <div class="form-field">
+          <label for="guide-register-token">客户端注册链接或 Auth ID</label>
+          <input id="guide-register-token" type="text" class="text-input mono" placeholder="粘贴客户端执行 tailscale up 后显示的链接或 Auth ID">
+        </div>
+        <div class="sub-line">在客户端执行不带密钥的登录命令后，将终端输出的注册链接粘贴至此处即可直接批准入网。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button type="button" id="btn-copy-cmd" class="btn btn-primary">复制命令</button>
+    <button type="button" id="btn-register-node-now" class="btn btn-primary" hidden>批准接入</button>
+  </div>
+</dialog>
+
+<!-- Dedicated Create PreAuth Key Modal Dialog -->
+<dialog id="modal-create-key" class="modal-dialog" closedby="any" aria-labelledby="modal-create-key-title">
+  <form id="form-create-key">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-create-key-title">新建密钥</h2>
+        <div class="sub-line">签发预授权密钥，供批量部署或自动化脚本使用</div>
+      </div>
+      <button type="button" id="modal-create-key-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="key-form-user">所属用户</label>
+          <select id="key-form-user" class="select-input"></select>
+        </div>
+        <div class="form-field">
+          <label for="key-form-exp">密钥有效期</label>
+          <select id="key-form-exp" class="select-input">
+            <option value="1h">1 小时</option>
+            <option value="24h" selected>24 小时</option>
+            <option value="7d">7 天</option>
+            <option value="30d">30 天</option>
+            <option value="90d">90 天</option>
+            <option value="365d">365 天</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <label class="checkbox-label"><input type="checkbox" id="key-form-reusable" checked> 可复用</label>
+        <label class="checkbox-label"><input type="checkbox" id="key-form-ephemeral"> 临时节点</label>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-submit-create-key" class="btn btn-primary">创建密钥</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Add / Edit Custom DNS Record Modal Dialog -->
+<dialog id="modal-dns-record" class="modal-dialog" closedby="any" aria-labelledby="modal-dns-record-title">
+  <form id="form-dns-record">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-dns-record-title">添加解析记录</h2>
+        <div class="sub-line">修改后实时推送至所有在线节点，无需重启服务</div>
+      </div>
+      <button type="button" id="modal-dns-record-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="form-field">
+        <label for="dns-record-name">解析域名</label>
+        <input id="dns-record-name" type="text" class="text-input mono" required placeholder="如 nas.nodes.internal 或 git.lan（输入短名自动补全后缀）">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="dns-record-node-pick">快捷选择节点（可选）</label>
+          <select id="dns-record-node-pick" class="select-input">
+            <option value="">手动输入地址</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="dns-record-value">指向 IP 地址（IPv4 / IPv6）</label>
+          <input id="dns-record-value" type="text" class="text-input mono" required placeholder="如 100.88.0.2">
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-save-dns-record" class="btn btn-primary">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Global DNS Settings Modal Dialog -->
+<dialog id="modal-dns-config" class="modal-dialog" closedby="any" aria-labelledby="modal-dns-config-title">
+  <form id="form-dns-config">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-dns-config-title">配置 DNS</h2>
+        <div class="sub-line">设置内网 MagicDNS、上游 DNS 与分流规则</div>
+      </div>
+      <button type="button" id="modal-dns-config-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="checkbox-group">
+        <label class="checkbox-label"><input type="checkbox" id="dns-cfg-magic" checked> 启用 MagicDNS</label>
+        <label class="checkbox-label"><input type="checkbox" id="dns-cfg-override"> 覆盖客户端本地 DNS</label>
+      </div>
+
+      <div class="form-field">
+        <label for="dns-cfg-global">全局 DNS 服务器（多个用逗号分隔，支持 IP 或 https:// DoH）</label>
+        <input id="dns-cfg-global" type="text" class="text-input mono" placeholder="如 223.5.5.5, 119.29.29.29">
+      </div>
+
+      <div class="form-field">
+        <label for="dns-cfg-search">搜索域（可选，多个用逗号分隔）</label>
+        <input id="dns-cfg-search" type="text" class="text-input mono" placeholder="如 home.lan, corp.internal">
+      </div>
+
+      <div class="form-field">
+        <label for="dns-cfg-split">分流 DNS（可选，每行一条，格式：域名=DNS）</label>
+        <textarea id="dns-cfg-split" class="textarea-input" placeholder="如 corp.local=10.0.0.53"></textarea>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-save-dns-config" class="btn btn-primary">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Create / Rename User Modal Dialog -->
+<dialog id="modal-user" class="modal-dialog" closedby="any" aria-labelledby="modal-user-title">
+  <form id="form-user">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-user-title">新建用户</h2>
+        <div id="modal-user-subtitle" class="sub-line">创建新的组网用户以隔离设备与授权密钥</div>
+      </div>
+      <button type="button" id="modal-user-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="form-field">
+        <label for="user-form-name">用户名（字母开头）</label>
+        <input id="user-form-name" type="text" class="text-input mono" required maxlength="62" placeholder="如 devops 或 guest">
+      </div>
+
+      <div id="user-form-extra-fields" class="form-grid">
+        <div class="form-field">
+          <label for="user-form-display">备注名称（可选）</label>
+          <input id="user-form-display" type="text" class="text-input" maxlength="64" placeholder="如 研发运维组">
+        </div>
+        <div class="form-field">
+          <label for="user-form-email">邮箱（可选）</label>
+          <input id="user-form-email" type="email" class="text-input" maxlength="120" placeholder="如 ops@example.com">
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-save-user" class="btn btn-primary">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Visual Add / Edit ACL Rule Modal Dialog -->
+<dialog id="modal-acl-rule" class="modal-dialog" closedby="any" aria-labelledby="modal-acl-rule-title">
+  <form id="form-acl-rule">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-acl-rule-title">添加访问规则</h2>
+        <div class="sub-line">点选允许发起访问的来源、目标及端口，保存后立即生效</div>
+      </div>
+      <button type="button" id="modal-acl-rule-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="form-field">
+        <label>1. 允许谁发起访问（访问来源）</label>
+        <div class="filter-pills" style="margin-bottom:6px">
+          <button type="button" id="acl-src-mode-all" class="pill-btn" aria-pressed="true">全部设备</button>
+          <button type="button" id="acl-src-mode-custom" class="pill-btn" aria-pressed="false">指定用户 / 标签 / 设备</button>
+        </div>
+        <div id="acl-src-picker" class="pick-box" hidden></div>
+      </div>
+
+      <div class="form-field">
+        <label>2. 允许访问哪些目标（访问目标）</label>
+        <div class="filter-pills" style="margin-bottom:6px">
+          <button type="button" id="acl-dst-mode-all" class="pill-btn" aria-pressed="true">全部设备</button>
+          <button type="button" id="acl-dst-mode-custom" class="pill-btn" aria-pressed="false">指定用户 / 标签 / 设备</button>
+        </div>
+        <div id="acl-dst-picker" class="pick-box" hidden></div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>3. 开放端口范围</label>
+          <div class="filter-pills" style="margin-bottom:6px">
+            <button type="button" id="acl-port-mode-all" class="pill-btn" aria-pressed="true">全部端口</button>
+            <button type="button" id="acl-port-mode-custom" class="pill-btn" aria-pressed="false">指定端口 / 服务</button>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="acl-rule-proto">4. 网络协议</label>
+          <select id="acl-rule-proto" class="select-input">
+            <option value="">全部协议（默认）</option>
+            <option value="tcp">仅 TCP</option>
+            <option value="udp">仅 UDP</option>
+            <option value="icmp">仅 ICMP (Ping)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="acl-port-picker" class="pick-box" hidden>
+        <div class="pick-group">
+          <span class="pick-group-title">常用服务快捷点选（可多选）</span>
+          <div id="acl-service-pills" class="pick-pills"></div>
+        </div>
+        <div class="form-field">
+          <label for="acl-custom-ports">端口号（多个用逗号分隔，支持范围如 8080, 9000-9010）</label>
+          <input id="acl-custom-ports" type="text" class="text-input mono" placeholder="如 22, 80, 443">
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-save-acl-rule" class="btn btn-primary">保存规则</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Visual Manage Groups & Tags Modal Dialog -->
+<dialog id="modal-acl-meta" class="modal-dialog" closedby="any" aria-labelledby="modal-acl-meta-title">
+  <form id="form-acl-meta">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-acl-meta-title">分组与标签管理</h2>
+        <div class="sub-line">定义设备分类标签与管理员分组，无需手写配置文件</div>
+      </div>
+      <button type="button" id="modal-acl-meta-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="form-field">
+        <label>可用设备标签（用于给服务器、客户端、访客等设备分类）</label>
+        <div id="acl-meta-tags-list" class="pick-pills" style="min-height:28px;padding:4px 0"></div>
+        <div class="inline-row" style="margin-top:4px">
+          <input id="acl-meta-new-tag" type="text" class="text-input mono" placeholder="输入新标签名，如 nas、iot、prod">
+          <button type="button" id="btn-acl-meta-add-tag" class="btn btn-sm">添加标签</button>
+        </div>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:2px 0">
+
+      <div class="form-field">
+        <label>管理员组成员（group:admin，拥有最高管理权限）</label>
+        <div id="acl-meta-admin-users" class="pick-pills" style="padding:4px 0"></div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="submit" id="btn-save-acl-meta" class="btn btn-primary">保存设置</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Raw ACL Policy JSON Modal Dialog -->
+<dialog id="modal-acl-raw" class="modal-dialog" style="width:min(640px,94vw)" closedby="any" aria-labelledby="modal-acl-raw-title">
+  <div class="dialog-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2 id="modal-acl-raw-title">策略源码 (JSON)</h2>
+        <span id="acl-dirty-badge" class="badge badge-warn" hidden>未保存修改</span>
+      </div>
+      <div class="sub-line">直接查看或编辑底层访问控制策略文件，保存后热重载生效</div>
+    </div>
+    <button type="button" id="modal-acl-raw-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div id="acl-check-banner" class="banner" role="status" hidden></div>
+    <textarea id="acl-editor-textarea" class="textarea-input mono" style="min-height:280px" spellcheck="false" aria-label="ACL 策略配置编辑器"></textarea>
+  </div>
+
+  <div class="dialog-footer">
+    <button type="button" id="btn-acl-format" class="btn">格式化</button>
+    <button type="button" id="btn-acl-reset" class="btn">还原</button>
+    <button type="button" id="btn-acl-check" class="btn">校验语法</button>
+    <button type="button" id="btn-acl-save" class="btn btn-primary">保存源码</button>
+  </div>
+</dialog>
+
+<!-- Local Node Setup & Embedded DERP Relay Configuration Modal Dialog -->
+<dialog id="modal-derp-config" class="modal-dialog" closedby="any" aria-labelledby="modal-derp-config-title">
+  <form id="form-derp-config">
+    <div class="dialog-header">
+      <div>
+        <h2 id="modal-derp-config-title">本机配置</h2>
+        <div class="sub-line">管理当前服务器组件、本机连接与内置中继服务</div>
+      </div>
+      <button type="button" id="modal-derp-config-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="filter-pills">
+        <button type="button" id="tab-local-env" class="pill-btn" aria-pressed="true">本机连接</button>
+        <button type="button" id="tab-local-derp" class="pill-btn" aria-pressed="false">中继配置</button>
+      </div>
+
+      <div class="modal-tab-stack">
+        <div id="local-pane-env" class="modal-tab-pane">
+          <div class="kv-list">
+            <div class="kv-row">
+              <span class="kv-key">服务端组件 (Headscale)</span>
+              <span id="local-env-hs-status" class="kv-val">检测中…</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">客户端组件 (Tailscale)</span>
+              <div class="kv-val" style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+                <span id="local-env-ts-status">检测中…</span>
+                <button type="button" id="btn-install-local-ts" class="btn btn-sm">安装客户端</button>
+              </div>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">本机连接状态</span>
+              <span id="local-env-join-status" class="kv-val">检测中…</span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="derp-cfg-server-url">服务端地址</label>
+            <input id="derp-cfg-server-url" type="url" class="text-input mono" required placeholder="如 https://hs.example.com">
+          </div>
+
+          <div class="form-field">
+            <label>本机客户端连接选项</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" id="local-pref-incoming" checked> 允许入站连接</label>
+              <label class="checkbox-label"><input type="checkbox" id="local-pref-dns" checked> 使用内网 DNS</label>
+              <label class="checkbox-label"><input type="checkbox" id="local-pref-routes" checked> 接收子网路由</label>
+              <label class="checkbox-label"><input type="checkbox" id="local-pref-exit"> 作为出口节点</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="local-pane-derp" class="modal-tab-pane is-inactive">
+          <div class="checkbox-group">
+            <label class="checkbox-label"><input type="checkbox" id="derp-cfg-enabled" checked> 启用内置中继</label>
+            <label class="checkbox-label"><input type="checkbox" id="derp-cfg-verify" checked> 开启客户端校验</label>
+            <label class="checkbox-label"><input type="checkbox" id="derp-cfg-private" checked> 禁用公共中继</label>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="derp-cfg-code">区域代码</label>
+              <input id="derp-cfg-code" type="text" class="text-input mono" required maxlength="24" placeholder="如 local">
+            </div>
+            <div class="form-field">
+              <label for="derp-cfg-name">区域名称</label>
+              <input id="derp-cfg-name" type="text" class="text-input" maxlength="48" placeholder="如 local relay">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="derp-cfg-ipv4">公网 IPv4 地址</label>
+              <input id="derp-cfg-ipv4" type="text" class="text-input mono" placeholder="如 203.0.113.10">
+            </div>
+            <div class="form-field">
+              <label for="derp-cfg-stun">STUN 端口</label>
+              <input id="derp-cfg-stun" type="number" class="text-input mono" min="1" max="65535" value="3478" required>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="button" id="btn-modal-connect-local" class="btn">连接本机</button>
+      <button type="submit" id="btn-save-derp-config" class="btn btn-primary">保存配置</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Backup Export & Restore Modal Dialog -->
+<dialog id="modal-backup" class="modal-dialog" style="width:min(560px,94vw)" closedby="any" aria-labelledby="modal-backup-title">
+  <div class="dialog-header">
+    <div>
+      <h2 id="modal-backup-title">配置备份</h2>
+      <div class="sub-line">导出组网配置快照，或从备份文件恢复 DNS、访问控制与中继配置</div>
+    </div>
+    <button type="button" id="modal-backup-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div class="filter-pills">
+      <button type="button" id="tab-backup-export" class="pill-btn" aria-pressed="true">导出备份</button>
+      <button type="button" id="tab-backup-restore" class="pill-btn" aria-pressed="false">导入恢复</button>
+    </div>
+
+    <div class="modal-tab-stack">
+      <div id="backup-pane-export" class="modal-tab-pane">
+        <div id="backup-summary-kv" class="kv-list"></div>
+        <div class="form-field">
+          <label for="backup-export-textarea">配置快照内容 (JSON)</label>
+          <textarea id="backup-export-textarea" class="textarea-input mono" style="min-height:165px" readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div id="backup-pane-restore" class="modal-tab-pane is-inactive">
+        <div class="form-field">
+          <label for="backup-import-textarea">选择备份文件或粘贴 JSON 内容</label>
+          <div class="inline-row" style="margin-bottom:4px">
+            <input type="file" id="backup-import-file" accept=".json,application/json" hidden>
+            <button type="button" id="btn-pick-backup-file" class="btn btn-sm">选择备份文件</button>
+            <span id="backup-file-name" class="sub-line">支持 .json 备份文件，或直接在下方粘贴</span>
+          </div>
+          <textarea id="backup-import-textarea" class="textarea-input mono" style="min-height:165px" spellcheck="false" placeholder="粘贴导出的 JSON 备份内容，或点击上方「选择备份文件」加载"></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" id="restore-opt-dns" checked> 恢复 DNS 解析与配置</label>
+          <label class="checkbox-label"><input type="checkbox" id="restore-opt-acl" checked> 恢复访问控制策略</label>
+          <label class="checkbox-label"><input type="checkbox" id="restore-opt-derp" checked> 恢复中继配置</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button type="button" id="btn-copy-backup" class="btn">复制内容</button>
+    <button type="button" id="btn-download-backup" class="btn btn-primary">下载文件</button>
+    <button type="button" id="btn-submit-restore" class="btn btn-primary" hidden>立即恢复</button>
+  </div>
+</dialog>
+
+<!-- Route & Exit Node Configuration Guide Modal Dialog -->
+<dialog id="modal-route-guide" class="modal-dialog" closedby="any" aria-labelledby="modal-route-guide-title">
+  <div class="dialog-header">
+    <div>
+      <h2 id="modal-route-guide-title">路由配置指南</h2>
+      <div class="sub-line">将任意已入网节点设为全局出口节点或局域网子网路由网关</div>
+    </div>
+    <button type="button" id="modal-route-guide-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div class="filter-pills">
+      <button type="button" id="tab-rguide-exit" class="pill-btn" aria-pressed="true">出口节点</button>
+      <button type="button" id="tab-rguide-subnet" class="pill-btn" aria-pressed="false">子网路由</button>
+    </div>
+
+    <div class="modal-tab-stack">
+      <div id="rguide-pane-exit" class="modal-tab-pane">
+        <div class="form-field">
+          <label>1. 在作为出口的节点上开启出口转发</label>
+          <div class="sub-line" style="margin-bottom:4px">若要将当前服务器设为出口，直接点击页面上的「开启本机出口」即可一键完成；其他节点请执行：</div>
+          <div id="rguide-exit-cmd" class="cmd-box">sudo sysctl -w net.ipv4.ip_forward=1 net.ipv6.conf.all.forwarding=1 && sudo tailscale set --advertise-exit-node</div>
+        </div>
+        <div class="form-field">
+          <label>2. 在管理台批准并在客户端启用</label>
+          <div class="kv-list">
+            <div class="kv-row">
+              <span class="kv-key">管理台审批</span>
+              <span class="kv-val">在「子网路由」或节点「路由审批」中批准 0.0.0.0/0</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">macOS / Windows / 手机</span>
+              <span class="kv-val">在客户端菜单 Exit Node 中勾选该节点即可全局走代理出网</span>
+            </div>
+            <div class="kv-row">
+              <span class="kv-key">Linux 客户端</span>
+              <span class="kv-val mono">tailscale set --exit-node=出口节点IP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rguide-pane-subnet" class="modal-tab-pane is-inactive">
+        <div class="form-field">
+          <label for="rguide-subnet-cidr">1. 局域网子网网段（可修改预览）</label>
+          <input id="rguide-subnet-cidr" type="text" class="text-input mono" value="192.168.1.0/24" placeholder="如 192.168.1.0/24, 10.0.0.0/24">
+        </div>
+        <div class="form-field">
+          <label>2. 在局域网网关节点上宣告子网路由</label>
+          <div id="rguide-subnet-cmd" class="cmd-box">sudo sysctl -w net.ipv4.ip_forward=1 && sudo tailscale set --advertise-routes=192.168.1.0/24</div>
+        </div>
+        <div class="sub-line">执行后，在本页列表点击该路由右侧「⋯ -> 批准路由」，其他开启了「Use Tailscale subnets / 接收子网路由」的设备即可直接访问该内网网段。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-footer">
+    <button type="button" id="btn-copy-rguide-cmd" class="btn btn-primary">复制命令</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" popover="manual" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const pathLabels = {
+    self: '本机',
+    direct: '直连',
+    relay: '中继',
+    'peer-relay': '节点中继',
+    offline: '离线',
+    unreachable: '超时',
+    unknown: '未知',
+  };
+
+  let snapshot = null;
+  let activeTab = 'machines';
+  let nodeFilter = 'all';
+  let nodeUserFilter = 'all';
+  let keyFilter = 'all';
+  let searchQuery = '';
+  let selectedNodeId = null;
+  let busy = false;
+  let toastTimer = null;
+  let activeMenuTrigger = null;
+
+  const darkMedia = matchMedia('(prefers-color-scheme: dark)');
+  function setTheme() {
+    let dark = darkMedia.matches;
+    try {
+      const root = parent.document.documentElement;
+      if (root.classList.contains('dark')) dark = true;
+      else if (root.classList.contains('light')) dark = false;
+    } catch (_) {}
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  }
+  setTheme();
+  darkMedia.addEventListener('change', setTheme);
+  try {
+    new MutationObserver(setTheme).observe(parent.document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  } catch (_) {}
+
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    const outside = (e, dialog) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    for (const dialog of document.querySelectorAll('dialog[closedby="any"]')) {
+      let pressedOutside = false;
+      dialog.addEventListener('pointerdown', e => {
+        pressedOutside = outside(e, dialog);
+      });
+      dialog.addEventListener('pointerup', e => {
+        if (pressedOutside && outside(e, dialog)) dialog.close();
+      });
+    }
+  }
+
+  for (const dialog of document.querySelectorAll('dialog')) {
+    dialog.addEventListener('close', () => {
+      dialog.returnValue = '';
+    });
+  }
+
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text !== undefined && text !== null) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  function copyIconSvg() {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', '12');
+    svg.setAttribute('height', '12');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('width', '14');
+    rect.setAttribute('height', '14');
+    rect.setAttribute('x', '8');
+    rect.setAttribute('y', '8');
+    rect.setAttribute('rx', '2');
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2');
+    svg.append(rect, path);
+    return svg;
+  }
+
+  function moreIconSvg() {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    for (const cx of ['5', '12', '19']) {
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', cx);
+      c.setAttribute('cy', '12');
+      c.setAttribute('r', '1.25');
+      c.setAttribute('fill', 'currentColor');
+      svg.append(c);
+    }
+    return svg;
+  }
+
+  function closeActionMenu() {
+    const menu = $('action-dropdown');
+    menu.hidden = true;
+    menu.replaceChildren();
+    if (activeMenuTrigger) {
+      activeMenuTrigger.setAttribute('aria-expanded', 'false');
+      activeMenuTrigger = null;
+    }
+  }
+
+  function openActionMenu(triggerBtn, items) {
+    const menu = $('action-dropdown');
+    if (activeMenuTrigger === triggerBtn && !menu.hidden) {
+      closeActionMenu();
+      return;
+    }
+    closeActionMenu();
+    activeMenuTrigger = triggerBtn;
+    triggerBtn.setAttribute('aria-expanded', 'true');
+
+    for (const item of items) {
+      if (item.separator) {
+        menu.append(el('div', undefined, 'menu-sep'));
+        continue;
+      }
+      const btn = el('button', item.label, 'menu-item' + (item.danger ? ' danger' : ''));
+      btn.type = 'button';
+      btn.role = 'menuitem';
+      btn.disabled = Boolean(item.disabled);
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        closeActionMenu();
+        item.onClick();
+      });
+      menu.append(btn);
+    }
+
+    menu.hidden = false;
+    const rect = triggerBtn.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    let top = rect.bottom + 5;
+    let left = rect.right - menuRect.width;
+    if (top + menuRect.height > window.innerHeight - 10) {
+      top = Math.max(10, rect.top - menuRect.height - 5);
+    }
+    if (left < 10) left = 10;
+    menu.style.top = top + 'px';
+    menu.style.left = left + 'px';
+  }
+
+  document.addEventListener('click', e => {
+    if (!$('action-dropdown').hidden && !e.target.closest('#action-dropdown')) {
+      closeActionMenu();
+    }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('action-dropdown').hidden) {
+      closeActionMenu();
+    }
+  });
+  window.addEventListener('scroll', closeActionMenu, true);
+  window.addEventListener('resize', closeActionMenu);
+
+  function showToast(msg, isError = false) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.style.borderColor = isError ? 'var(--bad-border)' : 'var(--line-strong)';
+    t.style.color = isError ? 'var(--bad)' : 'var(--text)';
+    t.hidden = false;
+    try {
+      if (typeof t.hidePopover === 'function') {
+        if (t.matches(':popover-open')) t.hidePopover();
+        t.showPopover();
+      }
+    } catch (_) {}
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      try {
+        if (typeof t.hidePopover === 'function' && t.matches(':popover-open')) {
+          t.hidePopover();
+        }
+      } catch (_) {}
+      t.hidden = true;
+    }, 2600);
+  }
+
+  async function copyText(text, label = '已复制') {
+    if (!text) return;
+    const isShortSingleLine = !text.includes('\n') && text.length <= 28;
+    const toastMsg = isShortSingleLine ? `${label}：${text}` : label;
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(toastMsg);
+    } catch (_) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.append(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      showToast(toastMsg);
+    }
+  }
+
+  function formatRelativeTime(iso) {
+    if (!iso) return '—';
+    const ms = Date.parse(iso);
+    if (!Number.isFinite(ms)) return '—';
+    const diffSec = Math.round((Date.now() - ms) / 1000);
+    if (diffSec < 0) {
+      const rem = Math.abs(diffSec);
+      if (rem < 3600) return Math.max(1, Math.round(rem / 60)) + ' 分钟后';
+      if (rem < 86400) return Math.round(rem / 3600) + ' 小时后';
+      return Math.round(rem / 86400) + ' 天后';
+    }
+    if (diffSec < 45) return '刚刚';
+    if (diffSec < 3600) return Math.floor(diffSec / 60) + ' 分钟前';
+    if (diffSec < 86400) return Math.floor(diffSec / 3600) + ' 小时前';
+    return Math.floor(diffSec / 86400) + ' 天前';
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return '—';
+    const ms = Date.parse(iso);
+    if (!Number.isFinite(ms)) return '—';
+    return new Date(ms).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  function formatBytes(bytes) {
+    if (typeof bytes !== 'number' || bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let idx = 0;
+    let val = bytes;
+    while (val >= 1024 && idx < units.length - 1) {
+      val /= 1024;
+      idx++;
+    }
+    return (idx === 0 ? val : val.toFixed(1)) + ' ' + units[idx];
+  }
+
+  function formatOS(os) {
+    if (!os) return '—';
+    const lower = os.toLowerCase();
+    if (lower === 'linux') return 'Linux';
+    if (lower === 'macos' || lower === 'darwin') return 'macOS';
+    if (lower === 'windows') return 'Windows';
+    if (lower === 'ios') return 'iOS';
+    if (lower === 'android') return 'Android';
+    return os;
+  }
+
+  async function rpcCall(method, params = {}) {
+    const response = await fetch('/api/rpc2', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params }),
+      signal: AbortSignal.timeout(12000),
+    });
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('登录已失效，请返回 Komari 后台重新登录。');
+    }
+    if (!response.ok) {
+      throw new Error('请求失败 (HTTP ' + response.status + ')，请稍后重试。');
+    }
+    const payload = await response.json();
+    if (payload.error) {
+      throw new Error(payload.error.message || '操作失败');
+    }
+    return payload.result;
+  }
+
+  function switchTab(tabName) {
+    activeTab = tabName;
+    closeActionMenu();
+    for (const btn of document.querySelectorAll('.tab-btn')) {
+      const selected = btn.dataset.tab === tabName;
+      btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+    }
+    $('panel-machines').hidden = tabName !== 'machines';
+    $('panel-users').hidden = tabName !== 'users';
+    $('panel-keys').hidden = tabName !== 'keys';
+    $('panel-routes').hidden = tabName !== 'routes';
+    $('panel-dns').hidden = tabName !== 'dns';
+    $('panel-acl').hidden = tabName !== 'acl';
+    $('panel-diag').hidden = tabName !== 'diag';
+  }
+
+  function syncFilterButtons() {
+    for (const btn of document.querySelectorAll('[data-filter]')) {
+      btn.setAttribute('aria-pressed', btn.dataset.filter === nodeFilter ? 'true' : 'false');
+    }
+    for (const btn of document.querySelectorAll('[data-metric-filter]')) {
+      btn.setAttribute('aria-pressed', (activeTab === 'machines' && btn.dataset.metricFilter === nodeFilter) ? 'true' : 'false');
+    }
+    $('metric-keys-btn').setAttribute('aria-pressed', activeTab === 'keys' ? 'true' : 'false');
+  }
+
+  function filterNodes(nodes) {
+    return nodes.filter(n => {
+      if (nodeUserFilter !== 'all' && n.user !== nodeUserFilter) return false;
+      if (nodeFilter === 'online' && n.online !== true) return false;
+      if (nodeFilter === 'offline' && n.online !== false) return false;
+      if (nodeFilter === 'direct' && n.connection !== 'direct') return false;
+      if (nodeFilter === 'relay' && !['relay', 'peer-relay'].includes(n.connection)) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const hay = [
+          n.name,
+          n.hostname,
+          n.dns_name,
+          n.user,
+          n.os,
+          n.active_endpoint,
+          ...(n.ips || []),
+          ...(n.tags || []),
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderMachinesTable(nodes) {
+    const tbody = $('nodes-tbody');
+    tbody.replaceChildren();
+    const filtered = filterNodes(nodes);
+    if (!filtered.length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 7;
+      td.append(el('p', nodes.length ? '无匹配的节点' : '暂无节点数据'));
+      tr.append(td);
+      tbody.append(tr);
+      return;
+    }
+
+    for (const n of filtered) {
+      const tr = el('tr', undefined, 'interactive-row');
+      tr.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        openNodeDrawer(n.id);
+      });
+
+      // 1. 节点
+      const tdName = el('td', undefined, 'cell-primary');
+      tdName.dataset.label = '节点';
+      const primary = el('div', undefined, 'node-primary');
+      primary.append(el('span', n.name, 'node-name'));
+      if (n.is_observer) primary.append(el('span', '本机', 'badge badge-accent'));
+      if (n.exit_node) primary.append(el('span', '出口', 'badge badge-ok'));
+      for (const tag of n.tags || []) {
+        primary.append(el('span', tag.replace(/^tag:/, ''), 'badge'));
+      }
+      tdName.append(primary);
+
+      // 2. 系统
+      const tdSys = el('td');
+      tdSys.dataset.label = '系统';
+      tdSys.append(el('span', formatOS(n.os)));
+
+      // 3. 内网 IP
+      const tdIps = el('td');
+      tdIps.dataset.label = '内网 IP';
+      const ips = n.ips || [];
+      if (!ips.length) {
+        tdIps.append(el('span', '—', 'muted-dash'));
+      } else {
+        ips.forEach((ip, idx) => {
+          const wrap = el('div');
+          const chip = el('button', undefined, idx === 0 ? 'copy-chip' : 'copy-chip secondary');
+          chip.type = 'button';
+          chip.title = '点击复制 IP';
+          chip.append(el('span', ip), copyIconSvg());
+          chip.addEventListener('click', () => copyText(ip, '已复制 IP'));
+          wrap.append(chip);
+          tdIps.append(wrap);
+        });
+      }
+
+      // 4. 状态
+      const tdState = el('td');
+      tdState.dataset.label = '状态';
+      const stateBadge = el('span', undefined, 'badge ' + (n.online === true ? 'badge-ok' : n.online === false ? 'badge-bad' : ''));
+      stateBadge.append(el('span', undefined, 'dot'), el('span', n.online === true ? '在线' : n.online === false ? '离线' : '未知'));
+      tdState.append(stateBadge);
+      if (n.online === false && n.last_seen) {
+        tdState.append(el('div', formatRelativeTime(n.last_seen), 'sub-line'));
+      }
+
+      // 5. 连接方式
+      const tdPath = el('td');
+      tdPath.dataset.label = '连接方式';
+      const pathClass = n.connection === 'direct'
+        ? 'badge badge-accent'
+        : ['relay', 'peer-relay'].includes(n.connection)
+        ? 'badge badge-warn'
+        : n.connection === 'unreachable'
+        ? 'badge badge-bad'
+        : 'badge';
+      const pathText = (['relay', 'peer-relay'].includes(n.connection) && n.relay)
+        ? `中继 · ${n.relay}`
+        : (pathLabels[n.connection] || '未知');
+      tdPath.append(el('span', pathText, pathClass));
+
+      // 6. 延迟
+      const tdLat = el('td', undefined, 'col-right');
+      tdLat.dataset.label = '延迟';
+      if (typeof n.latency_ms === 'number') {
+        tdLat.append(
+          el('strong', n.latency_ms.toLocaleString('zh-CN', { maximumFractionDigits: 1 }), 'latency-val'),
+          el('span', 'ms', 'unit')
+        );
+      } else {
+        tdLat.append(el('span', '—', 'muted-dash'));
+      }
+
+      // 7. 操作 (Icon + Dropdown Menu)
+      const tdAct = el('td', undefined, 'col-act');
+      tdAct.dataset.label = '操作';
+      const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+      moreBtn.type = 'button';
+      moreBtn.setAttribute('aria-label', '节点操作');
+      moreBtn.setAttribute('aria-haspopup', 'menu');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      moreBtn.title = '更多操作';
+      moreBtn.append(moreIconSvg());
+      moreBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        openActionMenu(moreBtn, [
+          { label: '节点详情', onClick: () => openNodeDrawer(n.id) },
+          { label: '立即测速', disabled: Boolean(n.is_observer || n.online === false), onClick: () => runAction({ action: 'ping', node_id: n.id }) },
+          { label: '修改名称', onClick: () => openNodeDrawer(n.id, 'rename') },
+          { label: '修改 IP', onClick: () => openNodeDrawer(n.id, 'ip') },
+          { label: '路由审批', onClick: () => openNodeDrawer(n.id, 'routes') },
+          { label: '迁移用户', onClick: () => openNodeDrawer(n.id, 'user') },
+          { label: '设置标签', onClick: () => openNodeDrawer(n.id, 'tags') },
+          { separator: true },
+          { label: '设为永不过期', disabled: Boolean(n.expiry_disabled), onClick: () => runAction({ action: 'expire_node', node_id: n.id, disable: true }) },
+          { label: '强制下线', onClick: () => runAction({ action: 'expire_node', node_id: n.id }) },
+          { label: '移除节点', danger: true, disabled: Boolean(n.is_observer), onClick: () => openNodeDrawer(n.id, 'delete') },
+        ]);
+      });
+      tdAct.append(moreBtn);
+
+      tr.append(tdName, tdSys, tdIps, tdState, tdPath, tdLat, tdAct);
+      tbody.append(tr);
+    }
+  }
+
+  function renderKeysTable(keys) {
+    const tbody = $('keys-tbody');
+    tbody.replaceChildren();
+    const filtered = keys.filter(k => keyFilter === 'all' || k.state === keyFilter);
+    if (!filtered.length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 8;
+      td.append(el('p', keys.length ? '无匹配的密钥' : '暂无授权密钥'));
+      tr.append(td);
+      tbody.append(tr);
+      return;
+    }
+
+    for (const k of filtered) {
+      const tr = el('tr');
+      const tdId = el('td', '#' + k.id, 'mono');
+      tdId.dataset.label = 'ID';
+
+      const tdKey = el('td', k.key_preview || '—', 'mono');
+      tdKey.dataset.label = '密钥';
+
+      const tdUser = el('td', k.user || 'default');
+      tdUser.dataset.label = '用户';
+
+      const tdProps = el('td');
+      tdProps.dataset.label = '属性';
+      const propWrap = el('div', undefined, 'node-primary');
+      propWrap.append(el('span', k.reusable ? '可复用' : '单次', k.reusable ? 'badge badge-accent' : 'badge'));
+      if (k.ephemeral) propWrap.append(el('span', '临时', 'badge badge-warn'));
+      for (const t of k.acl_tags || []) propWrap.append(el('span', t.replace(/^tag:/, ''), 'badge'));
+      tdProps.append(propWrap);
+
+      const tdState = el('td');
+      tdState.dataset.label = '状态';
+      const stateMap = {
+        active: ['有效', 'badge badge-ok'],
+        used: ['已使用', 'badge'],
+        expired: ['已过期', 'badge badge-bad'],
+      };
+      const [sLabel, sClass] = stateMap[k.state] || ['未知', 'badge'];
+      tdState.append(el('span', sLabel, sClass));
+
+      const tdCreated = el('td', formatDateTime(k.created_at));
+      tdCreated.dataset.label = '创建时间';
+
+      const tdExp = el('td', formatDateTime(k.expiration));
+      tdExp.dataset.label = '到期时间';
+
+      const tdAct = el('td', undefined, 'col-act');
+      tdAct.dataset.label = '操作';
+      const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+      moreBtn.type = 'button';
+      moreBtn.setAttribute('aria-label', '密钥操作');
+      moreBtn.setAttribute('aria-haspopup', 'menu');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      moreBtn.append(moreIconSvg());
+      moreBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const menuItems = [];
+        if (k.state === 'active') {
+          menuItems.push({ label: '废止密钥', danger: true, onClick: () => runAction({ action: 'expire_preauthkey', key_id: k.id }) });
+        }
+        menuItems.push({ label: '删除记录', danger: k.state !== 'active', onClick: () => runAction({ action: 'delete_preauthkey', key_id: k.id }) });
+        openActionMenu(moreBtn, menuItems);
+      });
+      tdAct.append(moreBtn);
+
+      tr.append(tdId, tdKey, tdUser, tdProps, tdState, tdCreated, tdExp, tdAct);
+      tbody.append(tr);
+    }
+  }
+
+  let routeFilter = 'all';
+
+  function renderRoutesTable(routes) {
+    const loc = (snapshot && snapshot.local_node) || {};
+    const obsNode = ((snapshot && snapshot.nodes) || []).find(n => n.is_observer);
+    const localExitActive = Boolean(loc.advertise_exit_node || (obsNode && obsNode.exit_node));
+    const exitBtn = $('btn-routes-local-exit');
+    exitBtn.textContent = localExitActive ? '关闭本机出口' : '开启本机出口';
+    exitBtn.className = 'btn btn-sm' + (localExitActive ? ' btn-danger' : '');
+
+    const tbody = $('routes-tbody');
+    tbody.replaceChildren();
+    const filtered = (routes || []).filter(r => {
+      if (routeFilter === 'exit') return Boolean(r.is_exit);
+      if (routeFilter === 'subnet') return !r.is_exit;
+      if (routeFilter === 'pending') return !r.enabled;
+      return true;
+    });
+
+    if (!filtered.length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 5;
+      td.append(
+        el('p', (routes || []).length ? '无匹配的路由记录' : '暂无子网路由或出口节点'),
+        el('div', '可点击右上角「开启本机出口」将当前服务器设为全局出口，或点击「路由配置指南」查看客户端开启方法', 'sub-line')
+      );
+      tr.append(td);
+      tbody.append(tr);
+      return;
+    }
+
+    for (const r of filtered) {
+      const tr = el('tr');
+      const tdNode = el('td', r.node_name || ('#' + r.node_id), 'node-name');
+      tdNode.dataset.label = '节点';
+
+      const tdPrefix = el('td', r.prefix, 'mono');
+      tdPrefix.dataset.label = '路由网段';
+
+      const tdType = el('td');
+      tdType.dataset.label = '类型';
+      tdType.append(el('span', r.is_exit ? '出口节点' : '子网路由', r.is_exit ? 'badge badge-accent' : 'badge'));
+
+      const tdState = el('td');
+      tdState.dataset.label = '状态';
+      tdState.append(el('span', r.enabled ? '已启用' : '待批准', r.enabled ? 'badge badge-ok' : 'badge badge-warn'));
+
+      const tdAct = el('td', undefined, 'col-act');
+      tdAct.dataset.label = '操作';
+      if (r.node_id) {
+        const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+        moreBtn.type = 'button';
+        moreBtn.setAttribute('aria-label', '路由操作');
+        moreBtn.append(moreIconSvg());
+        moreBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          const nodeRoutes = routes.filter(item => item.node_id === r.node_id && item.enabled).map(item => item.prefix);
+          const nextRoutes = r.enabled ? nodeRoutes.filter(p => p !== r.prefix) : [...new Set([...nodeRoutes, r.prefix])];
+          openActionMenu(moreBtn, [
+            {
+              label: r.enabled ? '关闭路由' : '批准路由',
+              onClick: () => runAction({ action: 'approve_routes', node_id: r.node_id, routes: nextRoutes }),
+            },
+          ]);
+        });
+        tdAct.append(moreBtn);
+      }
+
+      tr.append(tdNode, tdPrefix, tdType, tdState, tdAct);
+      tbody.append(tr);
+    }
+  }
+
+  function populateNodeDrawer(node) {
+    if (!node) return;
+    $('drawer-title').textContent = node.name;
+    const ob = $('drawer-online-badge');
+    ob.className = 'badge ' + (node.online === true ? 'badge-ok' : node.online === false ? 'badge-bad' : '');
+    ob.textContent = node.online === true ? '在线' : node.online === false ? '离线' : '未知';
+    $('drawer-subtitle').textContent = node.dns_name || node.hostname || '';
+
+    $('drawer-btn-ping').disabled = Boolean(node.is_observer || node.online === false);
+    $('drawer-btn-delete').disabled = Boolean(node.is_observer);
+    $('drawer-btn-delete').title = node.is_observer ? '本机节点不可移除' : '';
+
+    $('drawer-rename-input').value = node.name || '';
+    $('drawer-ip-input').value = (node.ips || [])[0] || '';
+    $('drawer-tags-input').value = (node.tags || []).join(', ');
+    const enabledRoutes = (node.routes || []).filter(r => r.enabled).map(r => r.prefix);
+    $('drawer-routes-exit').checked = Boolean(node.exit_node || enabledRoutes.includes('0.0.0.0/0') || enabledRoutes.includes('::/0'));
+    $('drawer-routes-input').value = enabledRoutes.filter(p => p !== '0.0.0.0/0' && p !== '::/0').join(', ');
+
+    const userSelect = $('drawer-user-select');
+    userSelect.replaceChildren();
+    const users = (snapshot && snapshot.users && snapshot.users.length)
+      ? snapshot.users
+      : [{ id: 1, name: node.user || 'default' }];
+    for (const u of users) {
+      const opt = el('option', u.name);
+      opt.value = String(u.id);
+      if (u.id === node.user_id || u.name === node.user) opt.selected = true;
+      userSelect.append(opt);
+    }
+
+    const kvNet = $('drawer-kv-net');
+    kvNet.replaceChildren();
+    const netRows = [
+      ['IPv4 地址', (node.ips || [])[0] || '—', true],
+      ['IPv6 地址', (node.ips || [])[1] || '—', true],
+      ['内网域名', node.dns_name || '—', Boolean(node.dns_name)],
+      ['连接方式', (pathLabels[node.connection] || '未知') + (node.relay ? ` (${node.relay})` : ''), false],
+      ['当前延迟', typeof node.latency_ms === 'number' ? node.latency_ms + ' ms' : '—', false],
+      ['公网地址', node.active_endpoint || '—', Boolean(node.active_endpoint)],
+      ['累计流量', `${formatBytes(node.rx_bytes)} / ${formatBytes(node.tx_bytes)}`, false],
+      ['子网路由', (node.routes || []).length ? node.routes.map(r => r.prefix).join(', ') : '无', false],
+    ];
+    for (const [k, v, copyable] of netRows) {
+      const row = el('div', undefined, 'kv-row');
+      row.append(el('span', k, 'kv-key'));
+      const valWrap = el('div', undefined, 'kv-val');
+      if (copyable && v !== '—') {
+        const chip = el('button', undefined, 'copy-chip');
+        chip.type = 'button';
+        chip.append(el('span', v), copyIconSvg());
+        chip.addEventListener('click', () => copyText(v));
+        valWrap.append(chip);
+      } else {
+        valWrap.textContent = v;
+      }
+      row.append(valWrap);
+      kvNet.append(row);
+    }
+
+    const kvMeta = $('drawer-kv-meta');
+    kvMeta.replaceChildren();
+    const metaRows = [
+      ['节点 ID', node.id ? '#' + node.id : '—'],
+      ['主机名', node.hostname || '—'],
+      ['所属用户', node.user || 'default'],
+      ['操作系统', formatOS(node.os)],
+      ['认证方式', node.register_method || '默认'],
+      ['标签', (node.tags || []).length ? node.tags.join(', ') : '无'],
+      ['接入时间', formatDateTime(node.created_at)],
+      ['最后在线', formatDateTime(node.last_seen)],
+      ['最近握手', formatDateTime(node.last_handshake)],
+      ['密钥到期', node.expiry ? formatDateTime(node.expiry) : '长期有效'],
+    ];
+    for (const [k, v] of metaRows) {
+      const row = el('div', undefined, 'kv-row');
+      row.append(el('span', k, 'kv-key'), el('span', v, 'kv-val'));
+      kvMeta.append(row);
+    }
+  }
+
+  function openNodeDrawer(nodeId, openSection = null) {
+    if (!snapshot) return;
+    const node = (snapshot.nodes || []).find(n => n.id === nodeId);
+    if (!node) return;
+    selectedNodeId = nodeId;
+    $('drawer-rename-box').hidden = openSection !== 'rename';
+    $('drawer-ip-box').hidden = openSection !== 'ip';
+    $('drawer-routes-box').hidden = openSection !== 'routes';
+    $('drawer-user-box').hidden = openSection !== 'user';
+    $('drawer-tags-box').hidden = openSection !== 'tags';
+    $('drawer-delete-box').hidden = openSection !== 'delete';
+    populateNodeDrawer(node);
+    const drawer = $('node-drawer');
+    if (!drawer.open) drawer.showModal();
+    if (openSection === 'rename') $('drawer-rename-input').focus();
+    else if (openSection === 'ip') $('drawer-ip-input').focus();
+    else if (openSection === 'routes') $('drawer-routes-input').focus();
+    else if (openSection === 'user') $('drawer-user-select').focus();
+    else if (openSection === 'tags') $('drawer-tags-input').focus();
+    else if (openSection === 'delete') $('drawer-delete-cancel').focus();
+  }
+
+  let guideOsMode = 'linux-auto';
+
+  function updateGuideCommand() {
+    const controlUrl = (snapshot && snapshot.tailnet && snapshot.tailnet.control_url) || window.location.origin;
+    const key = $('guide-authkey').value.trim();
+    const host = $('guide-hostname').value.trim();
+    const routes = $('guide-routes').value.trim();
+    const acceptRoutes = $('guide-accept-routes').checked;
+    const exitNode = $('guide-exit-node').checked;
+
+    if (guideOsMode === 'gui') {
+      $('guide-cmd-preview').textContent =
+        `[macOS 图形界面] 按住 Option 键点击菜单栏图标 -> Debug -> Custom Login Server，填入 ${controlUrl} 后登录\n` +
+        `[iOS / Android] 系统设置 -> Tailscale -> Alternate Server URL 填入 ${controlUrl}，返回 App 登录并在上方「审批接入」批准`;
+      $('btn-copy-cmd').textContent = '复制服务端地址';
+      return;
+    }
+
+    $('btn-copy-cmd').textContent = '复制命令';
+    const flags = [`--login-server=${controlUrl}`];
+    if (key) flags.push(`--authkey=${key}`);
+    if (host) flags.push(`--hostname=${host}`);
+    if (routes) flags.push(`--advertise-routes=${routes}`);
+    if (acceptRoutes) flags.push('--accept-routes');
+    if (exitNode) flags.push('--advertise-exit-node');
+
+    let cmd = '';
+    if (guideOsMode === 'linux-auto') {
+      cmd = `(command -v tailscale >/dev/null 2>&1 || curl -fsSL https://tailscale.com/install.sh | sh) && sudo tailscale up ${flags.join(' ')}`;
+    } else if (guideOsMode === 'windows') {
+      cmd = `& "C:\\Program Files\\Tailscale\\tailscale.exe" up ${flags.join(' ')}`;
+    } else if (guideOsMode === 'docker') {
+      const extraArgs = [`--login-server=${controlUrl}`];
+      if (host) extraArgs.push(`--hostname=${host}`);
+      if (acceptRoutes) extraArgs.push('--accept-routes');
+      if (exitNode) extraArgs.push('--advertise-exit-node');
+      const dockerParts = [
+        'docker run -d --name=tailscale --restart=unless-stopped --net=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v /var/lib/tailscale:/var/lib/tailscale',
+      ];
+      if (key) dockerParts.push(`-e TS_AUTHKEY=${key}`);
+      if (routes) dockerParts.push(`-e TS_ROUTES=${routes}`);
+      dockerParts.push(`-e TS_EXTRA_ARGS="${extraArgs.join(' ')}"`);
+      dockerParts.push('tailscale/tailscale:latest');
+      cmd = dockerParts.join(' ');
+    } else {
+      cmd = `tailscale up ${flags.join(' ')}`;
+    }
+    $('guide-cmd-preview').textContent = cmd;
+  }
+
+  let localSetupTab = 'env';
+  let guideModalTab = 'cmd';
+
+  function setLocalSetupTab(tab) {
+    localSetupTab = tab === 'derp' ? 'derp' : 'env';
+    $('tab-local-env').setAttribute('aria-pressed', localSetupTab === 'env' ? 'true' : 'false');
+    $('tab-local-derp').setAttribute('aria-pressed', localSetupTab === 'derp' ? 'true' : 'false');
+    $('local-pane-env').classList.toggle('is-inactive', localSetupTab !== 'env');
+    $('local-pane-derp').classList.toggle('is-inactive', localSetupTab !== 'derp');
+  }
+
+  function setGuideModalTab(tab) {
+    guideModalTab = tab === 'approve' ? 'approve' : 'cmd';
+    $('tab-guide-cmd').setAttribute('aria-pressed', guideModalTab === 'cmd' ? 'true' : 'false');
+    $('tab-guide-approve').setAttribute('aria-pressed', guideModalTab === 'approve' ? 'true' : 'false');
+    $('guide-pane-cmd').classList.toggle('is-inactive', guideModalTab !== 'cmd');
+    $('guide-pane-approve').classList.toggle('is-inactive', guideModalTab !== 'approve');
+    $('guide-exp-field').style.visibility = guideModalTab === 'cmd' ? 'visible' : 'hidden';
+    $('guide-exp-field').style.pointerEvents = guideModalTab === 'cmd' ? 'auto' : 'none';
+    $('btn-copy-cmd').hidden = guideModalTab !== 'cmd';
+    $('btn-register-node-now').hidden = guideModalTab !== 'approve';
+  }
+
+  function renderLocalSetupStatus() {
+    const loc = (snapshot && snapshot.local_node) || {};
+    const hsEl = $('local-env-hs-status');
+    hsEl.replaceChildren();
+    if (loc.headscale_installed !== false) {
+      hsEl.append(el('span', '运行中', 'badge badge-ok'));
+    } else {
+      hsEl.append(el('span', '未安装', 'badge badge-warn'));
+    }
+
+    const tsEl = $('local-env-ts-status');
+    tsEl.replaceChildren();
+    const tsInstalled = loc.tailscale_installed !== false;
+    const rawVer = loc.tailscale_version || (snapshot && snapshot.tailnet && snapshot.tailnet.client_version) || '';
+    const shortVer = rawVer.split('-')[0];
+    if (tsInstalled) {
+      tsEl.append(el('span', `已安装${shortVer ? ' · v' + shortVer : ''}`, 'badge badge-ok'));
+      $('btn-install-local-ts').hidden = true;
+    } else {
+      tsEl.append(el('span', '未安装', 'badge badge-warn'));
+      $('btn-install-local-ts').hidden = false;
+    }
+
+    const joinEl = $('local-env-join-status');
+    joinEl.replaceChildren();
+    const obsNode = ((snapshot && snapshot.nodes) || []).find(n => n.is_observer);
+    if (loc.observer_connected || obsNode) {
+      const name = loc.observer_name || (obsNode && obsNode.name) || '本机';
+      const ip = loc.observer_ip || ((obsNode && obsNode.ips) || [])[0] || '';
+      joinEl.append(el('span', `已连接 · ${name}${ip ? ' (' + ip + ')' : ''}`, 'badge badge-ok'));
+      $('btn-modal-connect-local').textContent = '重新连接';
+    } else {
+      joinEl.append(el('span', '未连接', 'badge badge-warn'));
+      $('btn-modal-connect-local').textContent = '连接本机';
+    }
+  }
+
+  function openDerpConfigModal(initialTab = 'env') {
+    const diag = (snapshot && snapshot.diagnostics) || {};
+    const loc = (snapshot && snapshot.local_node) || {};
+    const cfg = diag.derp_server || diag.derp_config || {};
+    const embeddedReg = (diag.derp_regions || []).find(r => r.is_embedded) || (diag.derp_regions || [])[0] || {};
+    const nc = diag.netcheck || {};
+    const detectedIp = (nc.global_v4 || '').split(':')[0] || '';
+    const stunStr = String(cfg.stun_listen_addr || '');
+    const stunPort = Number(stunStr.split(':').pop()) || embeddedReg.stun_port || 3478;
+    const serverUrl = loc.server_url || (snapshot && snapshot.tailnet && snapshot.tailnet.control_url) || (detectedIp ? `https://${detectedIp}` : window.location.origin);
+
+    renderLocalSetupStatus();
+    setLocalSetupTab(initialTab);
+    $('derp-cfg-server-url').value = serverUrl;
+    $('local-pref-incoming').checked = loc.allow_incoming !== false;
+    $('local-pref-dns').checked = loc.accept_dns !== false;
+    $('local-pref-routes').checked = loc.accept_routes !== false;
+    $('local-pref-exit').checked = Boolean(loc.advertise_exit_node);
+    $('derp-cfg-enabled').checked = cfg.enabled !== false;
+    $('derp-cfg-verify').checked = cfg.verify_clients !== false;
+    $('derp-cfg-private').checked = cfg.private_only !== false;
+    $('derp-cfg-code').value = (cfg.region_code && cfg.region_code !== 'local') ? cfg.region_code : (embeddedReg.region_code || 'local');
+    $('derp-cfg-name').value = (cfg.region_name && cfg.region_name !== 'Embedded DERP') ? cfg.region_name : (embeddedReg.region_name || 'local relay');
+    $('derp-cfg-ipv4').value = cfg.ipv4 || embeddedReg.ipv4 || embeddedReg.hostname || detectedIp;
+    $('derp-cfg-stun').value = String(stunPort);
+    const dialog = $('modal-derp-config');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function openCreateKeyModal(prefillUserId = null) {
+    const userSelect = $('key-form-user');
+    userSelect.replaceChildren();
+    const users = (snapshot && snapshot.users && snapshot.users.length)
+      ? snapshot.users
+      : [{ id: 1, name: 'default' }];
+    for (const u of users) {
+      const opt = el('option', u.name);
+      opt.value = String(u.id);
+      if (prefillUserId && Number(u.id) === Number(prefillUserId)) opt.selected = true;
+      userSelect.append(opt);
+    }
+    const dialog = $('modal-create-key');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function openGuideModal(prefillKey = '', prefillUserId = null) {
+    const userSelect = $('guide-user');
+    userSelect.replaceChildren();
+    const users = (snapshot && snapshot.users && snapshot.users.length)
+      ? snapshot.users
+      : [{ id: 1, name: 'default' }];
+    for (const u of users) {
+      const opt = el('option', u.name);
+      opt.value = String(u.id);
+      if (prefillUserId && Number(u.id) === Number(prefillUserId)) opt.selected = true;
+      userSelect.append(opt);
+    }
+    if (prefillKey) {
+      $('guide-authkey').value = prefillKey;
+    }
+    setGuideModalTab('cmd');
+    updateGuideCommand();
+    const dialog = $('modal-guide');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  let editingUser = null;
+
+  function openUserModal(user = null) {
+    editingUser = user;
+    $('modal-user-title').textContent = user ? '修改用户名' : '新建用户';
+    $('modal-user-subtitle').textContent = user ? `修改用户 #${user.id} 的登录名称` : '创建新的组网用户以隔离设备与授权密钥';
+    $('user-form-name').value = user ? user.name : '';
+    $('user-form-display').value = user ? (user.display_name || '') : '';
+    $('user-form-email').value = user ? (user.email || '') : '';
+    $('user-form-extra-fields').hidden = Boolean(user);
+    const dialog = $('modal-user');
+    if (!dialog.open) dialog.showModal();
+    $('user-form-name').focus();
+  }
+
+  function renderUsersTable(users) {
+    const userFilterSel = $('node-user-filter');
+    const prevVal = userFilterSel.value || 'all';
+    userFilterSel.replaceChildren();
+    const allOpt = el('option', '全部用户');
+    allOpt.value = 'all';
+    userFilterSel.append(allOpt);
+    for (const u of users || []) {
+      const opt = el('option', u.name);
+      opt.value = u.name;
+      if (u.name === prevVal) opt.selected = true;
+      userFilterSel.append(opt);
+    }
+    if (prevVal !== 'all' && !(users || []).some(u => u.name === prevVal)) {
+      nodeUserFilter = 'all';
+    }
+
+    const tbody = $('users-tbody');
+    tbody.replaceChildren();
+    if (!(users || []).length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 7;
+      td.append(el('p', '暂无用户'));
+      tr.append(td);
+      tbody.append(tr);
+      return;
+    }
+
+    for (const u of users) {
+      const tr = el('tr');
+      const tdId = el('td', '#' + u.id, 'mono');
+      tdId.dataset.label = 'ID';
+
+      const tdName = el('td', u.name, 'node-name');
+      tdName.dataset.label = '用户名';
+
+      const tdMeta = el('td');
+      tdMeta.dataset.label = '备注与邮箱';
+      const metaParts = [u.display_name, u.email].filter(Boolean);
+      tdMeta.textContent = metaParts.length ? metaParts.join(' · ') : '—';
+
+      const tdNodes = el('td');
+      tdNodes.dataset.label = '关联设备';
+      const totalN = u.node_count || 0;
+      const onlineN = u.online_count || 0;
+      const nodeWrap = el('div', undefined, 'node-primary');
+      nodeWrap.append(el('span', `${totalN} 台`, totalN > 0 ? 'badge badge-accent' : 'badge'));
+      if (totalN > 0) {
+        nodeWrap.append(el('span', `${onlineN} 在线`, 'badge badge-ok'));
+      }
+      tdNodes.append(nodeWrap);
+
+      const tdKeys = el('td');
+      tdKeys.dataset.label = '有效密钥';
+      const keyC = u.active_key_count || 0;
+      tdKeys.append(el('span', `${keyC} 个`, keyC > 0 ? 'badge badge-ok' : 'badge'));
+
+      const tdCreated = el('td', formatDateTime(u.created_at));
+      tdCreated.dataset.label = '创建时间';
+
+      const tdAct = el('td', undefined, 'col-act');
+      tdAct.dataset.label = '操作';
+      const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+      moreBtn.type = 'button';
+      moreBtn.setAttribute('aria-label', '用户操作');
+      moreBtn.setAttribute('aria-haspopup', 'menu');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      moreBtn.append(moreIconSvg());
+      moreBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        openActionMenu(moreBtn, [
+          {
+            label: '查看设备',
+            onClick: () => {
+              nodeUserFilter = u.name;
+              $('node-user-filter').value = u.name;
+              switchTab('machines');
+              syncFilterButtons();
+              if (snapshot) renderMachinesTable(snapshot.nodes || []);
+            },
+          },
+          {
+            label: '新建密钥',
+            onClick: () => openCreateKeyModal(u.id),
+          },
+          {
+            label: '修改名称',
+            onClick: () => openUserModal(u),
+          },
+          { separator: true },
+          {
+            label: '删除用户',
+            danger: true,
+            disabled: totalN > 0,
+            onClick: () => runAction({ action: 'delete_user', user_id: u.id }),
+          },
+        ]);
+      });
+      tdAct.append(moreBtn);
+
+      tr.append(tdId, tdName, tdMeta, tdNodes, tdKeys, tdCreated, tdAct);
+      tbody.append(tr);
+    }
+  }
+
+  let editingDnsRecord = null;
+
+  function renderDnsPanel(dns, nodes) {
+    const d = dns || {};
+    const magicOn = d.magic_dns !== false;
+    const magicBadge = $('dns-magic-badge');
+    magicBadge.className = 'badge ' + (magicOn ? 'badge-ok' : '');
+    magicBadge.textContent = magicOn ? '已启用' : '已关闭';
+
+    const baseDomWrap = $('dns-base-domain-wrap');
+    baseDomWrap.replaceChildren();
+    const baseDom = d.base_domain || 'nodes.internal';
+    const domChip = el('button', undefined, 'copy-chip');
+    domChip.type = 'button';
+    domChip.append(el('span', baseDom), copyIconSvg());
+    domChip.addEventListener('click', () => copyText(baseDom, '已复制后缀'));
+    baseDomWrap.append(domChip);
+
+    const globalNs = d.nameservers_global || [];
+    $('dns-global-ns').textContent = globalNs.length ? globalNs.join(', ') : '跟随客户端';
+    $('dns-override-state').textContent = d.override_local_dns ? '已开启' : '未开启';
+
+    const splitObj = d.nameservers_split || {};
+    const splitKeys = Object.keys(splitObj);
+    $('dns-split-summary').textContent = splitKeys.length ? `${splitKeys.length} 个域名` : '未设置';
+
+    // Map node IPs to node names
+    const ipToNode = new Map();
+    for (const n of nodes || []) {
+      for (const ip of n.ips || []) {
+        ipToNode.set(ip, n.name);
+      }
+    }
+
+    // 1. Custom Extra Records Table
+    const rTbody = $('dns-records-tbody');
+    rTbody.replaceChildren();
+    const records = d.extra_records || [];
+    if (!records.length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 6;
+      td.append(
+        el('p', '暂无自定义解析记录'),
+        el('div', '点击右上角“添加记录”可将内网域名指向任意设备或服务地址', 'sub-line')
+      );
+      tr.append(td);
+      rTbody.append(tr);
+    } else {
+      for (const rec of records) {
+        const tr = el('tr');
+
+        const tdName = el('td');
+        tdName.dataset.label = '域名';
+        const nameChip = el('button', undefined, 'copy-chip');
+        nameChip.type = 'button';
+        nameChip.append(el('span', rec.name), copyIconSvg());
+        nameChip.addEventListener('click', () => copyText(rec.name, '已复制域名'));
+        tdName.append(nameChip);
+
+        const tdType = el('td');
+        tdType.dataset.label = '类型';
+        tdType.append(el('span', rec.type || 'A', 'badge badge-accent'));
+
+        const tdVal = el('td');
+        tdVal.dataset.label = '指向地址';
+        const valChip = el('button', undefined, 'copy-chip');
+        valChip.type = 'button';
+        valChip.append(el('span', rec.value), copyIconSvg());
+        valChip.addEventListener('click', () => copyText(rec.value, '已复制地址'));
+        tdVal.append(valChip);
+
+        const tdNode = el('td');
+        tdNode.dataset.label = '对应节点';
+        const matchedNode = ipToNode.get(rec.value);
+        if (matchedNode) {
+          tdNode.append(el('span', matchedNode, 'badge'));
+        } else {
+          tdNode.append(el('span', '外部地址', 'sub-line'));
+        }
+
+        const tdState = el('td');
+        tdState.dataset.label = '状态';
+        tdState.append(el('span', '生效中', 'badge badge-ok'));
+
+        const tdAct = el('td', undefined, 'col-act');
+        tdAct.dataset.label = '操作';
+        const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+        moreBtn.type = 'button';
+        moreBtn.setAttribute('aria-label', '记录操作');
+        moreBtn.setAttribute('aria-haspopup', 'menu');
+        moreBtn.setAttribute('aria-expanded', 'false');
+        moreBtn.append(moreIconSvg());
+        moreBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openActionMenu(moreBtn, [
+            { label: '编辑记录', onClick: () => openDnsRecordModal(rec) },
+            { label: '复制域名', onClick: () => copyText(rec.name, '已复制域名') },
+            { label: '复制地址', onClick: () => copyText(rec.value, '已复制地址') },
+            { separator: true },
+            {
+              label: '删除记录',
+              danger: true,
+              onClick: () => runAction({
+                action: 'delete_dns_record',
+                name: rec.name,
+                type: rec.type,
+                value: rec.value,
+              }),
+            },
+          ]);
+        });
+        tdAct.append(moreBtn);
+
+        tr.append(tdName, tdType, tdVal, tdNode, tdState, tdAct);
+        rTbody.append(tr);
+      }
+    }
+
+    // 2. Built-in Node MagicDNS Domains Table
+    const nTbody = $('dns-nodes-tbody');
+    nTbody.replaceChildren();
+    if (!(nodes || []).length) {
+      const tr = el('tr');
+      const td = el('td', '暂无节点', 'empty-state');
+      td.colSpan = 5;
+      tr.append(td);
+      nTbody.append(tr);
+      return;
+    }
+    for (const n of nodes) {
+      const tr = el('tr');
+      const tdNode = el('td', n.name, 'node-name');
+      tdNode.dataset.label = '节点';
+
+      const tdDom = el('td');
+      tdDom.dataset.label = '内网域名';
+      if (n.dns_name) {
+        const chip = el('button', undefined, 'copy-chip');
+        chip.type = 'button';
+        chip.append(el('span', n.dns_name), copyIconSvg());
+        chip.addEventListener('click', () => copyText(n.dns_name, '已复制域名'));
+        tdDom.append(chip);
+      } else {
+        tdDom.append(el('span', '—', 'muted-dash'));
+      }
+
+      const tdV4 = el('td', (n.ips || [])[0] || '—', 'mono');
+      tdV4.dataset.label = 'IPv4 地址';
+
+      const tdV6 = el('td', (n.ips || [])[1] || '—', 'mono');
+      tdV6.dataset.label = 'IPv6 地址';
+
+      const tdState = el('td');
+      tdState.dataset.label = '状态';
+      tdState.append(el('span', magicOn ? '生效中' : '已停用', magicOn ? 'badge badge-ok' : 'badge'));
+
+      tr.append(tdNode, tdDom, tdV4, tdV6, tdState);
+      nTbody.append(tr);
+    }
+  }
+
+  function openDnsRecordModal(record = null) {
+    editingDnsRecord = record;
+    $('modal-dns-record-title').textContent = record ? '编辑解析记录' : '添加解析记录';
+    $('dns-record-name').value = record ? record.name : '';
+    $('dns-record-value').value = record ? record.value : '';
+
+    const pick = $('dns-record-node-pick');
+    pick.replaceChildren();
+    const defOpt = el('option', '手动输入地址');
+    defOpt.value = '';
+    pick.append(defOpt);
+    for (const n of (snapshot && snapshot.nodes) || []) {
+      const ipv4 = (n.ips || [])[0];
+      if (ipv4) {
+        const opt = el('option', `${n.name} (${ipv4})`);
+        opt.value = ipv4;
+        if (record && record.value === ipv4) opt.selected = true;
+        pick.append(opt);
+      }
+    }
+
+    const dialog = $('modal-dns-record');
+    if (!dialog.open) dialog.showModal();
+    $('dns-record-name').focus();
+  }
+
+  function openDnsConfigModal() {
+    const d = (snapshot && snapshot.dns) || {};
+    $('dns-cfg-magic').checked = d.magic_dns !== false;
+    $('dns-cfg-override').checked = Boolean(d.override_local_dns);
+    $('dns-cfg-global').value = (d.nameservers_global || []).join(', ');
+    $('dns-cfg-search').value = (d.search_domains || []).join(', ');
+
+    const splitObj = d.nameservers_split || {};
+    const splitLines = [];
+    for (const [dom, servers] of Object.entries(splitObj)) {
+      if (Array.isArray(servers) && servers.length) {
+        splitLines.push(`${dom}=${servers.join(',')}`);
+      }
+    }
+    $('dns-cfg-split').value = splitLines.join('\n');
+
+    const dialog = $('modal-dns-config');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  let aclDirty = false;
+  let lastSavedAclRaw = '';
+  let editingAclRuleIndex = null;
+  let aclRuleSrcMode = 'all';
+  let aclRuleDstMode = 'all';
+  let aclRulePortMode = 'all';
+  let aclSelectedSrc = new Set();
+  let aclSelectedDst = new Set();
+  let aclMetaTags = new Set();
+  let aclMetaAdminUsers = new Set();
+
+  const COMMON_PORT_SERVICES = [
+    { port: '22', label: 'SSH (22)' },
+    { port: '80', label: 'HTTP (80)' },
+    { port: '443', label: 'HTTPS (443)' },
+    { port: '3389', label: '远程桌面 (3389)' },
+    { port: '445', label: '文件共享 SMB (445)' },
+    { port: '3306', label: 'MySQL (3306)' },
+    { port: '5432', label: 'PostgreSQL (5432)' },
+    { port: '6379', label: 'Redis (6379)' },
+  ];
+
+  const PORT_NAME_MAP = {
+    '22': '22 (SSH)',
+    '80': '80 (HTTP)',
+    '443': '443 (HTTPS)',
+    '3389': '3389 (远程桌面)',
+    '445': '445 (SMB)',
+    '3306': '3306 (MySQL)',
+    '5432': '5432 (PG)',
+    '6379': '6379 (Redis)',
+  };
+
+  function stripHujson(raw) {
+    return String(raw || '')
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/,\s*([}\]])/g, '$1');
+  }
+
+  function getCurrentPolicyObject() {
+    const a = (snapshot && snapshot.acl) || {};
+    try {
+      const parsed = JSON.parse(stripHujson(a.raw || ''));
+      if (parsed && typeof parsed === 'object') {
+        return {
+          groups: parsed.groups || {},
+          tagOwners: parsed.tagOwners || {},
+          hosts: parsed.hosts || {},
+          acls: Array.isArray(parsed.acls) ? parsed.acls : [],
+          ...(parsed.ssh ? { ssh: parsed.ssh } : {}),
+        };
+      }
+    } catch (_) {}
+    return {
+      groups: { ...(a.groups || {}) },
+      tagOwners: { ...(a.tag_owners || {}) },
+      hosts: { ...(a.hosts || {}) },
+      acls: (a.rules || []).map(r => ({
+        action: r.action || 'accept',
+        src: [...(r.src || [])],
+        dst: [...(r.dst || [])],
+        ...(r.proto ? { proto: r.proto } : {}),
+      })),
+    };
+  }
+
+  function formatAclActor(token) {
+    const t = String(token || '').trim();
+    if (t === '*') return '全部设备';
+    if (t === 'group:admin') return '管理员组';
+    if (t.startsWith('group:')) return '分组：' + t.slice(6);
+    if (t.startsWith('tag:')) return '标签：' + t.slice(4);
+    if (t.endsWith('@')) return '用户：' + t.slice(0, -1);
+    const nodes = (snapshot && snapshot.nodes) || [];
+    const matched = nodes.find(n => (n.ips || []).includes(t) || n.name === t);
+    if (matched) return `设备：${matched.name}`;
+    return t;
+  }
+
+  function splitDstTargetAndPorts(dstStr) {
+    const s = String(dstStr || '').trim();
+    if (!s) return { target: '*', ports: '*' };
+    const lastColon = s.lastIndexOf(':');
+    if (lastColon <= 0) return { target: s, ports: '*' };
+    return {
+      target: s.slice(0, lastColon),
+      ports: s.slice(lastColon + 1) || '*',
+    };
+  }
+
+  function formatPortList(portsStr) {
+    const p = String(portsStr || '*').trim();
+    if (p === '*') return '全部端口';
+    return p
+      .split(',')
+      .map(x => x.trim())
+      .filter(Boolean)
+      .map(x => PORT_NAME_MAP[x] || ('端口 ' + x))
+      .join('、');
+  }
+
+  function getAclTemplate(templateKey) {
+    const primaryUser = (((snapshot && snapshot.users) || [])[0]?.name || 'default') + '@';
+    const current = getCurrentPolicyObject();
+    const baseGroups = Object.keys(current.groups || {}).length
+      ? current.groups
+      : { 'group:admin': [primaryUser] };
+    const baseTags = Object.keys(current.tagOwners || {}).length
+      ? current.tagOwners
+      : {
+          'tag:server': ['group:admin'],
+          'tag:client': ['group:admin'],
+          'tag:guest': ['group:admin'],
+        };
+    if (templateKey === 'allow_all') {
+      return JSON.stringify({
+        groups: baseGroups,
+        tagOwners: baseTags,
+        acls: [
+          {
+            action: 'accept',
+            src: ['*'],
+            dst: ['*:*'],
+          },
+        ],
+      }, null, 2);
+    }
+    if (templateKey === 'tiered') {
+      return JSON.stringify({
+        groups: baseGroups,
+        tagOwners: {
+          ...baseTags,
+          'tag:server': ['group:admin'],
+          'tag:client': ['group:admin'],
+        },
+        acls: [
+          {
+            action: 'accept',
+            src: ['group:admin'],
+            dst: ['*:*'],
+          },
+          {
+            action: 'accept',
+            src: ['tag:client'],
+            dst: ['tag:server:*'],
+          },
+          {
+            action: 'accept',
+            src: ['tag:server'],
+            dst: ['tag:server:*'],
+          },
+        ],
+      }, null, 2);
+    }
+    if (templateKey === 'guest_isolation') {
+      return JSON.stringify({
+        groups: baseGroups,
+        tagOwners: {
+          ...baseTags,
+          'tag:server': ['group:admin'],
+          'tag:guest': ['group:admin'],
+        },
+        acls: [
+          {
+            action: 'accept',
+            src: ['group:admin'],
+            dst: ['*:*'],
+          },
+          {
+            action: 'accept',
+            src: ['tag:guest'],
+            dst: ['tag:server:80,443'],
+          },
+        ],
+      }, null, 2);
+    }
+    return '';
+  }
+
+  function renderAclPanel(acl) {
+    const a = acl || {};
+    const rules = a.rules || [];
+    const groups = a.groups || {};
+    const tagOwners = a.tag_owners || {};
+
+    const isAllowAll = rules.length === 1 && (rules[0].src || []).includes('*') && (rules[0].dst || []).includes('*:*') && !rules[0].proto;
+    const modeBadge = $('acl-mode-badge');
+    if (!rules.length) {
+      modeBadge.className = 'badge badge-bad';
+      modeBadge.textContent = '全部阻断';
+    } else if (isAllowAll) {
+      modeBadge.className = 'badge badge-ok';
+      modeBadge.textContent = '全网互通';
+    } else {
+      modeBadge.className = 'badge badge-accent';
+      modeBadge.textContent = '按规则放行';
+    }
+
+    $('acl-rules-count').textContent = `${rules.length} 条`;
+    const adminMembers = (groups['group:admin'] || []).map(u => u.replace(/@$/, ''));
+    $('acl-groups-summary').textContent = adminMembers.length ? adminMembers.join(', ') : '未设置';
+    const tKeys = Object.keys(tagOwners).map(k => k.replace(/^tag:/, ''));
+    $('acl-tags-summary').textContent = tKeys.length ? tKeys.join('、') : '未设置';
+
+    const tbody = $('acl-rules-tbody');
+    tbody.replaceChildren();
+    if (!rules.length) {
+      const tr = el('tr');
+      const td = el('td', undefined, 'empty-state');
+      td.colSpan = 6;
+      td.append(el('p', '当前未配置放行规则（默认拒绝所有设备互访），请点击右上角「添加规则」或切换预设模式'));
+      tr.append(td);
+      tbody.append(tr);
+    } else {
+      rules.forEach((r, idx) => {
+        const tr = el('tr', undefined, 'interactive-row');
+        tr.addEventListener('click', e => {
+          if (e.target.closest('button')) return;
+          openAclRuleModal(idx);
+        });
+
+        const tdIdx = el('td', '#' + (idx + 1), 'mono');
+        tdIdx.dataset.label = '序号';
+
+        const tdSrc = el('td');
+        tdSrc.dataset.label = '允许访问方（来源）';
+        const srcWrap = el('div', undefined, 'node-primary');
+        for (const s of r.src || []) {
+          srcWrap.append(el('span', formatAclActor(s), s === '*' ? 'badge badge-ok' : 'badge'));
+        }
+        tdSrc.append(srcWrap);
+
+        const parsedDsts = (r.dst || []).map(splitDstTargetAndPorts);
+        const uniqueTargets = [...new Set(parsedDsts.map(d => d.target))];
+        const uniquePorts = [...new Set(parsedDsts.map(d => d.ports))];
+
+        const tdDst = el('td');
+        tdDst.dataset.label = '可访问目标';
+        const dstWrap = el('div', undefined, 'node-primary');
+        for (const tgt of uniqueTargets) {
+          dstWrap.append(el('span', formatAclActor(tgt), tgt === '*' ? 'badge badge-ok' : 'badge badge-accent'));
+        }
+        tdDst.append(dstWrap);
+
+        const tdPorts = el('td');
+        tdPorts.dataset.label = '开放端口 / 服务';
+        const portWrap = el('div', undefined, 'node-primary');
+        for (const p of uniquePorts) {
+          portWrap.append(el('span', formatPortList(p), p === '*' ? 'badge badge-ok' : 'badge mono'));
+        }
+        tdPorts.append(portWrap);
+
+        const protoLabelMap = { tcp: '仅 TCP', udp: '仅 UDP', icmp: 'ICMP (Ping)' };
+        const tdProto = el('td', r.proto ? (protoLabelMap[r.proto.toLowerCase()] || r.proto.toUpperCase()) : '全部协议');
+        tdProto.dataset.label = '协议';
+
+        const tdAct = el('td', undefined, 'col-act');
+        tdAct.dataset.label = '操作';
+        const moreBtn = el('button', undefined, 'btn btn-icon btn-sm');
+        moreBtn.type = 'button';
+        moreBtn.setAttribute('aria-label', '规则操作');
+        moreBtn.setAttribute('aria-haspopup', 'menu');
+        moreBtn.setAttribute('aria-expanded', 'false');
+        moreBtn.append(moreIconSvg());
+        moreBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          openActionMenu(moreBtn, [
+            { label: '编辑规则', onClick: () => openAclRuleModal(idx) },
+            { label: '上移优先级', disabled: idx === 0, onClick: () => moveAclRule(idx, -1) },
+            { label: '下移优先级', disabled: idx === rules.length - 1, onClick: () => moveAclRule(idx, 1) },
+            { separator: true },
+            { label: '删除规则', danger: true, onClick: () => deleteAclRule(idx) },
+          ]);
+        });
+        tdAct.append(moreBtn);
+
+        tr.append(tdIdx, tdSrc, tdDst, tdPorts, tdProto, tdAct);
+        tbody.append(tr);
+      });
+    }
+
+    const rawText = a.raw || '';
+    lastSavedAclRaw = rawText;
+    if (!aclDirty) {
+      $('acl-editor-textarea').value = rawText;
+      $('acl-dirty-badge').hidden = true;
+    }
+  }
+
+  async function saveVisualPolicy(policyObj, triggerBtn = null) {
+    aclDirty = false;
+    $('acl-dirty-badge').hidden = true;
+    const text = JSON.stringify(policyObj, null, 2);
+    await runAction({ action: 'save_acl_policy', policy: text }, triggerBtn);
+  }
+
+  async function moveAclRule(idx, delta) {
+    const policyObj = getCurrentPolicyObject();
+    const list = [...(policyObj.acls || [])];
+    const targetIdx = idx + delta;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+    const [item] = list.splice(idx, 1);
+    list.splice(targetIdx, 0, item);
+    policyObj.acls = list;
+    await saveVisualPolicy(policyObj);
+  }
+
+  async function deleteAclRule(idx) {
+    const policyObj = getCurrentPolicyObject();
+    const list = [...(policyObj.acls || [])];
+    if (list.length <= 1) {
+      showToast('至少需保留一条放行规则，避免所有设备断联', true);
+      return;
+    }
+    list.splice(idx, 1);
+    policyObj.acls = list;
+    await saveVisualPolicy(policyObj);
+  }
+
+  function buildActorPickerOptions() {
+    const groups = [];
+    const policyObj = getCurrentPolicyObject();
+    const users = (snapshot && snapshot.users) || [];
+    const nodes = (snapshot && snapshot.nodes) || [];
+
+    const userItems = users.map(u => ({ val: u.name + '@', label: '用户：' + u.name }));
+    const groupKeys = Object.keys(policyObj.groups || {});
+    if (!groupKeys.includes('group:admin')) groupKeys.unshift('group:admin');
+    const groupItems = groupKeys.map(g => ({
+      val: g,
+      label: g === 'group:admin' ? '管理员组 (admin)' : ('分组：' + g.replace(/^group:/, '')),
+    }));
+
+    const tagSet = new Set(Object.keys(policyObj.tagOwners || {}));
+    for (const n of nodes) {
+      for (const t of n.tags || []) tagSet.add(t);
+    }
+    for (const defTag of ['tag:server', 'tag:client', 'tag:guest']) tagSet.add(defTag);
+    const tagItems = [...tagSet].map(t => ({
+      val: t,
+      label: '标签：' + t.replace(/^tag:/, ''),
+    }));
+
+    const nodeItems = nodes
+      .filter(n => (n.ips || [])[0])
+      .map(n => ({
+        val: n.ips[0],
+        label: `${n.name} (${n.ips[0]})`,
+      }));
+
+    if (groupItems.length || userItems.length) {
+      groups.push({ title: '按用户或分组', items: [...groupItems, ...userItems] });
+    }
+    if (tagItems.length) {
+      groups.push({ title: '按设备标签', items: tagItems });
+    }
+    if (nodeItems.length) {
+      groups.push({ title: '按具体设备', items: nodeItems });
+    }
+    return groups;
+  }
+
+  function renderActorPicker(containerId, selectedSet) {
+    const container = $(containerId);
+    container.replaceChildren();
+    const sections = buildActorPickerOptions();
+    for (const sec of sections) {
+      const grp = el('div', undefined, 'pick-group');
+      grp.append(el('span', sec.title, 'pick-group-title'));
+      const pills = el('div', undefined, 'pick-pills');
+      for (const item of sec.items) {
+        const btn = el('button', item.label, 'pick-pill');
+        btn.type = 'button';
+        const active = selectedSet.has(item.val);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.addEventListener('click', () => {
+          if (selectedSet.has(item.val)) selectedSet.delete(item.val);
+          else selectedSet.add(item.val);
+          btn.setAttribute('aria-pressed', selectedSet.has(item.val) ? 'true' : 'false');
+        });
+        pills.append(btn);
+      }
+      grp.append(pills);
+      container.append(grp);
+    }
+  }
+
+  function syncAclRuleModeButtons() {
+    $('acl-src-mode-all').setAttribute('aria-pressed', aclRuleSrcMode === 'all' ? 'true' : 'false');
+    $('acl-src-mode-custom').setAttribute('aria-pressed', aclRuleSrcMode === 'custom' ? 'true' : 'false');
+    $('acl-src-picker').hidden = aclRuleSrcMode === 'all';
+
+    $('acl-dst-mode-all').setAttribute('aria-pressed', aclRuleDstMode === 'all' ? 'true' : 'false');
+    $('acl-dst-mode-custom').setAttribute('aria-pressed', aclRuleDstMode === 'custom' ? 'true' : 'false');
+    $('acl-dst-picker').hidden = aclRuleDstMode === 'all';
+
+    $('acl-port-mode-all').setAttribute('aria-pressed', aclRulePortMode === 'all' ? 'true' : 'false');
+    $('acl-port-mode-custom').setAttribute('aria-pressed', aclRulePortMode === 'custom' ? 'true' : 'false');
+    $('acl-port-picker').hidden = aclRulePortMode === 'all';
+  }
+
+  function syncServicePillsFromInput() {
+    const currentPorts = new Set(
+      $('acl-custom-ports')
+        .value.split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+    );
+    const wrap = $('acl-service-pills');
+    wrap.replaceChildren();
+    for (const svc of COMMON_PORT_SERVICES) {
+      const btn = el('button', svc.label, 'pick-pill');
+      btn.type = 'button';
+      btn.setAttribute('aria-pressed', currentPorts.has(svc.port) ? 'true' : 'false');
+      btn.addEventListener('click', () => {
+        const next = new Set(
+          $('acl-custom-ports')
+            .value.split(',')
+            .map(s => s.trim())
+            .filter(Boolean)
+        );
+        if (next.has(svc.port)) next.delete(svc.port);
+        else next.add(svc.port);
+        $('acl-custom-ports').value = [...next].join(', ');
+        syncServicePillsFromInput();
+      });
+      wrap.append(btn);
+    }
+  }
+
+  function openAclRuleModal(ruleIdx = null) {
+    editingAclRuleIndex = ruleIdx;
+    $('modal-acl-rule-title').textContent = ruleIdx !== null ? `编辑规则 #${ruleIdx + 1}` : '添加访问规则';
+
+    aclSelectedSrc = new Set();
+    aclSelectedDst = new Set();
+    aclRuleSrcMode = 'all';
+    aclRuleDstMode = 'all';
+    aclRulePortMode = 'all';
+    $('acl-custom-ports').value = '';
+    $('acl-rule-proto').value = '';
+
+    if (ruleIdx !== null && snapshot && snapshot.acl && snapshot.acl.rules && snapshot.acl.rules[ruleIdx]) {
+      const rule = snapshot.acl.rules[ruleIdx];
+      const srcs = rule.src || [];
+      if (srcs.length && !srcs.includes('*')) {
+        aclRuleSrcMode = 'custom';
+        srcs.forEach(s => aclSelectedSrc.add(s));
+      }
+      const parsedDsts = (rule.dst || []).map(splitDstTargetAndPorts);
+      const targets = [...new Set(parsedDsts.map(d => d.target))];
+      if (targets.length && !targets.includes('*')) {
+        aclRuleDstMode = 'custom';
+        targets.forEach(t => aclSelectedDst.add(t));
+      }
+      const ports = [...new Set(parsedDsts.map(d => d.ports))].filter(p => p !== '*');
+      if (ports.length) {
+        aclRulePortMode = 'custom';
+        $('acl-custom-ports').value = ports.join(', ');
+      }
+      $('acl-rule-proto').value = rule.proto ? rule.proto.toLowerCase() : '';
+    }
+
+    renderActorPicker('acl-src-picker', aclSelectedSrc);
+    renderActorPicker('acl-dst-picker', aclSelectedDst);
+    syncServicePillsFromInput();
+    syncAclRuleModeButtons();
+
+    const dialog = $('modal-acl-rule');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function renderAclMetaModalContent() {
+    const tagWrap = $('acl-meta-tags-list');
+    tagWrap.replaceChildren();
+    if (!aclMetaTags.size) {
+      tagWrap.append(el('span', '暂未定义标签', 'sub-line'));
+    } else {
+      for (const tag of aclMetaTags) {
+        const shortName = tag.replace(/^tag:/, '');
+        const btn = el('button', `${shortName} ×`, 'pick-pill');
+        btn.type = 'button';
+        btn.setAttribute('aria-pressed', 'true');
+        btn.title = '点击移除该标签';
+        btn.addEventListener('click', () => {
+          aclMetaTags.delete(tag);
+          renderAclMetaModalContent();
+        });
+        tagWrap.append(btn);
+      }
+    }
+
+    const userWrap = $('acl-meta-admin-users');
+    userWrap.replaceChildren();
+    const users = (snapshot && snapshot.users && snapshot.users.length)
+      ? snapshot.users
+      : [{ name: 'default' }];
+    for (const u of users) {
+      const token = u.name + '@';
+      const btn = el('button', u.name, 'pick-pill');
+      btn.type = 'button';
+      btn.setAttribute('aria-pressed', aclMetaAdminUsers.has(token) ? 'true' : 'false');
+      btn.addEventListener('click', () => {
+        if (aclMetaAdminUsers.has(token)) {
+          if (aclMetaAdminUsers.size <= 1) {
+            showToast('管理员组至少需保留一位用户', true);
+            return;
+          }
+          aclMetaAdminUsers.delete(token);
+        } else {
+          aclMetaAdminUsers.add(token);
+        }
+        renderAclMetaModalContent();
+      });
+      userWrap.append(btn);
+    }
+  }
+
+  function openAclMetaModal() {
+    const policyObj = getCurrentPolicyObject();
+    aclMetaTags = new Set(Object.keys(policyObj.tagOwners || {}));
+    const admins = (policyObj.groups && policyObj.groups['group:admin']) || [];
+    aclMetaAdminUsers = new Set(admins.length ? admins : [(((snapshot && snapshot.users) || [])[0]?.name || 'default') + '@']);
+    $('acl-meta-new-tag').value = '';
+    renderAclMetaModalContent();
+    const dialog = $('modal-acl-meta');
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function renderDiagPanel(diagnostics, nodes) {
+    const diag = diagnostics || {};
+    const nc = diag.netcheck || {};
+    const regions = diag.derp_regions || [];
+
+    const udpOk = Boolean(nc.udp);
+    const udpBadge = $('diag-udp-badge');
+    udpBadge.className = 'badge ' + (udpOk ? 'badge-ok' : 'badge-warn');
+    udpBadge.textContent = udpOk ? '正常' : '受限';
+
+    const stacks = [];
+    if (nc.ipv4) stacks.push('IPv4');
+    if (nc.ipv6) stacks.push('IPv6');
+    $('diag-ip-stack').textContent = stacks.length ? stacks.join(' + ') : (nc.ipv4_can_send ? '仅出站 IPv4' : '未知');
+
+    const natEl = $('diag-nat-type');
+    natEl.replaceChildren();
+    if (nc.mapping_varies === false) {
+      natEl.append(el('span', '常规 NAT（易直连）', 'badge badge-ok'));
+    } else if (nc.mapping_varies === true) {
+      natEl.append(el('span', '对称型 NAT（难直连）', 'badge badge-warn'));
+    } else if (nc.udp && nc.global_v4) {
+      natEl.append(el('span', 'UDP 映射正常', 'badge badge-ok'));
+    } else {
+      natEl.append(el('span', '待检测', 'sub-line'));
+    }
+
+    const gv4El = $('diag-global-v4');
+    gv4El.replaceChildren();
+    if (nc.global_v4) {
+      const chip = el('button', undefined, 'copy-chip');
+      chip.type = 'button';
+      chip.append(el('span', nc.global_v4), copyIconSvg());
+      chip.addEventListener('click', () => copyText(nc.global_v4, '已复制公网映射地址'));
+      gv4El.append(chip);
+    } else {
+      gv4El.textContent = '—';
+    }
+
+    const prefRegion = regions.find(r => r.is_preferred) || regions[0];
+    $('diag-pref-derp').textContent = prefRegion
+      ? `${prefRegion.region_code || prefRegion.region_name} (#${prefRegion.region_id})`
+      : (nc.preferred_derp ? `#${nc.preferred_derp}` : '—');
+
+    // 1. DERP Regions Table
+    const dTbody = $('diag-derp-tbody');
+    dTbody.replaceChildren();
+    if (!regions.length) {
+      const tr = el('tr');
+      const td = el('td', '未配置 DERP 中继区域', 'empty-state');
+      td.colSpan = 8;
+      tr.append(td);
+      dTbody.append(tr);
+    } else {
+      for (const reg of regions) {
+        const tr = el('tr');
+        const tdId = el('td', '#' + reg.region_id, 'mono');
+        tdId.dataset.label = '区域 ID';
+
+        const tdName = el('td');
+        tdName.dataset.label = '区域名称';
+        const nameWrap = el('div', undefined, 'node-primary');
+        nameWrap.append(el('span', reg.region_name || reg.region_code, 'node-name'));
+        if (reg.region_code) {
+          nameWrap.append(el('span', reg.region_code, 'badge mono'));
+        }
+        if (reg.is_embedded) {
+          nameWrap.append(el('span', '内置中继', 'badge badge-accent'));
+        }
+        tdName.append(nameWrap);
+
+        const tdHost = el('td', reg.hostname || reg.ipv4 || '—', 'mono');
+        tdHost.dataset.label = '服务地址';
+
+        const tdPorts = el('td', `UDP ${reg.stun_port || 3478} / HTTPS ${reg.derp_port || 443}`, 'mono');
+        tdPorts.dataset.label = '端口 (STUN / DERP)';
+
+        const tdVerify = el('td');
+        tdVerify.dataset.label = '客户端校验';
+        if (reg.verify_clients === true) {
+          tdVerify.append(el('span', '已开启', 'badge badge-ok'));
+        } else if (reg.verify_clients === false) {
+          tdVerify.append(el('span', '未开启', 'badge badge-warn'));
+        } else {
+          tdVerify.append(el('span', '外部节点', 'sub-line'));
+        }
+
+        const tdRelayCnt = el('td');
+        tdRelayCnt.dataset.label = '当前中继节点';
+        if (reg.relay_nodes_count > 0) {
+          const wrap = el('div', undefined, 'node-primary');
+          wrap.append(el('span', `${reg.relay_nodes_count} 台`, 'badge badge-warn'));
+          if ((reg.relay_node_names || []).length) {
+            wrap.append(el('span', reg.relay_node_names.join(', '), 'sub-line'));
+          }
+          tdRelayCnt.append(wrap);
+        } else {
+          tdRelayCnt.append(el('span', '0 台（全直连）', 'sub-line'));
+        }
+
+        const tdLat = el('td', undefined, 'col-right');
+        tdLat.dataset.label = '本地延迟';
+        if (typeof reg.latency_ms === 'number') {
+          tdLat.append(
+            el('strong', reg.latency_ms.toLocaleString('zh-CN', { maximumFractionDigits: 1 }), 'latency-val'),
+            el('span', 'ms', 'unit')
+          );
+        } else {
+          tdLat.append(el('span', '—', 'muted-dash'));
+        }
+
+        const tdState = el('td');
+        tdState.dataset.label = '状态';
+        tdState.append(el('span', '正常', 'badge badge-ok'));
+
+        tr.append(tdId, tdName, tdHost, tdPorts, tdVerify, tdRelayCnt, tdLat, tdState);
+        dTbody.append(tr);
+      }
+    }
+
+    // 2. Peer Endpoints & Traffic Table
+    const pTbody = $('diag-peers-tbody');
+    pTbody.replaceChildren();
+    if (!(nodes || []).length) {
+      const tr = el('tr');
+      const td = el('td', '暂无节点数据', 'empty-state');
+      td.colSpan = 7;
+      tr.append(td);
+      pTbody.append(tr);
+      return;
+    }
+
+    for (const n of nodes) {
+      const tr = el('tr', undefined, 'interactive-row');
+      tr.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        openNodeDrawer(n.id);
+      });
+
+      const tdNode = el('td');
+      tdNode.dataset.label = '节点';
+      const pWrap = el('div', undefined, 'node-primary');
+      pWrap.append(el('span', n.name, 'node-name'));
+      if (n.is_observer) pWrap.append(el('span', '本机', 'badge badge-accent'));
+      tdNode.append(pWrap);
+
+      const tdIp = el('td', (n.ips || [])[0] || '—', 'mono');
+      tdIp.dataset.label = '内网 IP';
+
+      const tdEp = el('td');
+      tdEp.dataset.label = '公网端点';
+      if (n.active_endpoint) {
+        const chip = el('button', undefined, 'copy-chip');
+        chip.type = 'button';
+        chip.append(el('span', n.active_endpoint), copyIconSvg());
+        chip.addEventListener('click', () => copyText(n.active_endpoint, '已复制公网端点'));
+        tdEp.append(chip);
+      } else {
+        tdEp.append(el('span', '—', 'muted-dash'));
+      }
+
+      const tdPath = el('td');
+      tdPath.dataset.label = '连接方式';
+      const pathClass = n.connection === 'direct'
+        ? 'badge badge-accent'
+        : ['relay', 'peer-relay'].includes(n.connection)
+        ? 'badge badge-warn'
+        : n.connection === 'unreachable'
+        ? 'badge badge-bad'
+        : 'badge';
+      const pathText = (['relay', 'peer-relay'].includes(n.connection) && n.relay)
+        ? `中继 · ${n.relay}`
+        : (pathLabels[n.connection] || '未知');
+      tdPath.append(el('span', pathText, pathClass));
+
+      const tdLat = el('td', undefined, 'col-right');
+      tdLat.dataset.label = '延迟';
+      if (typeof n.latency_ms === 'number') {
+        tdLat.append(
+          el('strong', n.latency_ms.toLocaleString('zh-CN', { maximumFractionDigits: 1 }), 'latency-val'),
+          el('span', 'ms', 'unit')
+        );
+      } else {
+        tdLat.append(el('span', '—', 'muted-dash'));
+      }
+
+      const tdTraffic = el('td', undefined, 'mono');
+      tdTraffic.dataset.label = '累计流量 (收 / 发)';
+      if (n.is_observer) {
+        tdTraffic.append(el('span', '—', 'muted-dash'));
+      } else {
+        tdTraffic.textContent = `↓ ${formatBytes(n.rx_bytes)} / ↑ ${formatBytes(n.tx_bytes)}`;
+      }
+
+      const tdHs = el('td');
+      tdHs.dataset.label = '最近握手';
+      tdHs.append(el('span', n.last_handshake ? formatRelativeTime(n.last_handshake) : '—', 'sub-line'));
+
+      tr.append(tdNode, tdIp, tdEp, tdPath, tdLat, tdTraffic, tdHs);
+      pTbody.append(tr);
+    }
+  }
+
+  function draw(data) {
+    snapshot = data;
+    const nodes = data.nodes || [];
+    const users = data.users || [];
+    const keys = data.preauthkeys || [];
+    const routes = data.routes || [];
+    const dns = data.dns || {};
+    const acl = data.acl || {};
+    const diagnostics = data.diagnostics || {};
+    const extraRecords = dns.extra_records || [];
+    const aclRules = acl.rules || [];
+    const activeKeysCount = keys.filter(k => k.state === 'active').length;
+
+    $('m-total').textContent = nodes.length;
+    $('m-online').textContent = nodes.filter(n => n.online === true).length;
+    $('m-direct').textContent = nodes.filter(n => n.connection === 'direct').length;
+    $('m-relay').textContent = nodes.filter(n => ['relay', 'peer-relay'].includes(n.connection)).length;
+    $('m-keys').textContent = activeKeysCount;
+
+    $('count-machines').textContent = nodes.length;
+    $('count-users').textContent = users.length;
+    $('count-keys').textContent = keys.length;
+    $('count-routes').textContent = routes.length;
+    $('count-dns').textContent = extraRecords.length;
+    $('count-acl').textContent = aclRules.length;
+
+    const running = data.control_state === 'Running';
+    $('control-badge').className = 'badge ' + (running ? 'badge-ok' : 'badge-warn');
+    $('control-text').textContent = running ? '运行中' : (data.control_state || '未知');
+
+    renderUsersTable(users);
+    renderMachinesTable(nodes);
+    renderKeysTable(keys);
+    renderRoutesTable(routes);
+    renderDnsPanel(dns, nodes);
+    renderAclPanel(acl);
+    renderDiagPanel(diagnostics, nodes);
+    syncFilterButtons();
+
+    if (selectedNodeId !== null && $('node-drawer').open) {
+      const updatedNode = nodes.find(n => n.id === selectedNodeId);
+      if (updatedNode) populateNodeDrawer(updatedNode);
+      else $('node-drawer').close();
+    }
+    if ($('modal-derp-config').open) {
+      renderLocalSetupStatus();
+    }
+
+    updateNotice();
+  }
+
+  function updateNotice() {
+    if (!snapshot) return;
+    const messages = [...(snapshot.errors || [])];
+    const age = Date.now() - Date.parse(snapshot.generated_at);
+    if (!Number.isFinite(age) || age > 45000) {
+      messages.push('数据已超过 45 秒未更新，请检查采集服务。');
+    }
+    if (snapshot.control_state !== 'Running') {
+      messages.push('Tailscale 服务未运行，暂时无法探测连接方式。');
+    }
+    $('notice').hidden = !messages.length;
+    $('notice').textContent = messages.join(' ');
+  }
+
+  async function refresh() {
+    if (busy) return;
+    busy = true;
+    const btn = $('refresh');
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    try {
+      const data = await rpcCall('plugin:tailscaleStatus');
+      if (!data || data.schema !== 1 || !Array.isArray(data.nodes)) {
+        throw new Error('状态数据格式异常，请检查采集服务。');
+      }
+      draw(data);
+      $('error').hidden = true;
+      $('error').textContent = '';
+    } catch (err) {
+      $('error').hidden = false;
+      $('error').textContent = err.name === 'TimeoutError' ? '读取状态超时，请稍后重试。' : err.message;
+      updateNotice();
+    } finally {
+      busy = false;
+      btn.disabled = false;
+      btn.classList.remove('spinning');
+    }
+  }
+
+  async function runAction(payload, triggerBtn = null) {
+    if (triggerBtn) triggerBtn.disabled = true;
+    try {
+      const res = await rpcCall('plugin:tailscaleAction', payload);
+      if (res && res.snapshot) {
+        draw(res.snapshot);
+      } else {
+        await refresh();
+      }
+      if (res && res.created_key) {
+        $('created-key-value').textContent = res.created_key;
+        $('created-key-banner').hidden = false;
+        $('guide-authkey').value = res.created_key;
+        updateGuideCommand();
+      }
+      if (res && res.message) {
+        showToast(res.message);
+      }
+      return res;
+    } catch (err) {
+      showToast(err.message || '操作失败', true);
+      throw err;
+    } finally {
+      if (triggerBtn) triggerBtn.disabled = false;
+    }
+  }
+
+  // Event Wiring
+  $('refresh').addEventListener('click', () => runAction({ action: 'refresh' }, $('refresh')));
+  $('btn-open-add').addEventListener('click', () => openGuideModal());
+  $('btn-create-key-inline').addEventListener('click', () => openCreateKeyModal());
+  $('modal-create-key-close').addEventListener('click', () => $('modal-create-key').close());
+  $('form-create-key').addEventListener('submit', async e => {
+    e.preventDefault();
+    const uid = Number($('key-form-user').value) || 1;
+    const expiration = $('key-form-exp').value;
+    const reusable = $('key-form-reusable').checked;
+    const ephemeral = $('key-form-ephemeral').checked;
+    await runAction({
+      action: 'create_preauthkey',
+      user_id: uid,
+      expiration,
+      reusable,
+      ephemeral,
+    }, $('btn-submit-create-key'));
+    $('modal-create-key').close();
+  });
+
+  for (const btn of document.querySelectorAll('.tab-btn')) {
+    btn.addEventListener('click', () => {
+      switchTab(btn.dataset.tab);
+      syncFilterButtons();
+    });
+  }
+
+  for (const btn of document.querySelectorAll('[data-metric-filter]')) {
+    btn.addEventListener('click', () => {
+      nodeFilter = btn.dataset.metricFilter;
+      switchTab('machines');
+      syncFilterButtons();
+      if (snapshot) renderMachinesTable(snapshot.nodes || []);
+    });
+  }
+
+  $('metric-keys-btn').addEventListener('click', () => {
+    switchTab('keys');
+    syncFilterButtons();
+  });
+
+  for (const btn of document.querySelectorAll('[data-filter]')) {
+    btn.addEventListener('click', () => {
+      nodeFilter = btn.dataset.filter;
+      syncFilterButtons();
+      if (snapshot) renderMachinesTable(snapshot.nodes || []);
+    });
+  }
+
+  for (const btn of document.querySelectorAll('[data-key-filter]')) {
+    btn.addEventListener('click', () => {
+      keyFilter = btn.dataset.keyFilter;
+      for (const b of document.querySelectorAll('[data-key-filter]')) {
+        b.setAttribute('aria-pressed', b.dataset.keyFilter === keyFilter ? 'true' : 'false');
+      }
+      if (snapshot) renderKeysTable(snapshot.preauthkeys || []);
+    });
+  }
+
+  for (const btn of document.querySelectorAll('[data-route-filter]')) {
+    btn.addEventListener('click', () => {
+      routeFilter = btn.dataset.routeFilter;
+      for (const b of document.querySelectorAll('[data-route-filter]')) {
+        b.setAttribute('aria-pressed', b.dataset.routeFilter === routeFilter ? 'true' : 'false');
+      }
+      if (snapshot) renderRoutesTable(snapshot.routes || []);
+    });
+  }
+
+  $('node-search').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    if (snapshot) renderMachinesTable(snapshot.nodes || []);
+  });
+
+  // Drawer events
+  $('drawer-close').addEventListener('click', () => $('node-drawer').close());
+  $('drawer-btn-ping').addEventListener('click', () => {
+    if (selectedNodeId) runAction({ action: 'ping', node_id: selectedNodeId }, $('drawer-btn-ping'));
+  });
+  $('drawer-btn-rename').addEventListener('click', () => {
+    const box = $('drawer-rename-box');
+    box.hidden = !box.hidden;
+    $('drawer-ip-box').hidden = true;
+    $('drawer-routes-box').hidden = true;
+    $('drawer-user-box').hidden = true;
+    $('drawer-tags-box').hidden = true;
+    $('drawer-delete-box').hidden = true;
+    if (!box.hidden) $('drawer-rename-input').focus();
+  });
+  $('drawer-rename-cancel').addEventListener('click', () => {
+    $('drawer-rename-box').hidden = true;
+  });
+  $('drawer-rename-box').addEventListener('submit', async e => {
+    e.preventDefault();
+    const newName = $('drawer-rename-input').value.trim();
+    if (!newName || !selectedNodeId) return;
+    await runAction({ action: 'rename_node', node_id: selectedNodeId, name: newName });
+    $('drawer-rename-box').hidden = true;
+  });
+
+  $('drawer-btn-ip').addEventListener('click', () => {
+    const box = $('drawer-ip-box');
+    box.hidden = !box.hidden;
+    $('drawer-rename-box').hidden = true;
+    $('drawer-routes-box').hidden = true;
+    $('drawer-user-box').hidden = true;
+    $('drawer-tags-box').hidden = true;
+    $('drawer-delete-box').hidden = true;
+    if (!box.hidden) $('drawer-ip-input').focus();
+  });
+  $('drawer-ip-cancel').addEventListener('click', () => {
+    $('drawer-ip-box').hidden = true;
+  });
+  $('drawer-ip-box').addEventListener('submit', async e => {
+    e.preventDefault();
+    const newIp = $('drawer-ip-input').value.trim();
+    if (!newIp || !selectedNodeId) return;
+    await runAction({ action: 'set_node_ip', node_id: selectedNodeId, ipv4: newIp });
+    $('drawer-ip-box').hidden = true;
+  });
+
+  $('drawer-btn-routes').addEventListener('click', () => {
+    const box = $('drawer-routes-box');
+    box.hidden = !box.hidden;
+    $('drawer-rename-box').hidden = true;
+    $('drawer-ip-box').hidden = true;
+    $('drawer-user-box').hidden = true;
+    $('drawer-tags-box').hidden = true;
+    $('drawer-delete-box').hidden = true;
+    if (!box.hidden) $('drawer-routes-input').focus();
+  });
+  $('drawer-routes-cancel').addEventListener('click', () => {
+    $('drawer-routes-box').hidden = true;
+  });
+  $('drawer-routes-box').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!selectedNodeId) return;
+    const cidrs = $('drawer-routes-input')
+      .value.split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    if ($('drawer-routes-exit').checked) {
+      if (!cidrs.includes('0.0.0.0/0')) cidrs.push('0.0.0.0/0');
+      if (!cidrs.includes('::/0')) cidrs.push('::/0');
+    }
+    const node = snapshot && (snapshot.nodes || []).find(n => n.id === selectedNodeId);
+    if (node && node.is_observer && $('drawer-routes-exit').checked) {
+      await runAction({ action: 'set_local_exit_node', enabled: true });
+    }
+    await runAction({ action: 'approve_routes', node_id: selectedNodeId, routes: cidrs });
+    $('drawer-routes-box').hidden = true;
+  });
+
+  $('drawer-btn-user').addEventListener('click', () => {
+    const box = $('drawer-user-box');
+    box.hidden = !box.hidden;
+    $('drawer-rename-box').hidden = true;
+    $('drawer-ip-box').hidden = true;
+    $('drawer-routes-box').hidden = true;
+    $('drawer-tags-box').hidden = true;
+    $('drawer-delete-box').hidden = true;
+    if (!box.hidden) $('drawer-user-select').focus();
+  });
+  $('drawer-user-cancel').addEventListener('click', () => {
+    $('drawer-user-box').hidden = true;
+  });
+  $('drawer-user-box').addEventListener('submit', async e => {
+    e.preventDefault();
+    const targetUid = Number($('drawer-user-select').value);
+    if (!targetUid || !selectedNodeId) return;
+    await runAction({ action: 'move_node_user', node_id: selectedNodeId, user_id: targetUid });
+    $('drawer-user-box').hidden = true;
+  });
+
+  $('drawer-btn-tags').addEventListener('click', () => {
+    const box = $('drawer-tags-box');
+    box.hidden = !box.hidden;
+    $('drawer-rename-box').hidden = true;
+    $('drawer-ip-box').hidden = true;
+    $('drawer-routes-box').hidden = true;
+    $('drawer-user-box').hidden = true;
+    $('drawer-delete-box').hidden = true;
+    if (!box.hidden) $('drawer-tags-input').focus();
+  });
+  $('drawer-tags-cancel').addEventListener('click', () => {
+    $('drawer-tags-box').hidden = true;
+  });
+  $('drawer-tags-box').addEventListener('submit', async e => {
+    e.preventDefault();
+    const tags = $('drawer-tags-input').value.trim();
+    if (!tags || !selectedNodeId) return;
+    await runAction({ action: 'set_tags', node_id: selectedNodeId, tags });
+    $('drawer-tags-box').hidden = true;
+  });
+
+  $('drawer-btn-expire').addEventListener('click', () => {
+    if (selectedNodeId) {
+      runAction({ action: 'expire_node', node_id: selectedNodeId }, $('drawer-btn-expire'));
+    }
+  });
+
+  $('drawer-btn-delete').addEventListener('click', () => {
+    const box = $('drawer-delete-box');
+    box.hidden = !box.hidden;
+    $('drawer-rename-box').hidden = true;
+    $('drawer-ip-box').hidden = true;
+    $('drawer-routes-box').hidden = true;
+    $('drawer-user-box').hidden = true;
+    $('drawer-tags-box').hidden = true;
+    if (!box.hidden) $('drawer-delete-cancel').focus();
+  });
+  $('drawer-delete-cancel').addEventListener('click', () => {
+    $('drawer-delete-box').hidden = true;
+  });
+  $('drawer-delete-confirm').addEventListener('click', async () => {
+    if (!selectedNodeId) return;
+    await runAction({ action: 'delete_node', node_id: selectedNodeId }, $('drawer-delete-confirm'));
+    $('node-drawer').close();
+  });
+
+  // Guide Modal events
+  $('modal-guide-close').addEventListener('click', () => $('modal-guide').close());
+  $('tab-guide-cmd').addEventListener('click', () => setGuideModalTab('cmd'));
+  $('tab-guide-approve').addEventListener('click', () => setGuideModalTab('approve'));
+  for (const id of ['guide-authkey', 'guide-hostname', 'guide-routes', 'guide-accept-routes', 'guide-exit-node']) {
+    $(id).addEventListener('input', updateGuideCommand);
+    $(id).addEventListener('change', updateGuideCommand);
+  }
+  for (const btn of document.querySelectorAll('[data-guide-os]')) {
+    btn.addEventListener('click', () => {
+      guideOsMode = btn.dataset.guideOs;
+      for (const b of document.querySelectorAll('[data-guide-os]')) {
+        b.setAttribute('aria-pressed', b.dataset.guideOs === guideOsMode ? 'true' : 'false');
+      }
+      updateGuideCommand();
+    });
+  }
+  $('btn-copy-cmd').addEventListener('click', () => {
+    if (guideOsMode === 'gui') {
+      const controlUrl = (snapshot && snapshot.tailnet && snapshot.tailnet.control_url) || window.location.origin;
+      copyText(controlUrl, '已复制服务端地址');
+    } else {
+      copyText($('guide-cmd-preview').textContent, '已复制命令');
+    }
+  });
+  $('btn-generate-key-now').addEventListener('click', async () => {
+    const uid = Number($('guide-user').value) || 1;
+    const expiration = $('guide-exp').value;
+    const reusable = $('guide-reusable').checked;
+    const ephemeral = $('guide-ephemeral').checked;
+    await runAction({
+      action: 'create_preauthkey',
+      user_id: uid,
+      expiration,
+      reusable,
+      ephemeral,
+    }, $('btn-generate-key-now'));
+  });
+
+  $('btn-register-node-now').addEventListener('click', async () => {
+    const token = $('guide-register-token').value.trim();
+    if (!token) {
+      showToast('请先粘贴注册链接、Auth ID 或 NodeKey', true);
+      $('guide-register-token').focus();
+      return;
+    }
+    const sel = $('guide-user');
+    const selectedOpt = sel.options[sel.selectedIndex];
+    const userName = selectedOpt ? selectedOpt.textContent.trim() : 'default';
+    await runAction({
+      action: 'register_node',
+      user: userName,
+      token,
+    }, $('btn-register-node-now'));
+    $('guide-register-token').value = '';
+    $('modal-guide').close();
+  });
+
+  let backupModalTab = 'export';
+  let latestBackupFilename = 'headscale-backup.json';
+
+  function setBackupModalTab(tab) {
+    backupModalTab = tab === 'restore' ? 'restore' : 'export';
+    $('tab-backup-export').setAttribute('aria-pressed', backupModalTab === 'export' ? 'true' : 'false');
+    $('tab-backup-restore').setAttribute('aria-pressed', backupModalTab === 'restore' ? 'true' : 'false');
+    $('backup-pane-export').classList.toggle('is-inactive', backupModalTab !== 'export');
+    $('backup-pane-restore').classList.toggle('is-inactive', backupModalTab !== 'restore');
+    $('btn-copy-backup').hidden = backupModalTab !== 'export';
+    $('btn-download-backup').hidden = backupModalTab !== 'export';
+    $('btn-submit-restore').hidden = backupModalTab !== 'restore';
+  }
+
+  function buildClientFallbackBundle() {
+    const s = snapshot || {};
+    const diag = s.diagnostics || {};
+    return {
+      backup_schema: 1,
+      exported_at: new Date().toISOString(),
+      observer: s.observer || '',
+      tailnet: s.tailnet || {},
+      dns: s.dns || {},
+      derp_config: diag.derp_server || diag.derp_config || {},
+      acl_policy_raw: (s.acl && s.acl.raw) || '',
+      users: s.users || [],
+      nodes: (s.nodes || []).map(n => ({
+        id: n.id,
+        name: n.name,
+        hostname: n.hostname,
+        user: n.user,
+        ips: n.ips,
+        tags: n.tags,
+        routes: (n.routes || []).filter(r => r.enabled).map(r => r.prefix),
+      })),
+      routes: s.routes || [],
+    };
+  }
+
+  function renderBackupSummary(bundle) {
+    const kv = $('backup-summary-kv');
+    kv.replaceChildren();
+    const nodesCnt = (bundle.nodes || []).length;
+    const usersCnt = (bundle.users || []).length;
+    const dnsCnt = ((bundle.dns && bundle.dns.extra_records) || []).length;
+    const hasAcl = Boolean(bundle.acl_policy_raw);
+    const rows = [
+      ['节点与用户清单', `${nodesCnt} 台节点 · ${usersCnt} 个用户`],
+      ['DNS 配置与自定义解析', `${dnsCnt} 条自定义记录 · MagicDNS ${(bundle.dns && bundle.dns.magic_dns === false) ? '关闭' : '开启'}`],
+      ['访问控制与中继配置', `${hasAcl ? '包含完整 ACL 策略' : '默认策略'} · 包含内置中继参数`],
+    ];
+    for (const [k, v] of rows) {
+      const row = el('div', undefined, 'kv-row');
+      row.append(el('span', k, 'kv-key'), el('span', v, 'kv-val'));
+      kv.append(row);
+    }
+  }
+
+  async function openBackupModal(initialTab = 'export') {
+    setBackupModalTab(initialTab);
+    const fallbackBundle = buildClientFallbackBundle();
+    renderBackupSummary(fallbackBundle);
+    $('backup-export-textarea').value = JSON.stringify(fallbackBundle, null, 2);
+    const dialog = $('modal-backup');
+    if (!dialog.open) dialog.showModal();
+
+    try {
+      const res = await rpcCall('plugin:tailscaleAction', { action: 'export_config' });
+      if (res && res.bundle) {
+        if (res.filename) latestBackupFilename = res.filename;
+        renderBackupSummary(res.bundle);
+        $('backup-export-textarea').value = JSON.stringify(res.bundle, null, 2);
+      }
+    } catch (_) {}
+  }
+
+  function triggerBackupDownload() {
+    const content = $('backup-export-textarea').value.trim();
+    if (!content) {
+      showToast('备份内容为空', true);
+      return;
+    }
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const fallbackName = `headscale-backup-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+    const filename = latestBackupFilename || fallbackName;
+    try {
+      let targetDoc = document;
+      let targetWin = window;
+      try {
+        if (window.top && window.top.document) {
+          targetDoc = window.top.document;
+          targetWin = window.top;
+        }
+      } catch (_) {}
+      const blob = new targetWin.Blob([content], { type: 'application/json;charset=utf-8' });
+      const url = targetWin.URL.createObjectURL(blob);
+      const a = targetDoc.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+      targetDoc.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        targetWin.URL.revokeObjectURL(url);
+      }, 600);
+      showToast('已开始下载：' + filename);
+    } catch (_) {
+      copyText(content, '浏览器限制直接下载，已为您复制完整备份 JSON');
+    }
+  }
+
+  $('btn-export-config').addEventListener('click', () => openBackupModal('export'));
+  $('modal-backup-close').addEventListener('click', () => $('modal-backup').close());
+  $('tab-backup-export').addEventListener('click', () => setBackupModalTab('export'));
+  $('tab-backup-restore').addEventListener('click', () => setBackupModalTab('restore'));
+  $('btn-copy-backup').addEventListener('click', () => copyText($('backup-export-textarea').value, '已复制配置备份 JSON'));
+  $('btn-download-backup').addEventListener('click', triggerBackupDownload);
+
+  $('btn-pick-backup-file').addEventListener('click', () => $('backup-import-file').click());
+  $('backup-import-file').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    $('backup-file-name').textContent = `已选择：${file.name}`;
+    const reader = new FileReader();
+    reader.onload = () => {
+      $('backup-import-textarea').value = String(reader.result || '');
+      showToast('已加载备份文件：' + file.name);
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  $('btn-submit-restore').addEventListener('click', async () => {
+    const rawText = $('backup-import-textarea').value.trim();
+    if (!rawText) {
+      showToast('请先选择备份文件或粘贴备份 JSON 内容', true);
+      $('backup-import-textarea').focus();
+      return;
+    }
+    const restoreDns = $('restore-opt-dns').checked;
+    const restoreAcl = $('restore-opt-acl').checked;
+    const restoreDerp = $('restore-opt-derp').checked;
+    if (!restoreDns && !restoreAcl && !restoreDerp) {
+      showToast('请至少勾选一项要恢复的配置', true);
+      return;
+    }
+    await runAction({
+      action: 'restore_config',
+      bundle: rawText,
+      restore_dns: restoreDns,
+      restore_acl: restoreAcl,
+      restore_derp: restoreDerp,
+    }, $('btn-submit-restore'));
+    $('modal-backup').close();
+  });
+
+  $('btn-copy-created-key').addEventListener('click', () => copyText($('created-key-value').textContent, '已复制密钥'));
+  $('btn-use-created-key').addEventListener('click', () => openGuideModal($('created-key-value').textContent));
+  $('btn-dismiss-created-key').addEventListener('click', () => {
+    $('created-key-banner').hidden = true;
+  });
+
+  // DNS Modal events
+  $('btn-open-add-record').addEventListener('click', () => openDnsRecordModal(null));
+  $('btn-open-dns-config').addEventListener('click', () => openDnsConfigModal());
+  $('modal-dns-record-close').addEventListener('click', () => $('modal-dns-record').close());
+  $('dns-record-node-pick').addEventListener('change', e => {
+    if (e.target.value) {
+      $('dns-record-value').value = e.target.value;
+    }
+  });
+  $('form-dns-record').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('dns-record-name').value.trim();
+    const value = $('dns-record-value').value.trim();
+    if (!name || !value) return;
+    const payload = {
+      action: 'save_dns_record',
+      name,
+      value,
+    };
+    if (editingDnsRecord) {
+      payload.old_name = editingDnsRecord.name;
+      payload.old_type = editingDnsRecord.type;
+      payload.old_value = editingDnsRecord.value;
+    }
+    await runAction(payload, $('btn-save-dns-record'));
+    $('modal-dns-record').close();
+  });
+
+  $('modal-dns-config-close').addEventListener('click', () => $('modal-dns-config').close());
+  $('form-dns-config').addEventListener('submit', async e => {
+    e.preventDefault();
+    await runAction({
+      action: 'save_dns_config',
+      magic_dns: $('dns-cfg-magic').checked,
+      override_local_dns: $('dns-cfg-override').checked,
+      nameservers_global: $('dns-cfg-global').value.trim(),
+      search_domains: $('dns-cfg-search').value.trim(),
+      nameservers_split: $('dns-cfg-split').value.trim(),
+    }, $('btn-save-dns-config'));
+    $('modal-dns-config').close();
+  });
+
+  // ACL Editor & Template events
+  function setAclCheckBanner(text, isError = false, isSuccess = false) {
+    const b = $('acl-check-banner');
+    if (!text) {
+      b.hidden = true;
+      b.textContent = '';
+      return;
+    }
+    b.className = 'banner' + (isError ? ' error' : isSuccess ? ' key-created' : '');
+    b.textContent = text;
+    b.hidden = false;
+  }
+
+  $('acl-editor-textarea').addEventListener('input', () => {
+    aclDirty = $('acl-editor-textarea').value.trim() !== lastSavedAclRaw.trim();
+    $('acl-dirty-badge').hidden = !aclDirty;
+    setAclCheckBanner('');
+  });
+
+  $('btn-load-acl-template').addEventListener('click', async () => {
+    const key = $('acl-template-select').value;
+    if (!key) {
+      showToast('请先选择预设模式', true);
+      return;
+    }
+    const tpl = getAclTemplate(key);
+    if (tpl) {
+      aclDirty = false;
+      $('acl-dirty-badge').hidden = true;
+      await runAction({ action: 'save_acl_policy', policy: tpl }, $('btn-load-acl-template'));
+      $('acl-template-select').value = '';
+    }
+  });
+
+  // Visual ACL Rule Modal events
+  $('btn-open-acl-rule').addEventListener('click', () => openAclRuleModal(null));
+  $('modal-acl-rule-close').addEventListener('click', () => $('modal-acl-rule').close());
+
+  $('acl-src-mode-all').addEventListener('click', () => {
+    aclRuleSrcMode = 'all';
+    syncAclRuleModeButtons();
+  });
+  $('acl-src-mode-custom').addEventListener('click', () => {
+    aclRuleSrcMode = 'custom';
+    syncAclRuleModeButtons();
+  });
+  $('acl-dst-mode-all').addEventListener('click', () => {
+    aclRuleDstMode = 'all';
+    syncAclRuleModeButtons();
+  });
+  $('acl-dst-mode-custom').addEventListener('click', () => {
+    aclRuleDstMode = 'custom';
+    syncAclRuleModeButtons();
+  });
+  $('acl-port-mode-all').addEventListener('click', () => {
+    aclRulePortMode = 'all';
+    syncAclRuleModeButtons();
+  });
+  $('acl-port-mode-custom').addEventListener('click', () => {
+    aclRulePortMode = 'custom';
+    syncAclRuleModeButtons();
+    $('acl-custom-ports').focus();
+  });
+  $('acl-custom-ports').addEventListener('input', () => syncServicePillsFromInput());
+
+  $('form-acl-rule').addEventListener('submit', async e => {
+    e.preventDefault();
+    const srcList = aclRuleSrcMode === 'all' ? ['*'] : [...aclSelectedSrc];
+    if (!srcList.length) {
+      showToast('请至少选择一个允许发起访问的来源', true);
+      return;
+    }
+    const dstTargets = aclRuleDstMode === 'all' ? ['*'] : [...aclSelectedDst];
+    if (!dstTargets.length) {
+      showToast('请至少选择一个允许访问的目标', true);
+      return;
+    }
+    let portSuffix = '*';
+    if (aclRulePortMode === 'custom') {
+      const cleanedPorts = $('acl-custom-ports')
+        .value.split(',')
+        .map(s => s.trim())
+        .filter(Boolean);
+      if (!cleanedPorts.length) {
+        showToast('请点选常用服务或输入开放端口号', true);
+        $('acl-custom-ports').focus();
+        return;
+      }
+      for (const p of cleanedPorts) {
+        if (!/^\d+(?:-\d+)?$/.test(p)) {
+          showToast(`端口格式无效：${p}（示例：80 或 8000-8010）`, true);
+          return;
+        }
+      }
+      portSuffix = cleanedPorts.join(',');
+    }
+
+    const dstList = dstTargets.map(t => `${t}:${portSuffix}`);
+    const proto = $('acl-rule-proto').value.trim();
+    const newRule = {
+      action: 'accept',
+      src: srcList,
+      dst: dstList,
+      ...(proto ? { proto } : {}),
+    };
+
+    const policyObj = getCurrentPolicyObject();
+    const acls = [...(policyObj.acls || [])];
+    if (editingAclRuleIndex !== null && editingAclRuleIndex >= 0 && editingAclRuleIndex < acls.length) {
+      acls[editingAclRuleIndex] = newRule;
+    } else {
+      acls.push(newRule);
+    }
+    policyObj.acls = acls;
+
+    await saveVisualPolicy(policyObj, $('btn-save-acl-rule'));
+    $('modal-acl-rule').close();
+  });
+
+  // Visual ACL Meta (Groups & Tags) & Raw Policy Modal events
+  $('btn-open-acl-meta').addEventListener('click', () => openAclMetaModal());
+  $('modal-acl-meta-close').addEventListener('click', () => $('modal-acl-meta').close());
+  $('btn-open-acl-raw').addEventListener('click', () => {
+    setAclCheckBanner('');
+    const dialog = $('modal-acl-raw');
+    if (!dialog.open) dialog.showModal();
+  });
+  $('modal-acl-raw-close').addEventListener('click', () => $('modal-acl-raw').close());
+
+  function addMetaTagFromInput() {
+    let raw = $('acl-meta-new-tag').value.trim().toLowerCase();
+    if (!raw) return;
+    if (!raw.startsWith('tag:')) raw = 'tag:' + raw;
+    if (!/^tag:[a-z0-9._-]{1,48}$/.test(raw)) {
+      showToast('标签名仅允许字母、数字、点、下划线或连字符', true);
+      return;
+    }
+    aclMetaTags.add(raw);
+    $('acl-meta-new-tag').value = '';
+    renderAclMetaModalContent();
+  }
+
+  $('btn-acl-meta-add-tag').addEventListener('click', addMetaTagFromInput);
+  $('acl-meta-new-tag').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addMetaTagFromInput();
+    }
+  });
+
+  $('form-acl-meta').addEventListener('submit', async e => {
+    e.preventDefault();
+    if ($('acl-meta-new-tag').value.trim()) {
+      addMetaTagFromInput();
+    }
+    const policyObj = getCurrentPolicyObject();
+    policyObj.groups = {
+      ...(policyObj.groups || {}),
+      'group:admin': [...aclMetaAdminUsers],
+    };
+    const nextTagOwners = {};
+    for (const t of aclMetaTags) {
+      nextTagOwners[t] = (policyObj.tagOwners && policyObj.tagOwners[t]) || ['group:admin'];
+    }
+    policyObj.tagOwners = nextTagOwners;
+    await saveVisualPolicy(policyObj, $('btn-save-acl-meta'));
+    $('modal-acl-meta').close();
+  });
+
+  $('btn-acl-format').addEventListener('click', () => {
+    const raw = $('acl-editor-textarea').value.trim();
+    if (!raw) return;
+    try {
+      const noComments = raw.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/,\s*([}\]])/g, '$1');
+      const parsed = JSON.parse(noComments);
+      $('acl-editor-textarea').value = JSON.stringify(parsed, null, 2);
+      aclDirty = $('acl-editor-textarea').value.trim() !== lastSavedAclRaw.trim();
+      $('acl-dirty-badge').hidden = !aclDirty;
+      showToast('已格式化');
+    } catch (err) {
+      setAclCheckBanner('格式化失败：JSON 语法有误（' + err.message + '）', true);
+    }
+  });
+
+  $('btn-acl-reset').addEventListener('click', () => {
+    $('acl-editor-textarea').value = lastSavedAclRaw;
+    aclDirty = false;
+    $('acl-dirty-badge').hidden = true;
+    setAclCheckBanner('');
+    showToast('已还原为当前生效策略');
+  });
+
+  $('btn-acl-check').addEventListener('click', async () => {
+    const policy = $('acl-editor-textarea').value.trim();
+    try {
+      const res = await runAction({ action: 'check_acl_policy', policy }, $('btn-acl-check'));
+      if (res && res.valid) {
+        setAclCheckBanner('语法与权限规则校验通过', false, true);
+      }
+    } catch (err) {
+      setAclCheckBanner(err.message || '策略校验未通过', true);
+    }
+  });
+
+  $('btn-acl-save').addEventListener('click', async () => {
+    const policy = $('acl-editor-textarea').value.trim();
+    try {
+      aclDirty = false;
+      $('acl-dirty-badge').hidden = true;
+      await runAction({ action: 'save_acl_policy', policy }, $('btn-acl-save'));
+      setAclCheckBanner('策略已保存并热重载生效', false, true);
+    } catch (err) {
+      aclDirty = true;
+      $('acl-dirty-badge').hidden = false;
+      setAclCheckBanner(err.message || '保存失败', true);
+    }
+  });
+
+  // User Modal & Filter events
+  $('node-user-filter').addEventListener('change', e => {
+    nodeUserFilter = e.target.value || 'all';
+    if (snapshot) renderMachinesTable(snapshot.nodes || []);
+  });
+  $('btn-open-create-user').addEventListener('click', () => openUserModal(null));
+  $('modal-user-close').addEventListener('click', () => $('modal-user').close());
+  $('form-user').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = $('user-form-name').value.trim();
+    if (!name) return;
+    if (editingUser) {
+      await runAction({
+        action: 'rename_user',
+        user_id: editingUser.id,
+        new_name: name,
+      }, $('btn-save-user'));
+    } else {
+      await runAction({
+        action: 'create_user',
+        name,
+        display_name: $('user-form-display').value.trim(),
+        email: $('user-form-email').value.trim(),
+      }, $('btn-save-user'));
+    }
+    $('modal-user').close();
+  });
+
+  // Route Guide & Local Exit Node events
+  let routeGuideTab = 'exit';
+  function setRouteGuideTab(tab) {
+    routeGuideTab = tab === 'subnet' ? 'subnet' : 'exit';
+    $('tab-rguide-exit').setAttribute('aria-pressed', routeGuideTab === 'exit' ? 'true' : 'false');
+    $('tab-rguide-subnet').setAttribute('aria-pressed', routeGuideTab === 'subnet' ? 'true' : 'false');
+    $('rguide-pane-exit').classList.toggle('is-inactive', routeGuideTab !== 'exit');
+    $('rguide-pane-subnet').classList.toggle('is-inactive', routeGuideTab !== 'subnet');
+  }
+  $('btn-open-route-guide').addEventListener('click', () => {
+    setRouteGuideTab('exit');
+    const dialog = $('modal-route-guide');
+    if (!dialog.open) dialog.showModal();
+  });
+  $('modal-route-guide-close').addEventListener('click', () => $('modal-route-guide').close());
+  $('tab-rguide-exit').addEventListener('click', () => setRouteGuideTab('exit'));
+  $('tab-rguide-subnet').addEventListener('click', () => setRouteGuideTab('subnet'));
+  $('rguide-subnet-cidr').addEventListener('input', e => {
+    const val = e.target.value.trim() || '192.168.1.0/24';
+    $('rguide-subnet-cmd').textContent = `sudo sysctl -w net.ipv4.ip_forward=1 && sudo tailscale set --advertise-routes=${val}`;
+  });
+  $('btn-copy-rguide-cmd').addEventListener('click', () => {
+    const text = routeGuideTab === 'exit' ? $('rguide-exit-cmd').textContent : $('rguide-subnet-cmd').textContent;
+    copyText(text, '已复制命令');
+  });
+  $('btn-routes-local-exit').addEventListener('click', async () => {
+    const loc = (snapshot && snapshot.local_node) || {};
+    const obsNode = ((snapshot && snapshot.nodes) || []).find(n => n.is_observer);
+    const localExitActive = Boolean(loc.advertise_exit_node || (obsNode && obsNode.exit_node));
+    await runAction({
+      action: 'set_local_exit_node',
+      enabled: !localExitActive,
+    }, $('btn-routes-local-exit'));
+  });
+
+  // Network Diagnostics, DERP Config & Ping All events
+  $('btn-ping-all-nodes').addEventListener('click', () => {
+    runAction({ action: 'ping_all' }, $('btn-ping-all-nodes'));
+  });
+  $('btn-run-netcheck').addEventListener('click', () => {
+    runAction({ action: 'run_netcheck' }, $('btn-run-netcheck'));
+  });
+  $('btn-diag-ping-all').addEventListener('click', () => {
+    runAction({ action: 'ping_all' }, $('btn-diag-ping-all'));
+  });
+  $('btn-open-local-setup').addEventListener('click', () => openDerpConfigModal('env'));
+  $('tab-local-env').addEventListener('click', () => setLocalSetupTab('env'));
+  $('tab-local-derp').addEventListener('click', () => setLocalSetupTab('derp'));
+  $('modal-derp-config-close').addEventListener('click', () => $('modal-derp-config').close());
+  $('btn-install-local-ts').addEventListener('click', () => {
+    runAction({ action: 'install_local_tailscale' }, $('btn-install-local-ts'));
+  });
+  $('btn-modal-connect-local').addEventListener('click', () => {
+    runAction({
+      action: 'connect_local_node',
+      server_url: $('derp-cfg-server-url').value.trim(),
+    }, $('btn-modal-connect-local'));
+  });
+  $('form-derp-config').addEventListener('submit', async e => {
+    e.preventDefault();
+    await runAction({
+      action: 'save_derp_config',
+      server_url: $('derp-cfg-server-url').value.trim(),
+      allow_incoming: $('local-pref-incoming').checked,
+      accept_dns: $('local-pref-dns').checked,
+      accept_routes: $('local-pref-routes').checked,
+      advertise_exit_node: $('local-pref-exit').checked,
+      enabled: $('derp-cfg-enabled').checked,
+      verify_clients: $('derp-cfg-verify').checked,
+      private_only: $('derp-cfg-private').checked,
+      region_code: $('derp-cfg-code').value.trim(),
+      region_name: $('derp-cfg-name').value.trim(),
+      ipv4: $('derp-cfg-ipv4').value.trim(),
+      stun_port: Number($('derp-cfg-stun').value) || 3478,
+    }, $('btn-save-derp-config'));
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh();
+  });
+  setInterval(() => {
+    updateNotice();
+    if (!document.hidden && !busy) refresh();
+  }, 15000);
+
+  refresh();
+})();
+</script>
+</body>
+</html>

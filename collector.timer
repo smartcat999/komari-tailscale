@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect Tailscale network state every 15 seconds
+
+[Timer]
+OnBootSec=5s
+OnUnitActiveSec=15s
+AccuracySec=1s
+Unit=komari-tailscale-collector.service
+
+[Install]
+WantedBy=timers.target

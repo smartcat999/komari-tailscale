@@ -1,0 +1,20 @@
+{
+  "name": "Tailscale 管理",
+  "short": "tailscale-status",
+  "description": "Headscale / Tailscale 可视化组网管理台：支持节点监控与管控、用户与授权密钥管理、子网路由与出口节点、MagicDNS 与自定义解析、可视化 ACL 访问控制及 DERP 中继网络诊断。",
+  "author": "smartcat999",
+  "version": "1.0.0",
+  "komari": ">=1.6.1",
+  "entry": "script.js",
+  "permissions": {
+    "node": true
+  },
+  "pages": [
+    {
+      "file": "status.html",
+      "title": "Tailscale 管理",
+      "type": "iframe",
+      "visibility": "admin"
+    }
+  ]
+}
