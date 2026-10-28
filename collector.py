@@ -1086,27 +1086,28 @@ def write_snapshot(snapshot):
             os.unlink(name)
 
 
-def ensure_control_token():
+def ensure_control_token(preferred_token=None):
     _ensure_storage_dir()
     ids = _komari_ids()
     try:
-        ENDPOINT_FILE.write_text(f'http://{CONTROL_HOST}:{CONTROL_PORT}', encoding='utf-8')
-        if ids:
-            os.chown(ENDPOINT_FILE, ids[0], ids[1])
-        os.chmod(ENDPOINT_FILE, 0o600)
+        if not ENDPOINT_FILE.exists():
+            ENDPOINT_FILE.write_text(f'http://{CONTROL_HOST}:{CONTROL_PORT}', encoding='utf-8')
+            if ids:
+                os.chown(ENDPOINT_FILE, ids[0], ids[1])
+            os.chmod(ENDPOINT_FILE, 0o600)
     except OSError:
         pass
     if TOKEN_FILE.exists():
         try:
             existing = TOKEN_FILE.read_text(encoding='utf-8').strip()
-            if len(existing) >= 32:
+            if len(existing) >= 32 and (not preferred_token or existing == preferred_token):
                 if ids:
                     os.chown(TOKEN_FILE, ids[0], ids[1])
                 os.chmod(TOKEN_FILE, 0o600)
                 return existing
         except OSError:
             pass
-    token = secrets.token_hex(32)
+    token = preferred_token if (preferred_token and len(preferred_token) >= 32) else secrets.token_hex(32)
     descriptor, name = tempfile.mkstemp(prefix='.token-', dir=STORAGE_DIR)
     try:
         with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
@@ -2460,10 +2461,14 @@ def run_daemon():
         while True:
             with ACTION_LOCK:
                 try:
+                    ensure_control_token(token)
                     collect_safe()
                 except Exception:
                     pass
-            time.sleep(15)
+            for _ in range(15):
+                time.sleep(1)
+                if not TOKEN_FILE.exists() or not OUTPUT.exists():
+                    break
 
     worker = threading.Thread(target=periodic_worker, daemon=True)
     worker.start()
