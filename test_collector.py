@@ -11,6 +11,7 @@ from collector import (
     build_snapshot,
     connection_result,
     execute_action,
+    localize_message,
     normalize_dns_record,
     parse_netcheck_output,
     parse_register_token,
@@ -385,6 +386,36 @@ class ActionValidationTests(unittest.TestCase):
             self.assertIn('访问控制策略', parts)
             mock_write_rec.assert_called_once()
             mock_apply_acl.assert_called_once()
+
+    def test_english_localization_of_actions_and_errors(self):
+        import re
+
+        samples = [
+            '已刷新组网状态',
+            '测速完成：直连 (21.5 ms)',
+            '测速完成：中继 local (30.2 ms)',
+            '节点已重命名为「edge-1」',
+            '节点 #3 已从组网中移除',
+            '该内网 IP (100.64.0.1) 已被节点「gateway」占用',
+            '用户「admin」下仍有 2 台设备，请先移除设备后再删除用户',
+            '全网测速完成：4 台直连，1 台中继',
+            '已成功恢复：DNS 配置与解析记录、访问控制策略、中继配置',
+            '本机节点 (gateway) 已成功接入组网并设为永不过期',
+            '节点 ID 必须为正整数',
+        ]
+        for zh_msg in samples:
+            en_msg = localize_message(zh_msg, 'en')
+            self.assertNotEqual(en_msg, zh_msg)
+            self.assertIsNone(re.search(r'[\u4e00-\u9fff]', en_msg), f'Chinese leaked in: {en_msg}')
+
+        with self.assertRaises(ValueError) as ctx_en:
+            execute_action({'action': 'create_user', 'name': '123bad', 'lang': 'en'})
+        self.assertIn('Username must start with a letter', str(ctx_en.exception))
+
+        fake_snap = {'schema': 1, 'nodes': []}
+        with patch('collector.collect', return_value=fake_snap), patch('collector.write_snapshot'):
+            res = execute_action({'action': 'refresh', 'lang': 'en-US'})
+            self.assertEqual(res['message'], 'Mesh status refreshed')
 
 
 if __name__ == '__main__':

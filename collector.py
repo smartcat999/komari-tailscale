@@ -1850,7 +1850,174 @@ def _apply_local_tailscale_prefs(payload):
     return True
 
 
+_EN_EXACT_MESSAGES = {
+    '请输入解析域名': 'Please enter a domain name',
+    '短主机名仅允许字母、数字、连字符或下划线': 'Short hostnames may only contain letters, digits, hyphens, or underscores',
+    '请输入指向的 IP 地址': 'Please enter a target IP address',
+    '请指定要删除的域名': 'Please specify a domain to delete',
+    'Headscale 配置文件格式不支持在线修改': 'Headscale config format does not support online editing',
+    '开启“覆盖本地 DNS”时，需至少填写一个全局 DNS 服务器（如 223.5.5.5）': 'At least one global DNS server (e.g. 1.1.1.1) is required when "Override local DNS" is enabled',
+    '无效的 Headscale 配置结构': 'Invalid Headscale config structure',
+    '服务端地址格式无效（示例：https://hs.example.com）': 'Invalid server URL format (e.g. https://hs.example.com)',
+    '区域代码仅允许字母、数字、连字符或下划线（如 local）': 'Region code may only contain letters, digits, hyphens, or underscores (e.g. local)',
+    '区域名称过长（最多 64 个字符）': 'Region name is too long (max 64 characters)',
+    'DERP 公网 IPv4 必须为 IPv4 地址': 'DERP public IPv4 must be a valid IPv4 address',
+    'STUN 端口必须在 1-65535 之间': 'STUN port must be between 1 and 65535',
+    'ACL 策略内容不能为空': 'ACL policy cannot be empty',
+    'ACL 策略文件过大': 'ACL policy file is too large',
+    'ACL 策略根节点必须为 JSON 对象 ({...})': 'ACL policy root must be a JSON object ({...})',
+    'acls 字段必须为数组 ([...])': 'The "acls" field must be an array ([...])',
+    '请输入节点注册链接、Auth ID 或 NodeKey': 'Please paste a registration URL, Auth ID, or NodeKey',
+    '节点密钥格式无效': 'Invalid node key format',
+    '无法识别的注册标识，请粘贴注册链接、Auth ID 或 nodekey/mkey': 'Unrecognized registration token. Please paste a registration URL, Auth ID, or nodekey/mkey',
+    '未找到 Headscale 数据库文件': 'Headscale database file not found',
+    '请输入有效的 IPv4 地址': 'Please enter a valid IPv4 address',
+    '节点内网 IP 必须位于 Tailscale 内网网段 (100.64.0.0/10) 或私有网段内': 'Node IP must be within the Tailscale CGNAT range (100.64.0.0/10) or a private IPv4 range',
+    '请提供备份 JSON 内容': 'Please provide backup JSON content',
+    '备份数据格式无效': 'Invalid backup data format',
+    '备份数据根节点必须为 JSON 对象': 'Backup data root must be a JSON object',
+    '未选择要恢复的配置项，或备份文件中不包含有效配置数据': 'No restore items selected, or backup contains no valid configuration data',
+    '请求参数格式错误': 'Invalid request parameters',
+    '缺少操作类型 (action)': 'Missing action parameter',
+    '已刷新组网状态': 'Mesh status refreshed',
+    '未找到可用于测速的内网 IP': 'No tailnet IP available for ping',
+    '测速完成：直连': 'Ping completed: Direct',
+    '当前节点为本机': 'This is the local node',
+    '未收到探测响应，节点可能离线或被防火墙拦截': 'No ping response received; node may be offline or blocked by a firewall',
+    '节点名称仅允许字母、数字、点、下划线或连字符，且以字母或数字开头（1-62 位）': 'Node name must start with a letter or digit and contain only letters, digits, dots, underscores, or hyphens (1-62 chars)',
+    '已将该节点设为密钥永不过期': 'Node key expiry disabled (never expires)',
+    '节点会话已设为过期，客户端需重新认证': 'Node session expired; client must re-authenticate',
+    '安全保护：不能直接移除当前控制面所在的本机节点': 'Safety guard: cannot remove the local control-plane node directly',
+    '请至少提供一个有效标签（如 tag:server）': 'Please provide at least one valid tag (e.g. tag:server)',
+    '节点标签已更新': 'Node tags updated',
+    '节点子网路由审批已更新': 'Node route approvals updated',
+    '不支持的有效期选项，请选择 1h、24h、7d、30d、90d 或 365d': 'Unsupported expiry option; choose 1h, 24h, 7d, 30d, 90d, or 365d',
+    '密钥已生成，请复制保存': 'Pre-auth key created; please copy and save it',
+    '解析记录已删除': 'DNS record deleted',
+    '未找到 Headscale 配置文件': 'Headscale config file not found',
+    'DNS 配置已生效': 'DNS settings applied',
+    '策略语法校验通过': 'Policy syntax check passed',
+    '访问控制策略已保存并生效': 'ACL policy saved and applied',
+    '用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': 'Username must start with a letter and contain only letters, digits, dots, underscores, or hyphens (1-62 chars)',
+    '备注名称过长（最多 64 个字符）': 'Display name is too long (max 64 characters)',
+    '邮箱格式无效': 'Invalid email address',
+    '新用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': 'New username must start with a letter and contain only letters, digits, dots, underscores, or hyphens (1-62 chars)',
+    '用户已删除': 'User deleted',
+    '网络诊断已完成': 'Network diagnostics completed',
+    '请选择有效的所属用户': 'Please select a valid user',
+    '已生成最新配置快照': 'Latest configuration snapshot generated',
+    '本机与中继配置已保存并生效': 'Local & relay configuration saved and applied',
+    '已开启本机作为出口节点并自动批准路由': 'Local exit node enabled and routes approved',
+    '已关闭本机出口节点功能': 'Local exit node disabled',
+    '本机 Tailscale 客户端已安装并启动服务': 'Local Tailscale client installed and started',
+    '未检测到服务端地址 (server_url)': 'Server URL (server_url) not detected',
+    '自动签发本机接入密钥失败': 'Failed to issue a pre-auth key for local node',
+    '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': 'Unable to read mesh status. Please check Headscale, Tailscale, and the collector service.',
+    '未授权的本地控制请求': 'Unauthorized local control request',
+    '未知路径': 'Unknown path',
+    '请求体大小异常': 'Invalid request body size',
+    '命令执行失败': 'Command execution failed',
+    '配置校验未通过': 'Config validation failed',
+    'ACL 策略校验未通过': 'ACL policy check failed',
+    '校验未通过': 'Validation failed',
+}
+
+_EN_FIELD_NAMES = {
+    '节点 ID': 'Node ID',
+    '用户 ID': 'User ID',
+    '目标用户 ID': 'Target User ID',
+    '密钥 ID': 'Key ID',
+}
+
+_EN_RESTORE_PARTS = {
+    'DNS 配置与解析记录': 'DNS settings & records',
+    '中继配置': 'DERP relay config',
+    '访问控制策略': 'ACL policy',
+}
+
+_EN_PATTERN_RULES = [
+    (re.compile(r'^域名格式无效：(.+)（示例：nas\.nodes\.internal 或 git\.lan）$'), lambda m: f'Invalid domain format: {m.group(1)} (e.g. nas.nodes.internal or git.lan)'),
+    (re.compile(r'^无效的 IPv4/IPv6 地址：(.+)$'), lambda m: f'Invalid IPv4/IPv6 address: {m.group(1)}'),
+    (re.compile(r'^(.+) 参数无效$'), lambda m: f'Invalid {_EN_FIELD_NAMES.get(m.group(1), m.group(1))}'),
+    (re.compile(r'^(.+) 必须为正整数$'), lambda m: f'{_EN_FIELD_NAMES.get(m.group(1), m.group(1))} must be a positive integer'),
+    (re.compile(r'^未找到域名记录：(.+)$'), lambda m: f'DNS record not found: {m.group(1)}'),
+    (re.compile(r'^无效的 DoH 地址：(.+)$'), lambda m: f'Invalid DoH URL: {m.group(1)}'),
+    (re.compile(r'^DNS 服务器地址无效：(.+)（请输入 IPv4/IPv6 或 https:// DoH 地址）$'), lambda m: f'Invalid DNS server: {m.group(1)} (enter IPv4/IPv6 or https:// DoH URL)'),
+    (re.compile(r'^搜索域格式无效：(.+)$'), lambda m: f'Invalid search domain: {m.group(1)}'),
+    (re.compile(r'^分流 DNS 格式错误：(.+)（格式：域名=DNS，如 corp\.local=10\.0\.0\.53）$'), lambda m: f'Invalid Split DNS format: {m.group(1)} (use domain=DNS, e.g. corp.local=10.0.0.53)'),
+    (re.compile(r'^分流域名格式无效：(.+)$'), lambda m: f'Invalid split domain: {m.group(1)}'),
+    (re.compile(r'^分流域名 (.+) 未指定有效 DNS 服务器$'), lambda m: f'No valid DNS server specified for split domain {m.group(1)}'),
+    (re.compile(r'^Headscale 配置校验失败：(.+)$'), lambda m: f'Headscale config check failed: {m.group(1)}'),
+    (re.compile(r'^无效的 IPv4 地址：(.+)$'), lambda m: f'Invalid IPv4 address: {m.group(1)}'),
+    (re.compile(r'^JSON / HuJSON 语法错误：(.+)$'), lambda m: f'JSON / HuJSON syntax error: {m.group(1)}'),
+    (re.compile(r'^第 (\d+) 条 ACL 规则必须为对象$'), lambda m: f'ACL rule #{m.group(1)} must be an object'),
+    (re.compile(r'^第 (\d+) 条规则 action 仅支持 "accept"$'), lambda m: f'ACL rule #{m.group(1)} action only supports "accept"'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 src 数组$'), lambda m: f'ACL rule #{m.group(1)} is missing a valid "src" array'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 dst 数组$'), lambda m: f'ACL rule #{m.group(1)} is missing a valid "dst" array'),
+    (re.compile(r'^策略校验未通过：(.+)$'), lambda m: f'Policy validation failed: {m.group(1)}'),
+    (re.compile(r'^目标用户 #(\d+) 不存在$'), lambda m: f'Target user #{m.group(1)} does not exist'),
+    (re.compile(r'^节点 #(\d+) 不存在$'), lambda m: f'Node #{m.group(1)} does not exist'),
+    (re.compile(r'^无效的 IPv4 地址格式：(.+)$'), lambda m: f'Invalid IPv4 address format: {m.group(1)}'),
+    (re.compile(r'^该内网 IP \(([^)]+)\) 已被节点「(.+)」占用$'), lambda m: f'IP address ({m.group(1)}) is already used by node "{m.group(2)}"'),
+    (re.compile(r'^备份文件不是合法的 JSON 格式：(.+)$'), lambda m: f'Backup file is not valid JSON: {m.group(1)}'),
+    (re.compile(r'^无效的本机子网网段：(.+)$'), lambda m: f'Invalid local subnet CIDR: {m.group(1)}'),
+    (re.compile(r'^测速完成：直连 \(([^)]+) ms\)$'), lambda m: f'Ping completed: Direct ({m.group(1)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+) \(([^)]+) ms\)$'), lambda m: f'Ping completed: Relay {m.group(1)} ({m.group(2)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+)$'), lambda m: f'Ping completed: Relay {m.group(1)}'),
+    (re.compile(r'^节点已重命名为「(.+)」$'), lambda m: f'Node renamed to "{m.group(1)}"'),
+    (re.compile(r'^节点 #(\d+) 已从组网中移除$'), lambda m: f'Node #{m.group(1)} removed from tailnet'),
+    (re.compile(r'^标签格式不合法：(.+)（示例：tag:server）$'), lambda m: f'Invalid tag format: {m.group(1)} (e.g. tag:server)'),
+    (re.compile(r'^标签格式不合法：(.+)$'), lambda m: f'Invalid tag format: {m.group(1)}'),
+    (re.compile(r'^无效的 CIDR 子网网段：(.+)$'), lambda m: f'Invalid CIDR subnet: {m.group(1)}'),
+    (re.compile(r'^预授权密钥 #(\d+) 已废止$'), lambda m: f'Pre-auth key #{m.group(1)} expired'),
+    (re.compile(r'^预授权密钥 #(\d+) 已删除$'), lambda m: f'Pre-auth key #{m.group(1)} deleted'),
+    (re.compile(r'^解析记录已保存：(.+) -> (.+)$'), lambda m: f'DNS record saved: {m.group(1)} -> {m.group(2)}'),
+    (re.compile(r'^已创建用户「(.+)」$'), lambda m: f'User "{m.group(1)}" created'),
+    (re.compile(r'^用户已重命名为「(.+)」$'), lambda m: f'User renamed to "{m.group(1)}"'),
+    (re.compile(r'^用户「(.+)」下仍有 (\d+) 台设备，请先移除设备后再删除用户$'), lambda m: f'User "{m.group(1)}" still owns {m.group(2)} node(s); remove or move them first'),
+    (re.compile(r'^全网测速完成：(\d+) 台直连，(\d+) 台中继$'), lambda m: f'Mesh ping completed: {m.group(1)} direct, {m.group(2)} relayed'),
+    (re.compile(r'^已将节点迁移至用户「(.+)」$'), lambda m: f'Node moved to user "{m.group(1)}"'),
+    (re.compile(r'^节点内网 IP 已修改为 (.+)$'), lambda m: f'Node tailnet IP updated to {m.group(1)}'),
+    (re.compile(r'^节点已批准接入至用户「(.+)」$'), lambda m: f'Node approved and assigned to user "{m.group(1)}"'),
+    (re.compile(r'^已成功恢复：(.+)$'), lambda m: 'Restored successfully: ' + ', '.join(_EN_RESTORE_PARTS.get(p, p) for p in m.group(1).split('、'))),
+    (re.compile(r'^本机节点 \((.+)\) 已成功接入组网并设为永不过期$'), lambda m: f'Local node ({m.group(1)}) connected with key expiry disabled'),
+    (re.compile(r'^未知的操作类型：(.+)$'), lambda m: f'Unknown action: {m.group(1)}'),
+    (re.compile(r'^Headscale 执行失败：(.+)$'), lambda m: f'Headscale command failed: {m.group(1)}'),
+    (re.compile(r'^操作失败：(.+)$'), lambda m: f'Action failed: {m.group(1)}'),
+]
+
+
+def normalize_lang(lang):
+    raw = str(lang or '').strip().lower()
+    if raw == 'en' or raw.startswith('en-') or raw.startswith('en_'):
+        return 'en'
+    return 'zh'
+
+
+def localize_message(text, lang='zh'):
+    if normalize_lang(lang) != 'en' or not isinstance(text, str) or not text:
+        return text
+    if text in _EN_EXACT_MESSAGES:
+        return _EN_EXACT_MESSAGES[text]
+    for pattern, repl in _EN_PATTERN_RULES:
+        m = pattern.match(text)
+        if m:
+            return repl(m)
+    return text
+
+
 def execute_action(payload):
+    lang = normalize_lang(payload.get('lang')) if isinstance(payload, dict) else 'zh'
+    try:
+        result = _execute_action_core(payload)
+    except ValueError as exc:
+        raise ValueError(localize_message(str(exc), lang)) from exc
+    if isinstance(result, dict) and isinstance(result.get('message'), str):
+        result['message'] = localize_message(result['message'], lang)
+    return result
+
+
+def _execute_action_core(payload):
     if not isinstance(payload, dict):
         raise ValueError('请求参数格式错误')
     action = str(payload.get('action') or '').strip()
@@ -2434,21 +2601,26 @@ def make_handler(expected_token):
             if self.path != '/action':
                 self._send_json(404, {'ok': False, 'error': '未知路径'})
                 return
+            req_lang = 'zh'
             try:
                 length = int(self.headers.get('Content-Length') or 0)
                 if length <= 0 or length > 524288:
                     raise ValueError('请求体大小异常')
                 payload = json.loads(self.rfile.read(length).decode('utf-8'))
+                if isinstance(payload, dict):
+                    req_lang = normalize_lang(payload.get('lang'))
                 result = execute_action(payload)
                 self._send_json(200, result)
             except ValueError as exc:
-                self._send_json(400, {'ok': False, 'error': str(exc)})
+                self._send_json(400, {'ok': False, 'error': localize_message(str(exc), req_lang)})
             except subprocess.CalledProcessError as exc:
                 stderr = (exc.stderr or exc.stdout or '').strip()
-                first_line = stderr.splitlines()[0] if stderr else '命令执行失败'
-                self._send_json(500, {'ok': False, 'error': f'Headscale 执行失败：{first_line}'})
+                first_line = stderr.splitlines()[0] if stderr else localize_message('命令执行失败', req_lang)
+                err_msg = f'Headscale command failed: {first_line}' if req_lang == 'en' else f'Headscale 执行失败：{first_line}'
+                self._send_json(500, {'ok': False, 'error': err_msg})
             except Exception as exc:
-                self._send_json(500, {'ok': False, 'error': f'操作失败：{exc}'})
+                err_msg = f'Action failed: {exc}' if req_lang == 'en' else f'操作失败：{exc}'
+                self._send_json(500, {'ok': False, 'error': err_msg})
 
     return Handler
 
