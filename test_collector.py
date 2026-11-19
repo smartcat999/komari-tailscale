@@ -13,6 +13,7 @@ from collector import (
     execute_action,
     localize_message,
     normalize_dns_record,
+    normalize_lang,
     parse_netcheck_output,
     parse_register_token,
     parse_timestamp,
@@ -416,6 +417,72 @@ class ActionValidationTests(unittest.TestCase):
         with patch('collector.collect', return_value=fake_snap), patch('collector.write_snapshot'):
             res = execute_action({'action': 'refresh', 'lang': 'en-US'})
             self.assertEqual(res['message'], 'Mesh status refreshed')
+
+    def test_multilingual_localization_of_actions_and_errors(self):
+        import re
+
+        lang_cases = [
+            (None, 'zh'),
+            ('', 'zh'),
+            ('zh', 'zh'),
+            ('zh-CN', 'zh'),
+            ('zh_TW', 'zh-TW'),
+            ('zh-Hant-HK', 'zh-TW'),
+            ('ja', 'ja'),
+            ('ja-JP', 'ja'),
+            ('id', 'id'),
+            ('id-ID', 'id'),
+            ('in-ID', 'id'),
+            ('en-GB', 'en'),
+            ('fr-FR', 'en'),
+        ]
+        for raw, expected in lang_cases:
+            self.assertEqual(normalize_lang(raw), expected)
+
+        samples = [
+            '已刷新组网状态',
+            '测速完成：直连 (21.5 ms)',
+            '测速完成：中继 local (30.2 ms)',
+            '节点已重命名为「edge-1」',
+            '节点 #3 已从组网中移除',
+            '该内网 IP (100.64.0.1) 已被节点「gateway」占用',
+            '用户「admin」下仍有 2 台设备，请先移除设备后再删除用户',
+            '全网测速完成：4 台直连，1 台中继',
+            '已成功恢复：DNS 配置与解析记录、访问控制策略、中继配置',
+            '本机节点 (gateway) 已成功接入组网并设为永不过期',
+            '节点 ID 必须为正整数',
+            'Headscale 执行失败：boom',
+            '操作失败：boom',
+        ]
+        sc_25 = set('节网请设态钥继连断户备规则删无认开闭导进选输错败')
+        sc_24 = sc_25 - {'断'}
+        for locale in ('zh-TW', 'en', 'ja-JP', 'id-ID'):
+            norm = normalize_lang(locale)
+            for zh_msg in samples:
+                out = localize_message(zh_msg, locale)
+                self.assertNotEqual(out, zh_msg, f'{locale} did not translate: {zh_msg}')
+                if norm in ('en', 'id'):
+                    self.assertIsNone(re.search(r'[\u4e00-\u9fff\u3040-\u30ff]', out), f'CJK/kana leaked in {locale}: {out}')
+                elif norm == 'zh-TW':
+                    self.assertFalse(sc_25.intersection(out), f'Simplified char leaked in zh-TW: {out}')
+                elif norm == 'ja':
+                    self.assertFalse(sc_24.intersection(out), f'Simplified char leaked in ja: {out}')
+
+        for tag in ('zh-TW', 'ja-JP', 'id-ID'):
+            with self.assertRaises(ValueError) as ctx:
+                execute_action({'action': 'create_user', 'name': '123bad', 'lang': tag})
+            self.assertNotIn('用户名需以字母开头', str(ctx.exception))
+
+        fake_snap = {'schema': 1, 'nodes': []}
+        with patch('collector.collect', return_value=fake_snap), patch('collector.write_snapshot'):
+            for tag, msg in [
+                ('zh', '已刷新组网状态'),
+                ('zh-TW', '已重新整理組網狀態'),
+                ('ja-JP', 'メッシュ状態を更新しました'),
+                ('id-ID', 'Status mesh disegarkan'),
+                ('en-US', 'Mesh status refreshed'),
+            ]:
+                self.assertEqual(execute_action({'action': 'refresh', 'lang': tag})['message'], msg)
 
 
 if __name__ == '__main__':

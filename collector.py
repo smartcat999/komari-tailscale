@@ -1986,20 +1986,452 @@ _EN_PATTERN_RULES = [
     (re.compile(r'^操作失败：(.+)$'), lambda m: f'Action failed: {m.group(1)}'),
 ]
 
+_ZHTW_EXACT_MESSAGES = {
+    '请输入解析域名': '請輸入解析網域',
+    '短主机名仅允许字母、数字、连字符或下划线': '短主機名稱僅允許英文字母、數字、連字號或底線',
+    '请输入指向的 IP 地址': '請輸入指向的 IP 位址',
+    '请指定要删除的域名': '請指定要刪除的網域',
+    'Headscale 配置文件格式不支持在线修改': 'Headscale 設定檔格式不支援線上修改',
+    '开启“覆盖本地 DNS”时，需至少填写一个全局 DNS 服务器（如 223.5.5.5）': '開啟「覆蓋本機 DNS」時，需至少填寫一個全域 DNS 伺服器（如 1.1.1.1）',
+    '无效的 Headscale 配置结构': '無效的 Headscale 設定結構',
+    '服务端地址格式无效（示例：https://hs.example.com）': '伺服器網址格式無效（範例：https://hs.example.com）',
+    '区域代码仅允许字母、数字、连字符或下划线（如 local）': '區域代碼僅允許英文字母、數字、連字號或底線（如 local）',
+    '区域名称过长（最多 64 个字符）': '區域名稱過長（最多 64 個字元）',
+    'DERP 公网 IPv4 必须为 IPv4 地址': 'DERP 公開 IPv4 必須為有效的 IPv4 位址',
+    'STUN 端口必须在 1-65535 之间': 'STUN 連接埠必須在 1-65535 之間',
+    'ACL 策略内容不能为空': 'ACL 原則內容不能為空',
+    'ACL 策略文件过大': 'ACL 原則檔案過大',
+    'ACL 策略根节点必须为 JSON 对象 ({...})': 'ACL 原則根節點必須為 JSON 物件 ({...})',
+    'acls 字段必须为数组 ([...])': 'acls 欄位必須為陣列 ([...])',
+    '请输入节点注册链接、Auth ID 或 NodeKey': '請輸入節點註冊連結、Auth ID 或 NodeKey',
+    '节点密钥格式无效': '節點金鑰格式無效',
+    '无法识别的注册标识，请粘贴注册链接、Auth ID 或 nodekey/mkey': '無法辨識的註冊識別碼，請貼上註冊連結、Auth ID 或 nodekey/mkey',
+    '未找到 Headscale 数据库文件': '找不到 Headscale 資料庫檔案',
+    '请输入有效的 IPv4 地址': '請輸入有效的 IPv4 位址',
+    '节点内网 IP 必须位于 Tailscale 内网网段 (100.64.0.0/10) 或私有网段内': '節點內網 IP 必須位於 Tailscale 內網網段 (100.64.0.0/10) 或私有網段內',
+    '请提供备份 JSON 内容': '請提供備份 JSON 內容',
+    '备份数据格式无效': '備份資料格式無效',
+    '备份数据根节点必须为 JSON 对象': '備份資料根節點必須為 JSON 物件',
+    '未选择要恢复的配置项，或备份文件中不包含有效配置数据': '未選擇要還原的設定項目，或備份檔中不包含有效設定資料',
+    '请求参数格式错误': '請求參數格式錯誤',
+    '缺少操作类型 (action)': '缺少操作類型 (action)',
+    '已刷新组网状态': '已重新整理組網狀態',
+    '未找到可用于测速的内网 IP': '找不到可用於測速的內網 IP',
+    '测速完成：直连': '測速完成：直連',
+    '当前节点为本机': '目前節點為本機',
+    '未收到探测响应，节点可能离线或被防火墙拦截': '未收到探測回應，節點可能離線或被防火牆攔截',
+    '节点名称仅允许字母、数字、点、下划线或连字符，且以字母或数字开头（1-62 位）': '節點名稱僅允許英文字母、數字、點號、底線或連字號，且須以字母或數字開頭（1-62 個字元）',
+    '已将该节点设为密钥永不过期': '已將此節點設為金鑰永不過期',
+    '节点会话已设为过期，客户端需重新认证': '節點工作階段已設為過期，用戶端須重新認證',
+    '安全保护：不能直接移除当前控制面所在的本机节点': '安全防護：不能直接移除目前控制面所在的本機節點',
+    '请至少提供一个有效标签（如 tag:server）': '請至少提供一個有效標籤（如 tag:server）',
+    '节点标签已更新': '節點標籤已更新',
+    '节点子网路由审批已更新': '節點子網路路由核准狀態已更新',
+    '不支持的有效期选项，请选择 1h、24h、7d、30d、90d 或 365d': '不支援的效期選項，請選擇 1h、24h、7d、30d、90d 或 365d',
+    '密钥已生成，请复制保存': '金鑰已產生，請複製並妥善儲存',
+    '解析记录已删除': '解析記錄已刪除',
+    '未找到 Headscale 配置文件': '找不到 Headscale 設定檔',
+    'DNS 配置已生效': 'DNS 設定已生效',
+    '策略语法校验通过': '原則語法驗證通過',
+    '访问控制策略已保存并生效': '存取控制原則已儲存並生效',
+    '用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': '使用者名稱須以英文字母開頭，僅允許字母、數字、點號、底線或連字號（1-62 個字元）',
+    '备注名称过长（最多 64 个字符）': '顯示名稱過長（最多 64 個字元）',
+    '邮箱格式无效': '電子郵件格式無效',
+    '新用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': '新使用者名稱須以英文字母開頭，僅允許字母、數字、點號、底線或連字號（1-62 個字元）',
+    '用户已删除': '使用者已刪除',
+    '网络诊断已完成': '網路診斷已完成',
+    '请选择有效的所属用户': '請選擇有效的所屬使用者',
+    '已生成最新配置快照': '已產生最新設定快照',
+    '本机与中继配置已保存并生效': '本機與中繼設定已儲存並生效',
+    '已开启本机作为出口节点并自动批准路由': '已開啟本機作為出口節點並自動核准路由',
+    '已关闭本机出口节点功能': '已關閉本機出口節點功能',
+    '本机 Tailscale 客户端已安装并启动服务': '本機 Tailscale 用戶端已安裝並啟動服務',
+    '未检测到服务端地址 (server_url)': '未偵測到伺服器網址 (server_url)',
+    '自动签发本机接入密钥失败': '自動核發本機加入金鑰失敗',
+    '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': '無法讀取組網狀態，請檢查 Headscale、Tailscale 與採集服務。',
+    '未授权的本地控制请求': '未授權的本機控制請求',
+    '未知路径': '未知路徑',
+    '请求体大小异常': '請求主體大小異常',
+    '命令执行失败': '指令執行失敗',
+    '配置校验未通过': '設定驗證未通過',
+    'ACL 策略校验未通过': 'ACL 原則驗證未通過',
+    '校验未通过': '驗證未通過',
+}
+
+_ZHTW_FIELD_NAMES = {
+    '节点 ID': '節點 ID',
+    '用户 ID': '使用者 ID',
+    '目标用户 ID': '目標使用者 ID',
+    '密钥 ID': '金鑰 ID',
+}
+
+_ZHTW_RESTORE_PARTS = {
+    'DNS 配置与解析记录': 'DNS 設定與解析記錄',
+    '中继配置': '中繼設定',
+    '访问控制策略': '存取控制原則',
+}
+
+_ZHTW_PATTERN_RULES = [
+    (re.compile(r'^域名格式无效：(.+)（示例：nas\.nodes\.internal 或 git\.lan）$'), lambda m: f'網域格式無效：{m.group(1)}（範例：nas.nodes.internal 或 git.lan）'),
+    (re.compile(r'^无效的 IPv4/IPv6 地址：(.+)$'), lambda m: f'無效的 IPv4/IPv6 位址：{m.group(1)}'),
+    (re.compile(r'^(.+) 参数无效$'), lambda m: f"{_ZHTW_FIELD_NAMES.get(m.group(1), m.group(1))} 參數無效"),
+    (re.compile(r'^(.+) 必须为正整数$'), lambda m: f"{_ZHTW_FIELD_NAMES.get(m.group(1), m.group(1))} 必須為正整數"),
+    (re.compile(r'^未找到域名记录：(.+)$'), lambda m: f'找不到網域記錄：{m.group(1)}'),
+    (re.compile(r'^无效的 DoH 地址：(.+)$'), lambda m: f'無效的 DoH 位址：{m.group(1)}'),
+    (re.compile(r'^DNS 服务器地址无效：(.+)（请输入 IPv4/IPv6 或 https:// DoH 地址）$'), lambda m: f'DNS 伺服器位址無效：{m.group(1)}（請輸入 IPv4/IPv6 或 https:// DoH 位址）'),
+    (re.compile(r'^搜索域格式无效：(.+)$'), lambda m: f'搜尋網域格式無效：{m.group(1)}'),
+    (re.compile(r'^分流 DNS 格式错误：(.+)（格式：域名=DNS，如 corp\.local=10\.0\.0\.53）$'), lambda m: f'分流 DNS 格式錯誤：{m.group(1)}（格式：網域=DNS，如 corp.local=10.0.0.53）'),
+    (re.compile(r'^分流域名格式无效：(.+)$'), lambda m: f'分流網域格式無效：{m.group(1)}'),
+    (re.compile(r'^分流域名 (.+) 未指定有效 DNS 服务器$'), lambda m: f'分流網域 {m.group(1)} 未指定有效 DNS 伺服器'),
+    (re.compile(r'^Headscale 配置校验失败：(.+)$'), lambda m: f'Headscale 設定驗證失敗：{m.group(1)}'),
+    (re.compile(r'^无效的 IPv4 地址：(.+)$'), lambda m: f'無效的 IPv4 位址：{m.group(1)}'),
+    (re.compile(r'^JSON / HuJSON 语法错误：(.+)$'), lambda m: f'JSON / HuJSON 語法錯誤：{m.group(1)}'),
+    (re.compile(r'^第 (\d+) 条 ACL 规则必须为对象$'), lambda m: f'第 {m.group(1)} 條 ACL 規則必須為物件'),
+    (re.compile(r'^第 (\d+) 条规则 action 仅支持 "accept"$'), lambda m: f'第 {m.group(1)} 條規則 action 僅支援 "accept"'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 src 数组$'), lambda m: f'第 {m.group(1)} 條規則缺少有效的 src 陣列'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 dst 数组$'), lambda m: f'第 {m.group(1)} 條規則缺少有效的 dst 陣列'),
+    (re.compile(r'^策略校验未通过：(.+)$'), lambda m: f'原則驗證未通過：{m.group(1)}'),
+    (re.compile(r'^目标用户 #(\d+) 不存在$'), lambda m: f'目標使用者 #{m.group(1)} 不存在'),
+    (re.compile(r'^节点 #(\d+) 不存在$'), lambda m: f'節點 #{m.group(1)} 不存在'),
+    (re.compile(r'^无效的 IPv4 地址格式：(.+)$'), lambda m: f'無效的 IPv4 位址格式：{m.group(1)}'),
+    (re.compile(r'^该内网 IP \(([^)]+)\) 已被节点「(.+)」占用$'), lambda m: f'該內網 IP ({m.group(1)}) 已被節點「{m.group(2)}」佔用'),
+    (re.compile(r'^备份文件不是合法的 JSON 格式：(.+)$'), lambda m: f'備份檔不是合法的 JSON 格式：{m.group(1)}'),
+    (re.compile(r'^无效的本机子网网段：(.+)$'), lambda m: f'無效的本機子網路網段：{m.group(1)}'),
+    (re.compile(r'^测速完成：直连 \(([^)]+) ms\)$'), lambda m: f'測速完成：直連 ({m.group(1)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+) \(([^)]+) ms\)$'), lambda m: f'測速完成：中繼 {m.group(1)} ({m.group(2)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+)$'), lambda m: f'測速完成：中繼 {m.group(1)}'),
+    (re.compile(r'^节点已重命名为「(.+)」$'), lambda m: f'節點已重新命名為「{m.group(1)}」'),
+    (re.compile(r'^节点 #(\d+) 已从组网中移除$'), lambda m: f'節點 #{m.group(1)} 已從組網中移除'),
+    (re.compile(r'^标签格式不合法：(.+)（示例：tag:server）$'), lambda m: f'標籤格式不合法：{m.group(1)}（範例：tag:server）'),
+    (re.compile(r'^标签格式不合法：(.+)$'), lambda m: f'標籤格式不合法：{m.group(1)}'),
+    (re.compile(r'^无效的 CIDR 子网网段：(.+)$'), lambda m: f'無效的 CIDR 子網路網段：{m.group(1)}'),
+    (re.compile(r'^预授权密钥 #(\d+) 已废止$'), lambda m: f'預先授權金鑰 #{m.group(1)} 已撤銷'),
+    (re.compile(r'^预授权密钥 #(\d+) 已删除$'), lambda m: f'預先授權金鑰 #{m.group(1)} 已刪除'),
+    (re.compile(r'^解析记录已保存：(.+) -> (.+)$'), lambda m: f'解析記錄已儲存：{m.group(1)} -> {m.group(2)}'),
+    (re.compile(r'^已创建用户「(.+)」$'), lambda m: f'已建立使用者「{m.group(1)}」'),
+    (re.compile(r'^用户已重命名为「(.+)」$'), lambda m: f'使用者已重新命名為「{m.group(1)}」'),
+    (re.compile(r'^用户「(.+)」下仍有 (\d+) 台设备，请先移除设备后再删除用户$'), lambda m: f'使用者「{m.group(1)}」下仍有 {m.group(2)} 台裝置，請先移除裝置後再刪除使用者'),
+    (re.compile(r'^全网测速完成：(\d+) 台直连，(\d+) 台中继$'), lambda m: f'全網測速完成：{m.group(1)} 台直連，{m.group(2)} 台中繼'),
+    (re.compile(r'^已将节点迁移至用户「(.+)」$'), lambda m: f'已將節點轉移至使用者「{m.group(1)}」'),
+    (re.compile(r'^节点内网 IP 已修改为 (.+)$'), lambda m: f'節點內網 IP 已修改為 {m.group(1)}'),
+    (re.compile(r'^节点已批准接入至用户「(.+)」$'), lambda m: f'節點已核准加入至使用者「{m.group(1)}」'),
+    (re.compile(r'^已成功恢复：(.+)$'), lambda m: '已成功還原：' + '、'.join(_ZHTW_RESTORE_PARTS.get(p, p) for p in m.group(1).split('、'))),
+    (re.compile(r'^本机节点 \((.+)\) 已成功接入组网并设为永不过期$'), lambda m: f'本機節點 ({m.group(1)}) 已成功加入組網並設為永不過期'),
+    (re.compile(r'^未知的操作类型：(.+)$'), lambda m: f'未知的操作類型：{m.group(1)}'),
+    (re.compile(r'^Headscale 执行失败：(.+)$'), lambda m: f'Headscale 執行失敗：{m.group(1)}'),
+    (re.compile(r'^操作失败：(.+)$'), lambda m: f'操作失敗：{m.group(1)}'),
+]
+
+_JA_EXACT_MESSAGES = {
+    '请输入解析域名': 'ドメイン名を入力してください',
+    '短主机名仅允许字母、数字、连字符或下划线': '短縮ホスト名には英数字、ハイフン、アンダースコアのみ使用できます',
+    '请输入指向的 IP 地址': '宛先の IP アドレスを入力してください',
+    '请指定要删除的域名': '削除するドメイン名を指定してください',
+    'Headscale 配置文件格式不支持在线修改': 'Headscale 設定ファイル形式はオンライン編集に対応していません',
+    '开启“覆盖本地 DNS”时，需至少填写一个全局 DNS 服务器（如 223.5.5.5）': '「ローカル DNS を上書き」を有効にする場合、グローバル DNS サーバーを少なくとも1つ指定してください（例: 1.1.1.1）',
+    '无效的 Headscale 配置结构': 'Headscale 設定構造が無効です',
+    '服务端地址格式无效（示例：https://hs.example.com）': 'サーバー URL の形式が無効です（例: https://hs.example.com）',
+    '区域代码仅允许字母、数字、连字符或下划线（如 local）': 'リージョンコードには英数字、ハイフン、アンダースコアのみ使用できます（例: local）',
+    '区域名称过长（最多 64 个字符）': 'リージョン名が長すぎます（最大 64 文字）',
+    'DERP 公网 IPv4 必须为 IPv4 地址': 'DERP パブリック IPv4 は有効な IPv4 アドレスである必要があります',
+    'STUN 端口必须在 1-65535 之间': 'STUN ポートは 1-65535 の範囲で指定してください',
+    'ACL 策略内容不能为空': 'ACL ポリシーの内容を空にすることはできません',
+    'ACL 策略文件过大': 'ACL ポリシーファイルが大きすぎます',
+    'ACL 策略根节点必须为 JSON 对象 ({...})': 'ACL ポリシーのルートは JSON オブジェクト ({...}) である必要があります',
+    'acls 字段必须为数组 ([...])': 'acls フィールドは配列 ([...]) である必要があります',
+    '请输入节点注册链接、Auth ID 或 NodeKey': 'ノード登録 URL、Auth ID、または NodeKey を入力してください',
+    '节点密钥格式无效': 'ノードキーの形式が無効です',
+    '无法识别的注册标识，请粘贴注册链接、Auth ID 或 nodekey/mkey': '登録トークンを識別できません。登録 URL、Auth ID、または nodekey/mkey を貼り付けてください',
+    '未找到 Headscale 数据库文件': 'Headscale データベースファイルが見つかりません',
+    '请输入有效的 IPv4 地址': '有効な IPv4 アドレスを入力してください',
+    '节点内网 IP 必须位于 Tailscale 内网网段 (100.64.0.0/10) 或私有网段内': 'ノード IP は Tailscale CGNAT 帯域 (100.64.0.0/10) またはプライベート IPv4 帯域内である必要があります',
+    '请提供备份 JSON 内容': 'バックアップ JSON の内容を入力してください',
+    '备份数据格式无效': 'バックアップデータの形式が無効です',
+    '备份数据根节点必须为 JSON 对象': 'バックアップデータのルートは JSON オブジェクトである必要があります',
+    '未选择要恢复的配置项，或备份文件中不包含有效配置数据': '復元する項目が選択されていないか、バックアップに有効な設定データが含まれていません',
+    '请求参数格式错误': 'リクエストパラメーターの形式が不正です',
+    '缺少操作类型 (action)': '操作タイプ (action) が不足しています',
+    '已刷新组网状态': 'メッシュ状態を更新しました',
+    '未找到可用于测速的内网 IP': 'Ping に使用できる Tailnet IP が見つかりません',
+    '测速完成：直连': 'Ping 完了：直接接続',
+    '当前节点为本机': '現在のノードはローカルノードです',
+    '未收到探测响应，节点可能离线或被防火墙拦截': '応答がありませんでした。ノードがオフラインかファイアウォールでブロックされている可能性があります',
+    '节点名称仅允许字母、数字、点、下划线或连字符，且以字母或数字开头（1-62 位）': 'ノード名は英数字で始まり、英数字・ドット・アンダースコア・ハイフンのみ使用できます（1-62 文字）',
+    '已将该节点设为密钥永不过期': 'このノードのキー有効期限を無期限に設定しました',
+    '节点会话已设为过期，客户端需重新认证': 'ノードのセッションを期限切れにしました。クライアントで再認証が必要です',
+    '安全保护：不能直接移除当前控制面所在的本机节点': '安全保護：現在のコントロールプレーンがあるローカルノードは直接削除できません',
+    '请至少提供一个有效标签（如 tag:server）': '有効なタグを少なくとも1つ指定してください（例: tag:server）',
+    '节点标签已更新': 'ノードタグを更新しました',
+    '节点子网路由审批已更新': 'ノードのサブネットルート承認を更新しました',
+    '不支持的有效期选项，请选择 1h、24h、7d、30d、90d 或 365d': '未対応の有効期限オプションです。1h、24h、7d、30d、90d、または 365d を選択してください',
+    '密钥已生成，请复制保存': '事前認証キーを作成しました。コピーして保存してください',
+    '解析记录已删除': 'DNS レコードを削除しました',
+    '未找到 Headscale 配置文件': 'Headscale 設定ファイルが見つかりません',
+    'DNS 配置已生效': 'DNS 設定を適用しました',
+    '策略语法校验通过': 'ポリシーの構文検証に合格しました',
+    '访问控制策略已保存并生效': 'ACL ポリシーを保存して適用しました',
+    '用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': 'ユーザー名は英字で始まり、英数字・ドット・アンダースコア・ハイフンのみ使用できます（1-62 文字）',
+    '备注名称过长（最多 64 个字符）': '表示名が長すぎます（最大 64 文字）',
+    '邮箱格式无效': 'メールアドレスの形式が無効です',
+    '新用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': '新しいユーザー名は英字で始まり、英数字・ドット・アンダースコア・ハイフンのみ使用できます（1-62 文字）',
+    '用户已删除': 'ユーザーを削除しました',
+    '网络诊断已完成': 'ネットワーク診断が完了しました',
+    '请选择有效的所属用户': '有効な所有ユーザーを選択してください',
+    '已生成最新配置快照': '最新の設定スナップショットを生成しました',
+    '本机与中继配置已保存并生效': 'ローカルおよびリレー設定を保存して適用しました',
+    '已开启本机作为出口节点并自动批准路由': 'ローカル出口ノードを有効化しルートを承認しました',
+    '已关闭本机出口节点功能': 'ローカル出口ノードを無効化しました',
+    '本机 Tailscale 客户端已安装并启动服务': 'ローカル Tailscale クライアントをインストールして起動しました',
+    '未检测到服务端地址 (server_url)': 'サーバー URL (server_url) が検出されませんでした',
+    '自动签发本机接入密钥失败': 'ローカルノード用の事前認証キーの自動発行に失敗しました',
+    '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': 'メッシュ状態を読み取れません。Headscale、Tailscale、およびコレクターサービスを確認してください。',
+    '未授权的本地控制请求': '未承認のローカル制御リクエストです',
+    '未知路径': '不明なパスです',
+    '请求体大小异常': 'リクエストボディのサイズが不正です',
+    '命令执行失败': 'コマンドの実行に失敗しました',
+    '配置校验未通过': '設定の検証に失敗しました',
+    'ACL 策略校验未通过': 'ACL ポリシーの検証に失敗しました',
+    '校验未通过': '検証に失敗しました',
+}
+
+_JA_FIELD_NAMES = {
+    '节点 ID': 'ノード ID',
+    '用户 ID': 'ユーザー ID',
+    '目标用户 ID': '移行先ユーザー ID',
+    '密钥 ID': 'キー ID',
+}
+
+_JA_RESTORE_PARTS = {
+    'DNS 配置与解析记录': 'DNS 設定とカスタムレコード',
+    '中继配置': 'DERP リレー設定',
+    '访问控制策略': 'ACL ポリシー',
+}
+
+_JA_PATTERN_RULES = [
+    (re.compile(r'^域名格式无效：(.+)（示例：nas\.nodes\.internal 或 git\.lan）$'), lambda m: f'ドメイン形式が無効です：{m.group(1)}（例: nas.nodes.internal または git.lan）'),
+    (re.compile(r'^无效的 IPv4/IPv6 地址：(.+)$'), lambda m: f'無効な IPv4/IPv6 アドレスです：{m.group(1)}'),
+    (re.compile(r'^(.+) 参数无效$'), lambda m: f'{_JA_FIELD_NAMES.get(m.group(1), m.group(1))} が無効です'),
+    (re.compile(r'^(.+) 必须为正整数$'), lambda m: f'{_JA_FIELD_NAMES.get(m.group(1), m.group(1))} は正の整数である必要があります'),
+    (re.compile(r'^未找到域名记录：(.+)$'), lambda m: f'DNS レコードが見つかりません：{m.group(1)}'),
+    (re.compile(r'^无效的 DoH 地址：(.+)$'), lambda m: f'無効な DoH URL です：{m.group(1)}'),
+    (re.compile(r'^DNS 服务器地址无效：(.+)（请输入 IPv4/IPv6 或 https:// DoH 地址）$'), lambda m: f'DNS サーバーアドレスが無効です：{m.group(1)}（IPv4/IPv6 または https:// DoH URL を入力してください）'),
+    (re.compile(r'^搜索域格式无效：(.+)$'), lambda m: f'検索ドメインの形式が無効です：{m.group(1)}'),
+    (re.compile(r'^分流 DNS 格式错误：(.+)（格式：域名=DNS，如 corp\.local=10\.0\.0\.53）$'), lambda m: f'スプリット DNS の形式が無効です：{m.group(1)}（形式：ドメイン=DNS、例: corp.local=10.0.0.53）'),
+    (re.compile(r'^分流域名格式无效：(.+)$'), lambda m: f'スプリットドメインの形式が無効です：{m.group(1)}'),
+    (re.compile(r'^分流域名 (.+) 未指定有效 DNS 服务器$'), lambda m: f'スプリットドメイン {m.group(1)} に有効な DNS サーバーが指定されていません'),
+    (re.compile(r'^Headscale 配置校验失败：(.+)$'), lambda m: f'Headscale 設定の検証に失敗しました：{m.group(1)}'),
+    (re.compile(r'^无效的 IPv4 地址：(.+)$'), lambda m: f'無効な IPv4 アドレスです：{m.group(1)}'),
+    (re.compile(r'^JSON / HuJSON 语法错误：(.+)$'), lambda m: f'JSON / HuJSON 構文エラー：{m.group(1)}'),
+    (re.compile(r'^第 (\d+) 条 ACL 规则必须为对象$'), lambda m: f'ACL ルール #{m.group(1)} はオブジェクトである必要があります'),
+    (re.compile(r'^第 (\d+) 条规则 action 仅支持 "accept"$'), lambda m: f'ACL ルール #{m.group(1)} の action は "accept" のみ対応しています'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 src 数组$'), lambda m: f'ACL ルール #{m.group(1)} に有効な "src" 配列がありません'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 dst 数组$'), lambda m: f'ACL ルール #{m.group(1)} に有効な "dst" 配列がありません'),
+    (re.compile(r'^策略校验未通过：(.+)$'), lambda m: f'ポリシーの検証に失敗しました：{m.group(1)}'),
+    (re.compile(r'^目标用户 #(\d+) 不存在$'), lambda m: f'対象ユーザー #{m.group(1)} が存在しません'),
+    (re.compile(r'^节点 #(\d+) 不存在$'), lambda m: f'ノード #{m.group(1)} が存在しません'),
+    (re.compile(r'^无效的 IPv4 地址格式：(.+)$'), lambda m: f'IPv4 アドレスの形式が無効です：{m.group(1)}'),
+    (re.compile(r'^该内网 IP \(([^)]+)\) 已被节点「(.+)」占用$'), lambda m: f'IP アドレス ({m.group(1)}) は既にノード「{m.group(2)}」で使用されています'),
+    (re.compile(r'^备份文件不是合法的 JSON 格式：(.+)$'), lambda m: f'バックアップファイルが有効な JSON ではありません：{m.group(1)}'),
+    (re.compile(r'^无效的本机子网网段：(.+)$'), lambda m: f'ローカルサブネット CIDR が無効です：{m.group(1)}'),
+    (re.compile(r'^测速完成：直连 \(([^)]+) ms\)$'), lambda m: f'Ping 完了：直接接続 ({m.group(1)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+) \(([^)]+) ms\)$'), lambda m: f'Ping 完了：リレー {m.group(1)} ({m.group(2)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+)$'), lambda m: f'Ping 完了：リレー {m.group(1)}'),
+    (re.compile(r'^节点已重命名为「(.+)」$'), lambda m: f'ノード名を「{m.group(1)}」に変更しました'),
+    (re.compile(r'^节点 #(\d+) 已从组网中移除$'), lambda m: f'ノード #{m.group(1)} を Tailnet から削除しました'),
+    (re.compile(r'^标签格式不合法：(.+)（示例：tag:server）$'), lambda m: f'タグの形式が無効です：{m.group(1)}（例: tag:server）'),
+    (re.compile(r'^标签格式不合法：(.+)$'), lambda m: f'タグの形式が無効です：{m.group(1)}'),
+    (re.compile(r'^无效的 CIDR 子网网段：(.+)$'), lambda m: f'CIDR サブネットが無効です：{m.group(1)}'),
+    (re.compile(r'^预授权密钥 #(\d+) 已废止$'), lambda m: f'事前認証キー #{m.group(1)} を失効させました'),
+    (re.compile(r'^预授权密钥 #(\d+) 已删除$'), lambda m: f'事前認証キー #{m.group(1)} を削除しました'),
+    (re.compile(r'^解析记录已保存：(.+) -> (.+)$'), lambda m: f'DNS レコードを保存しました：{m.group(1)} -> {m.group(2)}'),
+    (re.compile(r'^已创建用户「(.+)」$'), lambda m: f'ユーザー「{m.group(1)}」を作成しました'),
+    (re.compile(r'^用户已重命名为「(.+)」$'), lambda m: f'ユーザー名を「{m.group(1)}」に変更しました'),
+    (re.compile(r'^用户「(.+)」下仍有 (\d+) 台设备，请先移除设备后再删除用户$'), lambda m: f'ユーザー「{m.group(1)}」にはまだ {m.group(2)} 台のデバイスが所属しているため、先にデバイスを削除または移行してください'),
+    (re.compile(r'^全网测速完成：(\d+) 台直连，(\d+) 台中继$'), lambda m: f'一括 Ping 完了：{m.group(1)} 台 直接接続、{m.group(2)} 台 リレー'),
+    (re.compile(r'^已将节点迁移至用户「(.+)」$'), lambda m: f'ノードをユーザー「{m.group(1)}」へ移行しました'),
+    (re.compile(r'^节点内网 IP 已修改为 (.+)$'), lambda m: f'ノードの Tailnet IP を {m.group(1)} に変更しました'),
+    (re.compile(r'^节点已批准接入至用户「(.+)」$'), lambda m: f'ノードを承認しユーザー「{m.group(1)}」へ割り当てました'),
+    (re.compile(r'^已成功恢复：(.+)$'), lambda m: '復元しました：' + '、'.join(_JA_RESTORE_PARTS.get(p, p) for p in m.group(1).split('、'))),
+    (re.compile(r'^本机节点 \((.+)\) 已成功接入组网并设为永不过期$'), lambda m: f'ローカルノード ({m.group(1)}) を Tailnet に接続し無期限に設定しました'),
+    (re.compile(r'^未知的操作类型：(.+)$'), lambda m: f'不明な操作タイプです：{m.group(1)}'),
+    (re.compile(r'^Headscale 执行失败：(.+)$'), lambda m: f'Headscale コマンドの実行に失敗しました：{m.group(1)}'),
+    (re.compile(r'^操作失败：(.+)$'), lambda m: f'操作に失敗しました：{m.group(1)}'),
+]
+
+_ID_EXACT_MESSAGES = {
+    '请输入解析域名': 'Silakan masukkan nama domain',
+    '短主机名仅允许字母、数字、连字符或下划线': 'Nama host pendek hanya boleh berisi huruf, angka, tanda hubung, atau garis bawah',
+    '请输入指向的 IP 地址': 'Silakan masukkan alamat IP tujuan',
+    '请指定要删除的域名': 'Silakan tentukan domain yang ingin dihapus',
+    'Headscale 配置文件格式不支持在线修改': 'Format konfigurasi Headscale tidak mendukung pengeditan online',
+    '开启“覆盖本地 DNS”时，需至少填写一个全局 DNS 服务器（如 223.5.5.5）': 'Minimal satu server DNS global (mis. 1.1.1.1) diperlukan saat "Timpa DNS Lokal" diaktifkan',
+    '无效的 Headscale 配置结构': 'Struktur konfigurasi Headscale tidak valid',
+    '服务端地址格式无效（示例：https://hs.example.com）': 'Format URL server tidak valid (mis. https://hs.example.com)',
+    '区域代码仅允许字母、数字、连字符或下划线（如 local）': 'Kode wilayah hanya boleh berisi huruf, angka, tanda hubung, atau garis bawah (mis. local)',
+    '区域名称过长（最多 64 个字符）': 'Nama wilayah terlalu panjang (maks. 64 karakter)',
+    'DERP 公网 IPv4 必须为 IPv4 地址': 'IPv4 publik DERP harus berupa alamat IPv4 yang valid',
+    'STUN 端口必须在 1-65535 之间': 'Port STUN harus berada di antara 1 dan 65535',
+    'ACL 策略内容不能为空': 'Kebijakan ACL tidak boleh kosong',
+    'ACL 策略文件过大': 'File kebijakan ACL terlalu besar',
+    'ACL 策略根节点必须为 JSON 对象 ({...})': 'Root kebijakan ACL harus berupa objek JSON ({...})',
+    'acls 字段必须为数组 ([...])': 'Field "acls" harus berupa array ([...])',
+    '请输入节点注册链接、Auth ID 或 NodeKey': 'Silakan tempel URL pendaftaran, Auth ID, atau NodeKey',
+    '节点密钥格式无效': 'Format kunci node tidak valid',
+    '无法识别的注册标识，请粘贴注册链接、Auth ID 或 nodekey/mkey': 'Token pendaftaran tidak dikenali. Harap tempel URL pendaftaran, Auth ID, atau nodekey/mkey',
+    '未找到 Headscale 数据库文件': 'File database Headscale tidak ditemukan',
+    '请输入有效的 IPv4 地址': 'Silakan masukkan alamat IPv4 yang valid',
+    '节点内网 IP 必须位于 Tailscale 内网网段 (100.64.0.0/10) 或私有网段内': 'IP node harus berada dalam rentang CGNAT Tailscale (100.64.0.0/10) atau rentang IPv4 privat',
+    '请提供备份 JSON 内容': 'Harap berikan konten JSON cadangan',
+    '备份数据格式无效': 'Format data cadangan tidak valid',
+    '备份数据根节点必须为 JSON 对象': 'Root data cadangan harus berupa objek JSON',
+    '未选择要恢复的配置项，或备份文件中不包含有效配置数据': 'Tidak ada item pemulihan yang dipilih, atau cadangan tidak berisi data konfigurasi yang valid',
+    '请求参数格式错误': 'Parameter permintaan tidak valid',
+    '缺少操作类型 (action)': 'Parameter aksi (action) tidak ditemukan',
+    '已刷新组网状态': 'Status mesh disegarkan',
+    '未找到可用于测速的内网 IP': 'Tidak ada IP tailnet yang tersedia untuk ping',
+    '测速完成：直连': 'Ping selesai: Langsung',
+    '当前节点为本机': 'Ini adalah node lokal',
+    '未收到探测响应，节点可能离线或被防火墙拦截': 'Tidak ada respons ping yang diterima; node mungkin offline atau diblokir firewall',
+    '节点名称仅允许字母、数字、点、下划线或连字符，且以字母或数字开头（1-62 位）': 'Nama node harus diawali huruf atau angka dan hanya boleh berisi huruf, angka, titik, garis bawah, atau tanda hubung (1-62 karakter)',
+    '已将该节点设为密钥永不过期': 'Masa berlaku kunci node dinonaktifkan (tidak pernah kedaluwarsa)',
+    '节点会话已设为过期，客户端需重新认证': 'Sesi node diakhiri; klien harus melakukan autentikasi ulang',
+    '安全保护：不能直接移除当前控制面所在的本机节点': 'Perlindungan keamanan: tidak dapat menghapus node control-plane lokal secara langsung',
+    '请至少提供一个有效标签（如 tag:server）': 'Harap berikan minimal satu tag yang valid (mis. tag:server)',
+    '节点标签已更新': 'Tag node diperbarui',
+    '节点子网路由审批已更新': 'Persetujuan rute node diperbarui',
+    '不支持的有效期选项，请选择 1h、24h、7d、30d、90d 或 365d': 'Opsi masa berlaku tidak didukung; pilih 1h, 24h, 7d, 30d, 90d, atau 365d',
+    '密钥已生成，请复制保存': 'Kunci pra-auth dibuat; silakan salin dan simpan',
+    '解析记录已删除': 'Catatan DNS dihapus',
+    '未找到 Headscale 配置文件': 'File konfigurasi Headscale tidak ditemukan',
+    'DNS 配置已生效': 'Pengaturan DNS diterapkan',
+    '策略语法校验通过': 'Pemeriksaan sintaks kebijakan lolos',
+    '访问控制策略已保存并生效': 'Kebijakan ACL disimpan dan diterapkan',
+    '用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': 'Nama pengguna harus diawali huruf dan hanya boleh berisi huruf, angka, titik, garis bawah, atau tanda hubung (1-62 karakter)',
+    '备注名称过长（最多 64 个字符）': 'Nama tampilan terlalu panjang (maks. 64 karakter)',
+    '邮箱格式无效': 'Alamat email tidak valid',
+    '新用户名需以字母开头，仅允许字母、数字、点、下划线或连字符（1-62 位）': 'Nama pengguna baru harus diawali huruf dan hanya boleh berisi huruf, angka, titik, garis bawah, atau tanda hubung (1-62 karakter)',
+    '用户已删除': 'Pengguna dihapus',
+    '网络诊断已完成': 'Diagnostik jaringan selesai',
+    '请选择有效的所属用户': 'Silakan pilih pengguna yang valid',
+    '已生成最新配置快照': 'Snapshot konfigurasi terbaru dibuat',
+    '本机与中继配置已保存并生效': 'Konfigurasi lokal & relay disimpan dan diterapkan',
+    '已开启本机作为出口节点并自动批准路由': 'Exit node lokal diaktifkan dan rute disetujui',
+    '已关闭本机出口节点功能': 'Exit node lokal dinonaktifkan',
+    '本机 Tailscale 客户端已安装并启动服务': 'Klien Tailscale lokal terpasang dan layanan dijalankan',
+    '未检测到服务端地址 (server_url)': 'URL server (server_url) tidak terdeteksi',
+    '自动签发本机接入密钥失败': 'Gagal menerbitkan kunci pra-auth untuk node lokal',
+    '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': 'Tidak dapat membaca status mesh. Harap periksa Headscale, Tailscale, dan layanan kolektor.',
+    '未授权的本地控制请求': 'Permintaan kontrol lokal tidak sah',
+    '未知路径': 'Jalur tidak dikenal',
+    '请求体大小异常': 'Ukuran body permintaan tidak valid',
+    '命令执行失败': 'Eksekusi perintah gagal',
+    '配置校验未通过': 'Validasi konfigurasi gagal',
+    'ACL 策略校验未通过': 'Pemeriksaan kebijakan ACL gagal',
+    '校验未通过': 'Validasi gagal',
+}
+
+_ID_FIELD_NAMES = {
+    '节点 ID': 'ID Node',
+    '用户 ID': 'ID Pengguna',
+    '目标用户 ID': 'ID Pengguna Target',
+    '密钥 ID': 'ID Kunci',
+}
+
+_ID_RESTORE_PARTS = {
+    'DNS 配置与解析记录': 'pengaturan & catatan DNS',
+    '中继配置': 'konfigurasi relay DERP',
+    '访问控制策略': 'kebijakan ACL',
+}
+
+_ID_PATTERN_RULES = [
+    (re.compile(r'^域名格式无效：(.+)（示例：nas\.nodes\.internal 或 git\.lan）$'), lambda m: f'Format domain tidak valid: {m.group(1)} (mis. nas.nodes.internal atau git.lan)'),
+    (re.compile(r'^无效的 IPv4/IPv6 地址：(.+)$'), lambda m: f'Alamat IPv4/IPv6 tidak valid: {m.group(1)}'),
+    (re.compile(r'^(.+) 参数无效$'), lambda m: f'{_ID_FIELD_NAMES.get(m.group(1), m.group(1))} tidak valid'),
+    (re.compile(r'^(.+) 必须为正整数$'), lambda m: f'{_ID_FIELD_NAMES.get(m.group(1), m.group(1))} harus berupa bilangan bulat positif'),
+    (re.compile(r'^未找到域名记录：(.+)$'), lambda m: f'Catatan DNS tidak ditemukan: {m.group(1)}'),
+    (re.compile(r'^无效的 DoH 地址：(.+)$'), lambda m: f'URL DoH tidak valid: {m.group(1)}'),
+    (re.compile(r'^DNS 服务器地址无效：(.+)（请输入 IPv4/IPv6 或 https:// DoH 地址）$'), lambda m: f'Server DNS tidak valid: {m.group(1)} (masukkan IPv4/IPv6 atau URL https:// DoH)'),
+    (re.compile(r'^搜索域格式无效：(.+)$'), lambda m: f'Domain pencarian tidak valid: {m.group(1)}'),
+    (re.compile(r'^分流 DNS 格式错误：(.+)（格式：域名=DNS，如 corp\.local=10\.0\.0\.53）$'), lambda m: f'Format Split DNS tidak valid: {m.group(1)} (gunakan domain=DNS, mis. corp.local=10.0.0.53)'),
+    (re.compile(r'^分流域名格式无效：(.+)$'), lambda m: f'Domain split tidak valid: {m.group(1)}'),
+    (re.compile(r'^分流域名 (.+) 未指定有效 DNS 服务器$'), lambda m: f'Tidak ada server DNS valid yang ditentukan untuk domain split {m.group(1)}'),
+    (re.compile(r'^Headscale 配置校验失败：(.+)$'), lambda m: f'Pemeriksaan konfigurasi Headscale gagal: {m.group(1)}'),
+    (re.compile(r'^无效的 IPv4 地址：(.+)$'), lambda m: f'Alamat IPv4 tidak valid: {m.group(1)}'),
+    (re.compile(r'^JSON / HuJSON 语法错误：(.+)$'), lambda m: f'Kesalahan sintaks JSON / HuJSON: {m.group(1)}'),
+    (re.compile(r'^第 (\d+) 条 ACL 规则必须为对象$'), lambda m: f'Aturan ACL #{m.group(1)} harus berupa objek'),
+    (re.compile(r'^第 (\d+) 条规则 action 仅支持 "accept"$'), lambda m: f'Aksi aturan ACL #{m.group(1)} hanya mendukung "accept"'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 src 数组$'), lambda m: f'Aturan ACL #{m.group(1)} tidak memiliki array "src" yang valid'),
+    (re.compile(r'^第 (\d+) 条规则缺少有效的 dst 数组$'), lambda m: f'Aturan ACL #{m.group(1)} tidak memiliki array "dst" yang valid'),
+    (re.compile(r'^策略校验未通过：(.+)$'), lambda m: f'Validasi kebijakan gagal: {m.group(1)}'),
+    (re.compile(r'^目标用户 #(\d+) 不存在$'), lambda m: f'Pengguna target #{m.group(1)} tidak ada'),
+    (re.compile(r'^节点 #(\d+) 不存在$'), lambda m: f'Node #{m.group(1)} tidak ada'),
+    (re.compile(r'^无效的 IPv4 地址格式：(.+)$'), lambda m: f'Format alamat IPv4 tidak valid: {m.group(1)}'),
+    (re.compile(r'^该内网 IP \(([^)]+)\) 已被节点「(.+)」占用$'), lambda m: f'Alamat IP ({m.group(1)}) sudah digunakan oleh node "{m.group(2)}"'),
+    (re.compile(r'^备份文件不是合法的 JSON 格式：(.+)$'), lambda m: f'File cadangan bukan JSON yang valid: {m.group(1)}'),
+    (re.compile(r'^无效的本机子网网段：(.+)$'), lambda m: f'CIDR subnet lokal tidak valid: {m.group(1)}'),
+    (re.compile(r'^测速完成：直连 \(([^)]+) ms\)$'), lambda m: f'Ping selesai: Langsung ({m.group(1)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+) \(([^)]+) ms\)$'), lambda m: f'Ping selesai: Relay {m.group(1)} ({m.group(2)} ms)'),
+    (re.compile(r'^测速完成：中继 (.+)$'), lambda m: f'Ping selesai: Relay {m.group(1)}'),
+    (re.compile(r'^节点已重命名为「(.+)」$'), lambda m: f'Nama node diubah menjadi "{m.group(1)}"'),
+    (re.compile(r'^节点 #(\d+) 已从组网中移除$'), lambda m: f'Node #{m.group(1)} dihapus dari tailnet'),
+    (re.compile(r'^标签格式不合法：(.+)（示例：tag:server）$'), lambda m: f'Format tag tidak valid: {m.group(1)} (mis. tag:server)'),
+    (re.compile(r'^标签格式不合法：(.+)$'), lambda m: f'Format tag tidak valid: {m.group(1)}'),
+    (re.compile(r'^无效的 CIDR 子网网段：(.+)$'), lambda m: f'Subnet CIDR tidak valid: {m.group(1)}'),
+    (re.compile(r'^预授权密钥 #(\d+) 已废止$'), lambda m: f'Kunci pra-auth #{m.group(1)} dicabut'),
+    (re.compile(r'^预授权密钥 #(\d+) 已删除$'), lambda m: f'Kunci pra-auth #{m.group(1)} dihapus'),
+    (re.compile(r'^解析记录已保存：(.+) -> (.+)$'), lambda m: f'Catatan DNS disimpan: {m.group(1)} -> {m.group(2)}'),
+    (re.compile(r'^已创建用户「(.+)」$'), lambda m: f'Pengguna "{m.group(1)}" dibuat'),
+    (re.compile(r'^用户已重命名为「(.+)」$'), lambda m: f'Nama pengguna diubah menjadi "{m.group(1)}"'),
+    (re.compile(r'^用户「(.+)」下仍有 (\d+) 台设备，请先移除设备后再删除用户$'), lambda m: f'Pengguna "{m.group(1)}" masih memiliki {m.group(2)} perangkat; hapus atau pindahkan terlebih dahulu'),
+    (re.compile(r'^全网测速完成：(\d+) 台直连，(\d+) 台中继$'), lambda m: f'Ping mesh selesai: {m.group(1)} langsung, {m.group(2)} via relay'),
+    (re.compile(r'^已将节点迁移至用户「(.+)」$'), lambda m: f'Node dipindahkan ke pengguna "{m.group(1)}"'),
+    (re.compile(r'^节点内网 IP 已修改为 (.+)$'), lambda m: f'IP tailnet node diperbarui menjadi {m.group(1)}'),
+    (re.compile(r'^节点已批准接入至用户「(.+)」$'), lambda m: f'Node disetujui dan ditetapkan ke pengguna "{m.group(1)}"'),
+    (re.compile(r'^已成功恢复：(.+)$'), lambda m: 'Berhasil memulihkan: ' + ', '.join(_ID_RESTORE_PARTS.get(p, p) for p in m.group(1).split('、'))),
+    (re.compile(r'^本机节点 \((.+)\) 已成功接入组网并设为永不过期$'), lambda m: f'Node lokal ({m.group(1)}) terhubung dengan masa berlaku kunci dinonaktifkan'),
+    (re.compile(r'^未知的操作类型：(.+)$'), lambda m: f'Tindakan tidak dikenal: {m.group(1)}'),
+    (re.compile(r'^Headscale 执行失败：(.+)$'), lambda m: f'Perintah Headscale gagal: {m.group(1)}'),
+    (re.compile(r'^操作失败：(.+)$'), lambda m: f'Tindakan gagal: {m.group(1)}'),
+]
+
+
+_LANG_CATALOGS = {
+    'zh-TW': (_ZHTW_EXACT_MESSAGES, _ZHTW_PATTERN_RULES),
+    'en': (_EN_EXACT_MESSAGES, _EN_PATTERN_RULES),
+    'ja': (_JA_EXACT_MESSAGES, _JA_PATTERN_RULES),
+    'id': (_ID_EXACT_MESSAGES, _ID_PATTERN_RULES),
+}
+
 
 def normalize_lang(lang):
-    raw = str(lang or '').strip().lower()
-    if raw == 'en' or raw.startswith('en-') or raw.startswith('en_'):
-        return 'en'
-    return 'zh'
+    raw = str(lang or '').strip().lower().replace('_', '-')
+    if not raw:
+        return 'zh'
+    if (
+        raw in ('zh-tw', 'zh-hk', 'zh-mo', 'zh-hant')
+        or raw.startswith(('zh-tw-', 'zh-hk-', 'zh-mo-', 'zh-hant-'))
+    ):
+        return 'zh-TW'
+    if raw == 'zh' or raw.startswith('zh-'):
+        return 'zh'
+    if raw == 'ja' or raw.startswith('ja-'):
+        return 'ja'
+    if raw in ('id', 'in') or raw.startswith(('id-', 'in-')):
+        return 'id'
+    return 'en'
 
 
 def localize_message(text, lang='zh'):
-    if normalize_lang(lang) != 'en' or not isinstance(text, str) or not text:
+    norm = normalize_lang(lang)
+    if norm == 'zh' or not isinstance(text, str) or not text:
         return text
-    if text in _EN_EXACT_MESSAGES:
-        return _EN_EXACT_MESSAGES[text]
-    for pattern, repl in _EN_PATTERN_RULES:
+    catalog = _LANG_CATALOGS.get(norm)
+    if not catalog:
+        return text
+    exact_map, pattern_rules = catalog
+    if text in exact_map:
+        return exact_map[text]
+    for pattern, repl in pattern_rules:
         m = pattern.match(text)
         if m:
             return repl(m)
@@ -2616,11 +3048,9 @@ def make_handler(expected_token):
             except subprocess.CalledProcessError as exc:
                 stderr = (exc.stderr or exc.stdout or '').strip()
                 first_line = stderr.splitlines()[0] if stderr else localize_message('命令执行失败', req_lang)
-                err_msg = f'Headscale command failed: {first_line}' if req_lang == 'en' else f'Headscale 执行失败：{first_line}'
-                self._send_json(500, {'ok': False, 'error': err_msg})
+                self._send_json(500, {'ok': False, 'error': localize_message(f'Headscale 执行失败：{first_line}', req_lang)})
             except Exception as exc:
-                err_msg = f'Action failed: {exc}' if req_lang == 'en' else f'操作失败：{exc}'
-                self._send_json(500, {'ok': False, 'error': err_msg})
+                self._send_json(500, {'ok': False, 'error': localize_message(f'操作失败：{exc}', req_lang)})
 
     return Handler
 

@@ -1011,61 +1011,25 @@
     gap: 6px;
   }
 
-  .tunnel-card {
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    background: var(--surface);
-    padding: 14px 16px;
-    margin-bottom: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .tunnel-card-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 14px;
-  }
-
-  .tunnel-card-title {
-    font-size: 13.5px;
-    font-weight: 620;
-    color: var(--text);
-  }
-
-  .tunnel-port-hint {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
   .tunnel-controls {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
   }
 
   .tunnel-controls .select-input {
-    min-width: 150px;
-    max-width: 220px;
-    flex: 1 1 150px;
-  }
-
-  .tunnel-arrow {
-    color: var(--muted);
-    font-size: 13px;
-    user-select: none;
+    min-width: 0;
+    flex: 1 1 0;
   }
 
   .tunnel-result {
-    border-top: 1px solid var(--line);
-    padding-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
   .tunnel-result[hidden] {
@@ -1078,6 +1042,36 @@
     align-items: center;
     gap: 8px 10px;
     font-size: 13px;
+  }
+
+  .tunnel-guide {
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tunnel-guide-lead {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .tunnel-steps {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .tunnel-steps strong {
+    color: var(--text);
+    font-weight: 600;
   }
 
   .section-bar {
@@ -1715,24 +1709,9 @@
         </div>
       </div>
       <div class="inline-row">
-        <button type="button" id="btn-run-netcheck" class="btn btn-sm" data-i18n="btn_run_diag">运行诊断</button>
+        <button type="button" id="btn-open-tunnel-check" class="btn btn-sm" data-i18n="btn_open_tunnel_check">节点互测</button>
         <button type="button" id="btn-diag-ping-all" class="btn btn-primary btn-sm" data-i18n="btn_ping_all">全网测速</button>
       </div>
-    </div>
-
-    <div class="tunnel-card">
-      <div class="tunnel-card-head">
-        <span class="tunnel-card-title" data-i18n="tunnel_card_title">节点间隧道测试与直连加速</span>
-        <span id="tunnel-port-hint" class="tunnel-port-hint mono"></span>
-      </div>
-      <div class="tunnel-controls">
-        <select id="tunnel-src-select" class="select-input" aria-label="源节点" data-i18n-aria="aria_tunnel_src"></select>
-        <span class="tunnel-arrow" aria-hidden="true">↔</span>
-        <select id="tunnel-dst-select" class="select-input" aria-label="目标节点" data-i18n-aria="aria_tunnel_dst"></select>
-        <button type="button" id="btn-tunnel-test" class="btn btn-primary btn-sm" data-i18n="btn_tunnel_test">测试隧道</button>
-        <button type="button" id="btn-tunnel-boost" class="btn btn-sm" data-i18n="btn_tunnel_boost">一键优化直连</button>
-      </div>
-      <div id="tunnel-result-box" class="tunnel-result" hidden></div>
     </div>
 
     <div class="section-bar" style="margin-top:0">
@@ -2484,6 +2463,38 @@
   </div>
 </dialog>
 
+<!-- Peer-to-Peer Tunnel Connectivity Check Modal Dialog -->
+<dialog id="modal-tunnel-check" class="modal-dialog" closedby="any" aria-labelledby="modal-tunnel-check-title">
+  <div class="dialog-header">
+    <div>
+      <h2 id="modal-tunnel-check-title" data-i18n="tunnel_card_title">节点连通性检测</h2>
+      <div class="sub-line" data-i18n="tunnel_modal_sub">实测任意两台节点间的链路状态（直连或 DERP 中继）</div>
+    </div>
+    <button type="button" id="modal-tunnel-check-close" class="btn btn-icon btn-sm" aria-label="关闭" title="关闭" data-i18n-aria="btn_close" data-i18n-title="btn_close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <div class="form-field">
+      <label data-i18n="lbl_tunnel_pair">选择待检测的两台节点</label>
+      <div class="tunnel-controls">
+        <select id="tunnel-src-select" class="select-input" aria-label="源节点" data-i18n-aria="aria_tunnel_src"></select>
+        <button type="button" id="btn-tunnel-swap" class="btn btn-icon btn-sm" aria-label="交换方向" title="交换方向" data-i18n-aria="btn_swap_nodes" data-i18n-title="btn_swap_nodes">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3l4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/></svg>
+        </button>
+        <select id="tunnel-dst-select" class="select-input" aria-label="目标节点" data-i18n-aria="aria_tunnel_dst"></select>
+      </div>
+    </div>
+
+    <div id="tunnel-result-box" class="tunnel-result" hidden></div>
+  </div>
+
+  <div class="dialog-footer">
+    <button type="button" id="btn-tunnel-test" class="btn btn-primary" data-i18n="btn_tunnel_test">开始检测</button>
+  </div>
+</dialog>
+
 <div id="toast" class="toast" popover="manual" role="status" aria-live="polite" hidden></div>
 
 <script>
@@ -2612,7 +2623,6 @@
       diag_nat_type: 'NAT 类型',
       diag_global_v4: '公网出口地址',
       diag_pref_derp: '首选中继',
-      btn_run_diag: '运行诊断',
       diag_derp_title: 'DERP 中继服务器',
       col_region_id: '区域 ID',
       col_region_name: '区域名称',
@@ -2985,30 +2995,604 @@
       banner_check_fail: '策略校验未通过',
       banner_save_ok: '策略已保存并热重载生效',
       banner_save_fail: '保存失败',
-      tunnel_card_title: '节点间隧道测试与直连加速',
+      btn_open_tunnel_check: '节点互测',
+      tunnel_card_title: '节点连通性检测',
+      tunnel_modal_sub: '实测任意两台节点间的链路状态（直连或 DERP 中继）',
+      lbl_tunnel_pair: '选择待检测的两台节点',
       aria_tunnel_src: '源节点',
       aria_tunnel_dst: '目标节点',
-      btn_tunnel_test: '测试隧道',
-      btn_tunnel_boost: '一键优化直连',
-      tunnel_port_hint: stun => `端口提示：中心机 TCP 443 · UDP ${stun} ｜ 节点 UDP 41641`,
+      btn_swap_nodes: '交换方向',
+      btn_tunnel_test: '开始检测',
+      btn_fix_fw: '一键放行并复测',
       derp_port_notice: stun => `提示：启用内置中继请在服务器安全组/防火墙放行 TCP 443 与 UDP ${stun}（WireGuard 节点直连端口为 UDP 41641）。`,
       tunnel_pick_two: '请选择两个不同的节点',
       tunnel_no_ip: '目标节点缺少内网 IP',
-      tunnel_testing: (a, b) => `正在实测 ${a} ↔ ${b} 的 WireGuard 隧道路径…`,
-      tunnel_boosting: names => `正在为 ${names} 启动服务并放行直连端口 (UDP 41641 / tailscale0)…`,
-      tunnel_badge_direct: '已直连加速',
-      tunnel_badge_relay: 'DERP 中继',
-      tunnel_badge_fail: '隧道未通',
+      tunnel_testing: (a, b) => `正在检测 ${a} → ${b} 的链路连通性…`,
+      tunnel_fixing_fw: names => `正在为 ${names} 放行系统防火墙 (UDP 41641 / tailscale0) 并复测…`,
+      tunnel_badge_direct: '直连',
+      tunnel_badge_relay: via => (via ? `中继 · ${via}` : 'DERP 中继'),
+      tunnel_badge_fail: '未连通',
       tunnel_badge_testing: '检测中',
-      tunnel_badge_manual: '手动验证',
-      tunnel_res_direct: (a, b, ep, rev) => `${a} ↔ ${b} 已通过公网 UDP 直连${ep ? ' (' + ep + ')' : ''}${rev ? '（反向探测）' : ''}`,
-      tunnel_res_relay: (a, b, via, rev) => `${a} ↔ ${b} 已连通，当前经 DERP (${via}) 中继${rev ? '（反向探测）' : ''}。`,
-      tunnel_res_relay_hint: stun => `若长期未升级为直连，请点击「一键优化直连」，并确认云安全组已放行节点 UDP 41641 与中心机 UDP ${stun}。`,
-      tunnel_res_fail: (a, b) => `${a} ↔ ${b} 未收到响应，请确认节点在线、ACL 已放行，并点击「一键优化直连」放行本机防火墙。`,
-      tunnel_manual_hint: (a, b) => `${a} 与 ${b} 均未由 Komari 纳管，请在 ${a} 终端执行下方命令验证（显示 via IP:端口 即直连，via DERP 即中继）：`,
-      tunnel_boost_none: '选中的两台设备均未安装 Komari Agent，无法远程放行防火墙；请在设备各自放行 UDP 41641 及 tailscale0 网卡。',
-      tunnel_boost_done: names => `已完成 ${names} 的本机直连端口放行，正在验证最新隧道状态…`,
-      tunnel_err_exec: msg => `远程测试失败：${msg}`,
+      tunnel_badge_manual: '手动检测',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} → ${b} 已建立直连${ep ? '（' + ep + '）' : ''}${rev ? ' · 反向探测' : ''}`,
+      tunnel_direct_ok: '两台节点之间直接收发数据，不经过中继转发，无需任何额外设置。',
+      tunnel_res_relay: (a, b, via, rev) => `${a} → ${b} 已连通（当前经 ${via} 中继转发）${rev ? ' · 反向探测' : ''}`,
+      tunnel_fw_blocked: detail => `检测到 ${detail} 开启了系统防火墙且未放行直连端口 UDP 41641，可先一键放行后再测：`,
+      tunnel_fw_blocked_fail: detail => `检测到 ${detail} 开启了系统防火墙且未放行 tailscale0 网卡，可能拦截了组网流量：`,
+      tunnel_relay_lead_checked: names => `两台节点已正常互通（已检查 ${names} 系统防火墙无拦截）。若想改为直连降低延迟，请按节点类型操作：`,
+      tunnel_relay_lead_plain: '两台节点已正常互通。若想改为直连降低延迟，请按节点类型操作：',
+      tunnel_step_stun_title: '先放行中继探测端口：',
+      tunnel_step_stun_body: stun => `登录本插件所在服务器的云后台 →「安全组 / 防火墙」，放行入站 UDP ${stun}（用于打洞探测）。`,
+      tunnel_step_udp_title: '恢复节点 UDP 通信：',
+      tunnel_step_udp_body: (names, stun) => `检测到 ${names} 的 UDP 出站受阻，请检查其网络是否禁用了 UDP，或确认中继服务端已放行入站 UDP ${stun}。`,
+      tunnel_step_cloud_title: '若其中一台是云服务器：',
+      tunnel_step_cloud_body: (a, b) => `登录该云服务器（如 ${a} 或 ${b}）的云厂商后台 →「安全组 / 防火墙」→ 添加入站规则放行 UDP 41641（来源 0.0.0.0/0）。两端只需一端放行即可直连。`,
+      tunnel_step_router_title: '若两台都在家庭/办公路由器后：',
+      tunnel_step_router_body: '在任意一端的路由器后台开启 UPnP，或设置端口转发（外部 UDP 41641 转发至该节点局域网 IP）。',
+      tunnel_step_sym_title: '对称型 NAT 提示：',
+      tunnel_step_sym_body: names => `检测到 ${names} 处于严格型（对称）NAT，须确保对端节点已按上方步骤开放公网 UDP 41641；若两端均无公网条件，保持当前中继即可正常使用。`,
+      tunnel_step_keep_title: '若无法做上述设置：',
+      tunnel_step_keep_body: '当两端均为无公网宽带、校园网/企业网或手机热点时无法打洞属正常现象，无需处理，保持当前中继即可正常使用。',
+      tunnel_res_fail: (a, b) => `${a} → ${b} · 未收到探测响应`,
+      tunnel_fail_offline: names => `检测到 ${names} 当前处于离线状态，请先在对应设备上启动客户端（执行 tailscale up）后再重试。`,
+      tunnel_fail_lead_checked: names => `已检查 ${names} 系统防火墙无拦截。请按以下步骤排查：`,
+      tunnel_fail_lead_plain: '两台节点未能互通，请按以下步骤排查：',
+      tunnel_step_acl_title: '检查访问控制 (ACL)：',
+      tunnel_step_acl_body: (a, b) => `前往上方「访问控制」页签，确认当前规则允许 ${a} 访问 ${b}。`,
+      tunnel_step_derp_title: '检查客户端与中继端口：',
+      tunnel_step_derp_body: '确认两端设备上的 Tailscale 客户端正在运行，且中继服务器云安全组已放行入站 TCP 443。',
+      tunnel_manual_hint: (a, b) => `${a} 与 ${b} 均未安装 Komari Agent，请在 ${a} 终端执行下方命令（via IP:端口 为直连，via DERP 为中继）：`,
+      tunnel_fw_done: names => `已为 ${names} 放行防火墙规则，正在重新检测…`,
+      tunnel_err_exec: msg => `检测失败：${msg}`,
+      unnamed_node: '未命名节点',
+      err_collector_down: '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。',
+      err_snapshot_not_ready: '状态采集尚未就绪，请稍后刷新或检查采集服务。',
+    },
+    'zh-TW': {
+      page_title: 'Tailscale 管理',
+      status_running: '運作中',
+      status_unknown: '未知',
+      btn_add_device: '新增裝置',
+      btn_local_setup: '本機設定',
+      btn_backup: '設定備份',
+      btn_refresh: '重新整理狀態',
+      aria_summary: '組網統計',
+      metric_total: '總裝置',
+      metric_online: '線上',
+      metric_direct: '直連',
+      metric_relay: '中繼',
+      metric_keys: '有效金鑰',
+      banner_created_key: '新產生的金鑰（僅顯示一次）：',
+      btn_copy: '複製',
+      btn_join_cmd: '加入指令',
+      btn_dismiss: '關閉提示',
+      aria_tabs: '功能導覽',
+      tab_nodes: '節點',
+      tab_users: '使用者',
+      tab_keys: '授權金鑰',
+      tab_routes: '子網路路由',
+      tab_dns: 'DNS 解析',
+      tab_acl: '存取控制',
+      tab_diag: '網路診斷',
+      ph_search_nodes: '搜尋節點、IP、系統或標籤…',
+      aria_search_nodes: '搜尋節點',
+      aria_filter_user: '依使用者篩選',
+      opt_all_users: '全部使用者',
+      aria_filter_status: '依狀態篩選',
+      filter_all: '全部',
+      filter_online: '線上',
+      filter_offline: '離線',
+      filter_direct: '直連',
+      filter_relay: '中繼',
+      btn_ping_all: '全網測速',
+      col_node: '節點',
+      col_os: '系統',
+      col_tailnet_ip: '內網 IP',
+      col_status: '狀態',
+      col_connection: '連線方式',
+      col_latency: '延遲',
+      col_actions: '操作',
+      loading_mesh: '正在載入組網狀態…',
+      users_subtitle: '管理組網使用者、名下裝置與授權金鑰',
+      btn_create_user: '新增使用者',
+      col_username: '使用者名稱',
+      col_user_meta: '顯示名稱與電子郵件',
+      col_user_nodes: '關聯裝置',
+      col_active_keys: '有效金鑰',
+      col_created: '建立時間',
+      loading_users: '正在載入使用者列表…',
+      aria_filter_keys: '依金鑰狀態篩選',
+      key_active: '有效',
+      key_used: '已使用',
+      key_expired: '已過期',
+      btn_create_key: '新增金鑰',
+      col_key: '金鑰',
+      col_user: '使用者',
+      col_props: '屬性',
+      col_expires: '到期時間',
+      loading_keys: '正在載入金鑰列表…',
+      aria_filter_routes: '篩選路由',
+      route_exit: '出口節點',
+      route_subnet: '子網路路由',
+      route_pending: '待核准',
+      btn_enable_local_exit: '開啟本機出口',
+      btn_disable_local_exit: '關閉本機出口',
+      btn_route_guide: '路由設定指南',
+      col_cidr: '路由網段',
+      col_type: '類型',
+      loading_routes: '正在載入路由列表…',
+      state_enabled: '已啟用',
+      state_disabled: '已停用',
+      dns_base_domain: '內網網域字尾',
+      dns_global: '全域 DNS',
+      dns_override: '覆蓋本機 DNS',
+      dns_split: '分流 DNS',
+      btn_dns_config: '設定 DNS',
+      btn_add_record: '新增記錄',
+      dns_custom_records_title: '自訂解析記錄',
+      col_domain: '網域',
+      col_target_ip: '指向位址',
+      col_matched_node: '對應節點',
+      loading_dns_records: '正在載入解析記錄…',
+      dns_node_domains_title: '節點內網網域（MagicDNS 自動指派）',
+      col_internal_domain: '內網網域',
+      col_ipv4: 'IPv4 位址',
+      col_ipv6: 'IPv6 位址',
+      loading_dns_nodes: '正在載入節點網域…',
+      acl_mode: '目前模式',
+      acl_mode_allow_all: '全網互通',
+      acl_mode_block_all: '全部阻斷',
+      acl_mode_custom: '依規則允許',
+      acl_rules: '允許規則',
+      acl_admin_group: '管理員群組',
+      acl_tags: '可用標籤',
+      aria_acl_template: '快速切換存取模式',
+      acl_tpl_placeholder: '快速切換預設模式…',
+      acl_tpl_allow_all: '全網互通（所有裝置自由互訪）',
+      acl_tpl_tiered: '分層控管（管理員全通 + 用戶端存取伺服器）',
+      acl_tpl_guest: '訪客隔離（限制 guest 僅存取網頁）',
+      btn_apply_mode: '套用模式',
+      btn_groups_tags: '群組與標籤',
+      btn_policy_source: '原則原始碼',
+      btn_add_rule: '新增規則',
+      acl_rules_table_title: '存取允許規則（未符合規則的連線預設拒絕）',
+      col_index: '序號',
+      col_acl_src: '允許存取方（來源）',
+      col_acl_dst: '可存取目標',
+      col_acl_ports: '開放連接埠 / 服務',
+      col_proto: '協定',
+      loading_acl: '正在載入存取規則…',
+      diag_udp: 'UDP 通訊',
+      state_ok: '正常',
+      state_restricted: '受限',
+      diag_ip_stack: 'IP 協定',
+      diag_nat_type: 'NAT 類型',
+      diag_global_v4: '公開出口位址',
+      diag_pref_derp: '首選中繼',
+      diag_derp_title: 'DERP 中繼伺服器',
+      col_region_id: '區域 ID',
+      col_region_name: '區域名稱',
+      col_server_addr: '伺服器位址',
+      col_ports_stun_derp: '連接埠 (STUN / DERP)',
+      col_verify_clients: '用戶端驗證',
+      col_relay_nodes: '目前中繼節點',
+      col_local_latency: '本機延遲',
+      loading_derp: '正在載入 DERP 中繼資訊…',
+      diag_peers_title: '節點鏈路與流量明細',
+      col_public_ep: '公開端點',
+      col_traffic: '累計流量 (收 / 發)',
+      col_last_hs: '最近交握',
+      loading_peers: '正在載入節點鏈路明細…',
+      drawer_title: '節點詳情',
+      btn_close: '關閉',
+      act_ping: '測速',
+      act_rename_short: '改名',
+      act_edit_ip: '修改 IP',
+      act_routes: '路由核准',
+      act_move_user: '轉移使用者',
+      act_tags_short: '標籤',
+      act_expire_short: '下線',
+      act_delete_short: '移除',
+      lbl_node_name: '節點名稱',
+      ph_node_name: '輸入新節點名稱',
+      btn_save: '儲存',
+      btn_cancel: '取消',
+      lbl_node_ip: '節點內網 IPv4 位址（100.64.0.0/10）',
+      ph_node_ip: '如 100.88.0.10',
+      chk_approve_exit: '核准作為出口節點 (0.0.0.0/0, ::/0)',
+      lbl_approve_routes: '核准的子網路路由網段（多個請以逗號分隔，留空則僅儲存上方出口設定）',
+      ph_subnet: '如 192.168.1.0/24',
+      lbl_move_user: '轉移所屬使用者',
+      lbl_node_tags: '節點標籤（多個請以逗號分隔）',
+      ph_node_tags: '如 tag:server, tag:prod',
+      confirm_delete_node: '確定移除此節點？移除後該裝置將中斷內網連線。',
+      btn_confirm_delete: '確認移除',
+      sec_net_info: '網路資訊',
+      sec_basic_info: '基本資訊',
+      modal_guide_title: '新增裝置',
+      modal_guide_sub: '透過授權金鑰指令或免金鑰核准加入用戶端',
+      tab_guide_cmd: '金鑰加入',
+      tab_guide_approve: '核准加入',
+      lbl_owner_user: '所屬使用者',
+      lbl_key_exp: '金鑰效期',
+      exp_1h: '1 小時',
+      exp_24h: '24 小時',
+      exp_7d: '7 天',
+      exp_30d: '30 天',
+      exp_90d: '90 天',
+      exp_365d: '365 天',
+      lbl_authkey: '授權金鑰',
+      ph_authkey: '點擊右側產生或貼上現有金鑰',
+      btn_gen_key: '產生金鑰',
+      lbl_opt_hostname: '節點名稱（選填）',
+      ph_hostname: '如 edge-node-1',
+      lbl_opt_routes: '子網路路由（選填）',
+      chk_reusable: '可重複使用',
+      chk_ephemeral: '臨時節點',
+      chk_accept_routes: '接收路由',
+      chk_exit_node: '出口節點',
+      lbl_client_cmd: '用戶端加入指令與方式',
+      pill_gui: '圖形介面',
+      lbl_register_token: '用戶端註冊連結或 Auth ID',
+      ph_register_token: '貼上用戶端執行 tailscale up 後顯示的連結或 Auth ID',
+      hint_register_token: '在用戶端執行不帶金鑰的登入指令後，將終端機輸出的註冊連結貼到此處即可直接核准入網。',
+      btn_copy_cmd: '複製指令',
+      btn_copy_server_url: '複製伺服器網址',
+      btn_approve_join: '核准加入',
+      modal_create_key_title: '新增金鑰',
+      modal_create_key_sub: '核發預先授權金鑰，供批次部署或自動化腳本使用',
+      btn_submit_create_key: '建立金鑰',
+      modal_dns_record_add: '新增解析記錄',
+      modal_dns_record_edit: '編輯解析記錄',
+      modal_dns_record_sub: '修改後即時推送至所有線上節點，無需重啟服務',
+      lbl_dns_domain: '解析網域',
+      ph_dns_domain: '如 nas.nodes.internal 或 git.lan（輸入短名稱自動補齊字尾）',
+      lbl_dns_pick_node: '快速選擇節點（選填）',
+      opt_manual_ip: '手動輸入位址',
+      lbl_dns_value: '指向 IP 位址（IPv4 / IPv6）',
+      ph_dns_value: '如 100.88.0.2',
+      modal_dns_config_title: '設定 DNS',
+      modal_dns_config_sub: '設定內網 MagicDNS、上游 DNS 與分流規則',
+      chk_magic_dns: '啟用 MagicDNS',
+      chk_override_dns: '覆蓋用戶端本機 DNS',
+      lbl_dns_global: '全域 DNS 伺服器（多個請以逗號分隔，支援 IP 或 https:// DoH）',
+      ph_dns_global: '如 1.1.1.1, 8.8.8.8',
+      lbl_dns_search: '搜尋網域（選填，多個請以逗號分隔）',
+      ph_dns_search: '如 home.lan, corp.internal',
+      lbl_dns_split: '分流 DNS（選填，每行一條，格式：網域=DNS）',
+      ph_dns_split: '如 corp.local=10.0.0.53',
+      modal_user_create: '新增使用者',
+      modal_user_rename: '修改使用者名稱',
+      modal_user_create_sub: '建立新的組網使用者以隔離裝置與授權金鑰',
+      modal_user_rename_sub: id => `修改使用者 #${id} 的登入名稱`,
+      lbl_username: '使用者名稱（英文字母開頭）',
+      ph_username: '如 devops 或 guest',
+      lbl_user_display: '顯示名稱（選填）',
+      ph_user_display: '如 研發維運組',
+      lbl_user_email: '電子郵件（選填）',
+      ph_user_email: '如 ops@example.com',
+      modal_acl_rule_add: '新增存取規則',
+      modal_acl_rule_edit: n => `編輯規則 #${n}`,
+      modal_acl_rule_sub: '點選允許發起存取的來源、目標及連接埠，儲存後立即生效',
+      lbl_acl_step1: '1. 允許誰發起存取（存取來源）',
+      lbl_acl_step2: '2. 允許存取哪些目標（存取目標）',
+      acl_all_devices: '全部裝置',
+      acl_custom_actors: '指定使用者 / 標籤 / 裝置',
+      lbl_acl_step3: '3. 開放連接埠範圍',
+      acl_all_ports: '全部連接埠',
+      acl_custom_ports: '指定連接埠 / 服務',
+      lbl_acl_step4: '4. 網路協定',
+      proto_all_default: '全部協定（預設）',
+      proto_all: '全部協定',
+      proto_tcp: '僅 TCP',
+      proto_udp: '僅 UDP',
+      proto_icmp: '僅 ICMP (Ping)',
+      lbl_common_services: '常用服務快速點選（可複選）',
+      lbl_custom_ports: '連接埠號（多個請以逗號分隔，支援範圍如 8080, 9000-9010）',
+      ph_custom_ports: '如 22, 80, 443',
+      btn_save_rule: '儲存規則',
+      modal_acl_meta_title: '群組與標籤管理',
+      modal_acl_meta_sub: '定義裝置分類標籤與管理員群組，無需手寫設定檔',
+      lbl_meta_tags: '可用裝置標籤（用於將伺服器、用戶端、訪客等裝置分類）',
+      ph_meta_new_tag: '輸入新標籤名稱，如 nas、iot、prod',
+      btn_add_tag: '新增標籤',
+      lbl_meta_admins: '管理員群組成員（group:admin，擁有最高管理權限）',
+      btn_save_settings: '儲存設定',
+      modal_acl_raw_title: '原則原始碼 (JSON)',
+      badge_unsaved: '未儲存變更',
+      modal_acl_raw_sub: '直接檢視或編輯底層存取控制原則檔，儲存後熱重載生效',
+      aria_acl_editor: 'ACL 原則設定編輯器',
+      btn_format: '格式化',
+      btn_reset: '還原',
+      btn_check_syntax: '驗證語法',
+      btn_save_source: '儲存原始碼',
+      modal_local_title: '本機設定',
+      modal_local_sub: '管理目前伺服器元件、本機連線與內建中繼服務',
+      tab_local_env: '本機連線',
+      tab_local_derp: '中繼設定',
+      kv_hs_comp: '伺服器端元件 (Headscale)',
+      kv_ts_comp: '用戶端元件 (Tailscale)',
+      state_checking: '檢測中…',
+      btn_install_client: '安裝用戶端',
+      kv_local_conn: '本機連線狀態',
+      lbl_server_url: '伺服器網址',
+      ph_server_url: '如 https://hs.example.com',
+      lbl_local_prefs: '本機用戶端連線選項',
+      chk_allow_incoming: '允許連入連線',
+      chk_accept_dns: '使用內網 DNS',
+      chk_accept_routes_full: '接收子網路路由',
+      chk_run_exit: '作為出口節點',
+      chk_derp_enabled: '啟用內建中繼',
+      chk_derp_verify: '開啟用戶端驗證',
+      chk_derp_private: '停用公用中繼',
+      lbl_region_code: '區域代碼',
+      ph_region_code: '如 local',
+      lbl_region_name: '區域名稱',
+      ph_region_name: '如 local relay',
+      lbl_public_ipv4: '公開 IPv4 位址',
+      ph_public_ipv4: '如 203.0.113.10',
+      lbl_stun_port: 'STUN 連接埠',
+      btn_connect_local: '連線本機',
+      btn_reconnect_local: '重新連線',
+      btn_save_config: '儲存設定',
+      modal_backup_title: '設定備份',
+      modal_backup_sub: '匯出組網設定快照，或從備份檔還原 DNS、存取控制與中繼設定',
+      tab_backup_export: '匯出備份',
+      tab_backup_restore: '匯入還原',
+      lbl_backup_json: '設定快照內容 (JSON)',
+      lbl_restore_input: '選擇備份檔或貼上 JSON 內容',
+      btn_pick_file: '選擇備份檔',
+      hint_pick_file: '支援 .json 備份檔，或直接在下方貼上',
+      ph_restore_json: '貼上匯出的 JSON 備份內容，或點擊上方「選擇備份檔」載入',
+      chk_restore_dns: '還原 DNS 解析與設定',
+      chk_restore_acl: '還原存取控制原則',
+      chk_restore_derp: '還原中繼設定',
+      btn_copy_content: '複製內容',
+      btn_download_file: '下載檔案',
+      btn_restore_now: '立即還原',
+      modal_rguide_title: '路由設定指南',
+      modal_rguide_sub: '將任一已入網節點設為全域出口節點或區域網路子網路路由閘道',
+      rguide_exit_step1: '1. 在作為出口的節點上開啟出口轉發',
+      rguide_exit_hint: '若要將目前伺服器設為出口，直接點擊頁面上的「開啟本機出口」即可一鍵完成；其他節點請執行：',
+      rguide_exit_step2: '2. 在管理台核准並在用戶端啟用',
+      rguide_kv_console: '管理台核准',
+      rguide_kv_console_val: '在「子網路路由」或節點「路由核准」中核准 0.0.0.0/0',
+      rguide_kv_gui: 'macOS / Windows / 手機',
+      rguide_kv_gui_val: '在用戶端選單 Exit Node 中勾選該節點即可全域透過代理連網',
+      rguide_kv_linux: 'Linux 用戶端',
+      rguide_kv_linux_val: 'tailscale set --exit-node=出口節點IP',
+      rguide_subnet_step1: '1. 區域網路子網路網段（可修改預覽）',
+      ph_rguide_subnet: '如 192.168.1.0/24, 10.0.0.0/24',
+      rguide_subnet_step2: '2. 在區域網路閘道節點上宣告子網路路由',
+      rguide_subnet_hint: '執行後，在本頁列表點擊該路由右側「⋯ -> 核准路由」，其他開啟了「Use Tailscale subnets / 接收子網路路由」的裝置即可直接存取該內網網段。',
+
+      // Dynamic JS strings
+      path_self: '本機',
+      path_direct: '直連',
+      path_relay: '中繼',
+      path_peer_relay: '節點中繼',
+      path_offline: '離線',
+      path_unreachable: '逾時',
+      path_unknown: '未知',
+      copied_default: '已複製',
+      copied_sep: '：',
+      rel_in_min: n => `${n} 分鐘後`,
+      rel_in_hour: n => `${n} 小時後`,
+      rel_in_day: n => `${n} 天後`,
+      rel_just_now: '剛剛',
+      rel_min_ago: n => `${n} 分鐘前`,
+      rel_hour_ago: n => `${n} 小時前`,
+      rel_day_ago: n => `${n} 天前`,
+      err_auth_expired: '登入已失效，請返回 Komari 後台重新登入。',
+      err_http: code => `請求失敗 (HTTP ${code})，請稍後重試。`,
+      err_action_failed: '操作失敗',
+      empty_nodes_filtered: '無符合的節點',
+      empty_nodes: '尚無節點資料',
+      badge_self: '本機',
+      badge_exit: '出口',
+      title_copy_ip: '點擊複製 IP',
+      toast_copied_ip: '已複製 IP',
+      relay_with_code: code => `中繼 · ${code}`,
+      aria_node_actions: '節點操作',
+      title_more_actions: '更多操作',
+      menu_node_detail: '節點詳情',
+      menu_ping_now: '立即測速',
+      menu_rename: '重新命名',
+      menu_set_tags: '設定標籤',
+      menu_never_expire: '設為永不過期',
+      menu_force_offline: '強制下線',
+      menu_remove_node: '移除節點',
+      empty_keys_filtered: '無符合的金鑰',
+      empty_keys: '尚無授權金鑰',
+      badge_reusable: '可重複使用',
+      badge_single_use: '單次',
+      badge_ephemeral: '臨時',
+      aria_key_actions: '金鑰操作',
+      menu_expire_key: '撤銷金鑰',
+      menu_delete_record: '刪除記錄',
+      empty_routes_filtered: '無符合的路由記錄',
+      empty_routes: '尚無子網路路由或出口節點',
+      empty_routes_hint: '可點擊右上角「開啟本機出口」將目前伺服器設為全域出口，或點擊「路由設定指南」查看用戶端開啟方法',
+      aria_route_actions: '路由操作',
+      menu_disable_route: '關閉路由',
+      menu_approve_route: '核准路由',
+      title_cannot_delete_self: '本機節點不可移除',
+      kv_ipv4: 'IPv4 位址',
+      kv_ipv6: 'IPv6 位址',
+      kv_dns_name: '內網網域',
+      kv_conn_type: '連線方式',
+      kv_latency: '目前延遲',
+      kv_public_addr: '公開位址',
+      kv_traffic: '累計流量',
+      kv_subnet_routes: '子網路路由',
+      val_none: '無',
+      kv_node_id: '節點 ID',
+      kv_hostname: '主機名稱',
+      kv_owner: '所屬使用者',
+      kv_os: '作業系統',
+      kv_auth_method: '認證方式',
+      val_default: '預設',
+      kv_tags: '標籤',
+      kv_joined_at: '加入時間',
+      kv_last_seen: '最後上線',
+      kv_last_hs: '最近交握',
+      kv_key_expiry: '金鑰到期',
+      val_never_expires: '長期有效',
+      guide_gui_text: url =>
+        `[macOS 圖形介面] 按住 Option 鍵點擊選單列圖示 -> Debug -> Custom Login Server，填入 ${url} 後登入\n` +
+        `[iOS / Android] 系統設定 -> Tailscale -> Alternate Server URL 填入 ${url}，返回 App 登入並在上方「核准加入」核准`,
+      state_not_installed: '未安裝',
+      state_installed: ver => `已安裝${ver ? ' · v' + ver : ''}`,
+      state_connected: (name, ip) => `已連線 · ${name}${ip ? ' (' + ip + ')' : ''}`,
+      state_disconnected: '未連線',
+      empty_users: '尚無使用者',
+      count_devices: n => `${n} 台`,
+      count_online: n => `${n} 線上`,
+      count_keys: n => `${n} 個`,
+      aria_user_actions: '使用者操作',
+      menu_view_devices: '查看裝置',
+      menu_delete_user: '刪除使用者',
+      toast_copied_suffix: '已複製字尾',
+      dns_follow_client: '跟隨用戶端',
+      state_on: '已開啟',
+      state_off: '未開啟',
+      dns_split_count: n => `${n} 個網域`,
+      state_unset: '未設定',
+      empty_dns_records: '尚無自訂解析記錄',
+      empty_dns_records_hint: '點擊右上角「新增記錄」可將內網網域指向任一裝置或服務位址',
+      toast_copied_domain: '已複製網域',
+      toast_copied_addr: '已複製位址',
+      dns_external_addr: '外部位址',
+      state_active: '生效中',
+      state_inactive: '已停用',
+      aria_record_actions: '記錄操作',
+      menu_edit_record: '編輯記錄',
+      menu_copy_domain: '複製網域',
+      menu_copy_addr: '複製位址',
+      empty_nodes_short: '尚無節點',
+      svc_rdp: '遠端桌面 (3389)',
+      svc_smb: '檔案共用 SMB (445)',
+      port_rdp: '3389 (遠端桌面)',
+      acl_actor_admin: '管理員群組',
+      acl_actor_group: g => '群組：' + g,
+      acl_actor_tag: tag => '標籤：' + tag,
+      acl_actor_user: u => '使用者：' + u,
+      acl_actor_node: n => `裝置：${n}`,
+      port_prefix: p => '連接埠 ' + p,
+      list_sep: '、',
+      acl_rules_count: n => `${n} 條`,
+      empty_acl_rules: '目前未設定允許規則（預設拒絕所有裝置互訪），請點擊右上角「新增規則」或切換預設模式',
+      aria_rule_actions: '規則操作',
+      menu_edit_rule: '編輯規則',
+      menu_move_up: '上移優先順序',
+      menu_move_down: '下移優先順序',
+      menu_delete_rule: '刪除規則',
+      toast_keep_one_rule: '至少需保留一條允許規則，避免所有裝置斷線',
+      picker_admin_group: '管理員群組 (admin)',
+      picker_sec_users: '依使用者或群組',
+      picker_sec_tags: '依裝置標籤',
+      picker_sec_nodes: '依特定裝置',
+      empty_meta_tags: '尚未定義標籤',
+      title_remove_tag: '點擊移除此標籤',
+      toast_keep_one_admin: '管理員群組至少需保留一位使用者',
+      diag_outbound_v4: '僅連出 IPv4',
+      nat_normal: '一般 NAT（易直連）',
+      nat_symmetric: '對稱型 NAT（難直連）',
+      nat_udp_ok: 'UDP 對應正常',
+      nat_pending: '待檢測',
+      toast_copied_global_v4: '已複製公開對映位址',
+      empty_derp: '未設定 DERP 中繼區域',
+      badge_embedded: '內建中繼',
+      derp_external_node: '外部節點',
+      derp_zero_relay: '0 台（全直連）',
+      toast_copied_ep: '已複製公開端點',
+      notice_stale: '資料已超過 45 秒未更新，請檢查採集服務。',
+      notice_ts_stopped: 'Tailscale 服務未運作，暫時無法探測連線方式。',
+      err_bad_snapshot: '狀態資料格式異常，請檢查採集服務。',
+      err_timeout: '讀取狀態逾時，請稍後重試。',
+      toast_copied_server_url: '已複製伺服器網址',
+      toast_copied_cmd: '已複製指令',
+      toast_paste_register_token: '請先貼上註冊連結、Auth ID 或 NodeKey',
+      backup_kv_nodes_users: '節點與使用者清單',
+      backup_kv_nodes_users_val: (n, u) => `${n} 台節點 · ${u} 位使用者`,
+      backup_kv_dns: 'DNS 設定與自訂解析',
+      backup_kv_dns_val: (c, on) => `${c} 條自訂記錄 · MagicDNS ${on ? '開啟' : '關閉'}`,
+      backup_kv_acl_derp: '存取控制與中繼設定',
+      backup_kv_acl_derp_val: hasAcl => `${hasAcl ? '包含完整 ACL 原則' : '預設原則'} · 包含內建中繼參數`,
+      toast_backup_empty: '備份內容為空',
+      toast_download_started: name => '已開始下載：' + name,
+      toast_download_fallback: '瀏覽器限制直接下載，已為您複製完整備份 JSON',
+      toast_copied_backup: '已複製設定備份 JSON',
+      file_selected: name => `已選擇：${name}`,
+      toast_file_loaded: name => '已載入備份檔：' + name,
+      toast_need_backup_input: '請先選擇備份檔或貼上備份 JSON 內容',
+      toast_need_restore_opt: '請至少勾選一項要還原的設定',
+      toast_copied_key: '已複製金鑰',
+      toast_pick_tpl: '請先選擇預設模式',
+      toast_need_src: '請至少選擇一個允許發起存取的來源',
+      toast_need_dst: '請至少選擇一個允許存取的目標',
+      toast_need_port: '請點選常用服務或輸入開放連接埠號',
+      toast_bad_port: p => `連接埠格式無效：${p}（範例：80 或 8000-8010）`,
+      toast_bad_tag: '標籤名稱僅允許英文字母、數字、點號、底線或連字號',
+      toast_formatted: '已格式化',
+      banner_format_err: msg => `格式化失敗：JSON 語法有誤（${msg}）`,
+      toast_reset_policy: '已還原為目前生效原則',
+      banner_check_ok: '語法與權限規則驗證通過',
+      banner_check_fail: '原則驗證未通過',
+      banner_save_ok: '原則已儲存並熱重載生效',
+      banner_save_fail: '儲存失敗',
+      btn_open_tunnel_check: '節點互測',
+      tunnel_card_title: '節點連通性檢測',
+      tunnel_modal_sub: '實測任兩台節點間的鏈路狀態（直連或 DERP 中繼）',
+      lbl_tunnel_pair: '選擇待檢測的兩台節點',
+      aria_tunnel_src: '來源節點',
+      aria_tunnel_dst: '目標節點',
+      btn_swap_nodes: '交換方向',
+      btn_tunnel_test: '開始檢測',
+      btn_fix_fw: '一鍵放行並複測',
+      derp_port_notice: stun => `提示：啟用內建中繼請在伺服器安全性群組 / 防火牆放行 TCP 443 與 UDP ${stun}（WireGuard 節點直連連接埠為 UDP 41641）。`,
+      tunnel_pick_two: '請選擇兩個不同的節點',
+      tunnel_no_ip: '目標節點缺少內網 IP',
+      tunnel_testing: (a, b) => `正在檢測 ${a} → ${b} 的鏈路連通性…`,
+      tunnel_fixing_fw: names => `正在為 ${names} 開放系統防火牆 (UDP 41641 / tailscale0) 並複測…`,
+      tunnel_badge_direct: '直連',
+      tunnel_badge_relay: via => (via ? `中繼 · ${via}` : 'DERP 中繼'),
+      tunnel_badge_fail: '未連通',
+      tunnel_badge_testing: '檢測中',
+      tunnel_badge_manual: '手動檢測',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} → ${b} 已建立直連${ep ? '（' + ep + '）' : ''}${rev ? ' · 反向探測' : ''}`,
+      tunnel_direct_ok: '兩台節點之間直接收發資料，不經過中繼轉發，無需任何額外設定。',
+      tunnel_res_relay: (a, b, via, rev) => `${a} → ${b} 已連通（目前經 ${via} 中繼轉發）${rev ? ' · 反向探測' : ''}`,
+      tunnel_fw_blocked: detail => `偵測到 ${detail} 開啟了系統防火牆且未放行直連連接埠 UDP 41641，可先一鍵放行後再測：`,
+      tunnel_fw_blocked_fail: detail => `偵測到 ${detail} 開啟了系統防火牆且未放行 tailscale0 網路介面，可能攔截了組網流量：`,
+      tunnel_relay_lead_checked: names => `兩台節點已正常互通（已檢查 ${names} 系統防火牆無攔截）。若想改為直連以降低延遲，請依節點類型操作：`,
+      tunnel_relay_lead_plain: '兩台節點已正常互通。若想改為直連以降低延遲，請依節點類型操作：',
+      tunnel_step_stun_title: '先放行中繼探測連接埠：',
+      tunnel_step_stun_body: stun => `登入本外掛程式所在伺服器的雲端後台 →「安全性群組 / 防火牆」，放行連入 UDP ${stun}（用於 NAT 穿透探測）。`,
+      tunnel_step_udp_title: '恢復節點 UDP 通訊：',
+      tunnel_step_udp_body: (names, stun) => `偵測到 ${names} 的 UDP 連出受阻，請檢查其網路是否停用了 UDP，或確認中繼伺服器端已放行連入 UDP ${stun}。`,
+      tunnel_step_cloud_title: '若其中一台是雲端伺服器：',
+      tunnel_step_cloud_body: (a, b) => `登入該雲端伺服器（如 ${a} 或 ${b}）的雲端廠商後台 →「安全性群組 / 防火牆」→ 新增連入規則放行 UDP 41641（來源 0.0.0.0/0）。兩端只需一端放行即可直連。`,
+      tunnel_step_router_title: '若兩台都在家用 / 辦公路由器後方：',
+      tunnel_step_router_body: '在任一端的路由器後台開啟 UPnP，或設定連接埠轉發（將外部 UDP 41641 轉發至該節點的區域網路 IP）。',
+      tunnel_step_sym_title: '對稱型 NAT 提示：',
+      tunnel_step_sym_body: names => `偵測到 ${names} 處於嚴格型（對稱）NAT，須確保對端節點已依上方步驟開放公開 UDP 41641；若兩端均無公開 IP 條件，維持目前中繼即可正常使用。`,
+      tunnel_step_keep_title: '若無法進行上述設定：',
+      tunnel_step_keep_body: '當兩端皆為無公開 IP 寬頻、校園網路／企業網路或手機熱點時，無法穿透屬正常現象，無需處理，維持目前中繼即可正常使用。',
+      tunnel_res_fail: (a, b) => `${a} → ${b} · 未收到探測回應`,
+      tunnel_fail_offline: names => `偵測到 ${names} 目前處於離線狀態，請先在對應裝置上啟動用戶端（執行 tailscale up）後再重試。`,
+      tunnel_fail_lead_checked: names => `已檢查 ${names} 系統防火牆無攔截。請依下列步驟排查：`,
+      tunnel_fail_lead_plain: '兩台節點未能互通，請依下列步驟排查：',
+      tunnel_step_acl_title: '檢查存取控制 (ACL)：',
+      tunnel_step_acl_body: (a, b) => `前往上方「存取控制」分頁，確認目前規則允許 ${a} 存取 ${b}。`,
+      tunnel_step_derp_title: '檢查用戶端與中繼連接埠：',
+      tunnel_step_derp_body: '確認兩端裝置上的 Tailscale 用戶端正在運作，且中繼伺服器雲端安全性群組已放行連入 TCP 443。',
+      tunnel_manual_hint: (a, b) => `${a} 與 ${b} 均未安裝 Komari Agent，請在 ${a} 終端機執行下方指令（via IP:連接埠 為直連，via DERP 為中繼）：`,
+      tunnel_fw_done: names => `已為 ${names} 開放防火牆規則，正在重新檢測…`,
+      tunnel_err_exec: msg => `檢測失敗：${msg}`,
+      unnamed_node: '未命名節點',
+      err_collector_down: '無法讀取組網狀態，請檢查 Headscale、Tailscale 與採集服務。',
+      err_snapshot_not_ready: '狀態採集尚未就緒，請稍後重新整理或檢查採集服務。',
     },
     en: {
       page_title: 'Tailscale Manager',
@@ -3131,7 +3715,6 @@
       diag_nat_type: 'NAT Type',
       diag_global_v4: 'Public Endpoint',
       diag_pref_derp: 'Preferred DERP',
-      btn_run_diag: 'Run Netcheck',
       diag_derp_title: 'DERP Relay Servers',
       col_region_id: 'Region ID',
       col_region_name: 'Region',
@@ -3504,32 +4087,1172 @@
       banner_check_fail: 'Policy validation failed',
       banner_save_ok: 'Policy saved and hot-reloaded',
       banner_save_fail: 'Save failed',
-      tunnel_card_title: 'Peer Tunnel Check & Direct Boost',
+      btn_open_tunnel_check: 'Peer Check',
+      tunnel_card_title: 'Peer Connectivity Check',
+      tunnel_modal_sub: 'Probe live WireGuard path (Direct or DERP relay) between any two nodes',
+      lbl_tunnel_pair: 'Select two nodes to test',
       aria_tunnel_src: 'Source node',
       aria_tunnel_dst: 'Target node',
-      btn_tunnel_test: 'Test Tunnel',
-      btn_tunnel_boost: 'Boost Direct',
-      tunnel_port_hint: stun => `Ports: Server TCP 443 · UDP ${stun} | Nodes UDP 41641`,
+      btn_swap_nodes: 'Swap direction',
+      btn_tunnel_test: 'Start Check',
+      btn_fix_fw: 'Allow Firewall & Retest',
       derp_port_notice: stun => `Tip: Open TCP 443 and UDP ${stun} on this server's firewall/security group (nodes use UDP 41641 for direct WireGuard).`,
       tunnel_pick_two: 'Please select two different nodes',
       tunnel_no_ip: 'Target node has no tailnet IP',
-      tunnel_testing: (a, b) => `Probing live WireGuard tunnel between ${a} ↔ ${b}…`,
-      tunnel_boosting: names => `Starting tailscaled and opening direct ports (UDP 41641 / tailscale0) on ${names}…`,
-      tunnel_badge_direct: 'Direct Tunnel',
-      tunnel_badge_relay: 'DERP Relayed',
+      tunnel_testing: (a, b) => `Checking connectivity from ${a} → ${b}…`,
+      tunnel_fixing_fw: names => `Allowing UDP 41641 & tailscale0 on ${names} firewall and retesting…`,
+      tunnel_badge_direct: 'Direct',
+      tunnel_badge_relay: via => (via ? `Relay · ${via}` : 'DERP Relay'),
       tunnel_badge_fail: 'Unreachable',
-      tunnel_badge_testing: 'Testing',
+      tunnel_badge_testing: 'Checking',
       tunnel_badge_manual: 'Manual Check',
-      tunnel_res_direct: (a, b, ep, rev) => `${a} ↔ ${b} connected via direct UDP${ep ? ' (' + ep + ')' : ''}${rev ? ' (reverse probe)' : ''}`,
-      tunnel_res_relay: (a, b, via, rev) => `${a} ↔ ${b} reachable via DERP (${via})${rev ? ' (reverse probe)' : ''}.`,
-      tunnel_res_relay_hint: stun => `To upgrade to direct P2P, click "Boost Direct" and ensure cloud security groups allow UDP 41641 (nodes) and UDP ${stun} (server).`,
-      tunnel_res_fail: (a, b) => `No response between ${a} ↔ ${b}. Check that both nodes are online, ACLs allow traffic, and click "Boost Direct" to open host firewalls.`,
+      tunnel_res_direct: (a, b, ep, rev) => `${a} → ${b} connected directly${ep ? ' (' + ep + ')' : ''}${rev ? ' · reverse probe' : ''}`,
+      tunnel_direct_ok: 'Traffic flows directly between both nodes without a relay. No extra setup needed.',
+      tunnel_res_relay: (a, b, via, rev) => `${a} → ${b} connected (relayed via ${via})${rev ? ' · reverse probe' : ''}`,
+      tunnel_fw_blocked: detail => `Active host firewall on ${detail} has not allowed UDP 41641. Allow it first and retest:`,
+      tunnel_fw_blocked_fail: detail => `Active host firewall on ${detail} has not allowed interface tailscale0 and may drop traffic:`,
+      tunnel_relay_lead_checked: names => `Both nodes can already communicate (no OS firewall block on ${names}). To switch to a lower-latency direct link:`,
+      tunnel_relay_lead_plain: 'Both nodes can already communicate. To switch to a lower-latency direct link:',
+      tunnel_step_stun_title: 'Open relay STUN port first: ',
+      tunnel_step_stun_body: stun => `In this Headscale server's cloud security group/firewall, allow inbound UDP ${stun} (used for NAT discovery).`,
+      tunnel_step_udp_title: 'Unblock outbound UDP: ',
+      tunnel_step_udp_body: (names, stun) => `Outbound UDP failed on ${names}; check if its network blocks UDP or ensure inbound UDP ${stun} is open on the relay server.`,
+      tunnel_step_cloud_title: 'If either node is a cloud server: ',
+      tunnel_step_cloud_body: (a, b) => `In its cloud console (${a} or ${b}) → Security Group / Firewall → allow inbound UDP 41641 (0.0.0.0/0). Only one side needs to open it for direct link.`,
+      tunnel_step_router_title: 'If both are behind home/office routers: ',
+      tunnel_step_router_body: 'Enable UPnP on either router, or forward external UDP 41641 to that node\'s LAN IP.',
+      tunnel_step_sym_title: 'Symmetric NAT detected: ',
+      tunnel_step_sym_body: names => `${names} is behind strict (symmetric) NAT, so the other node must expose public UDP 41641 above; if neither side can, keeping this relay works fine.`,
+      tunnel_step_keep_title: 'If neither applies: ',
+      tunnel_step_keep_body: 'On carrier NAT, campus/corporate Wi-Fi, or mobile hotspots where hole-punching is blocked, relay fallback is normal—no action required.',
+      tunnel_res_fail: (a, b) => `${a} → ${b} · No response received`,
+      tunnel_fail_offline: names => `${names} is currently offline. Start Tailscale on that device (run tailscale up) and test again.`,
+      tunnel_fail_lead_checked: names => `No OS firewall block on ${names}. Please check the following:`,
+      tunnel_fail_lead_plain: 'Nodes could not reach each other. Please check the following:',
+      tunnel_step_acl_title: 'Check ACL policy: ',
+      tunnel_step_acl_body: (a, b) => `Open the ACLs tab above and verify your rules allow ${a} to reach ${b}.`,
+      tunnel_step_derp_title: 'Check client & relay port: ',
+      tunnel_step_derp_body: 'Ensure Tailscale is running on both devices and inbound TCP 443 is open on the relay server\'s security group.',
       tunnel_manual_hint: (a, b) => `Neither ${a} nor ${b} has Komari Agent installed. Run this on ${a} ("via IP:port" = Direct, "via DERP" = Relayed):`,
-      tunnel_boost_none: 'Neither selected node has Komari Agent installed. Please open UDP 41641 and allow tailscale0 on each device manually.',
-      tunnel_boost_done: names => `Opened local direct ports on ${names}. Re-testing tunnel path…`,
-      tunnel_err_exec: msg => `Remote probe failed: ${msg}`,
+      tunnel_fw_done: names => `Updated firewall rules on ${names}. Re-checking…`,
+      tunnel_err_exec: msg => `Check failed: ${msg}`,
+      unnamed_node: 'Unnamed Node',
+      err_collector_down: 'Unable to read mesh status. Please check Headscale, Tailscale, and the collector service.',
+      err_snapshot_not_ready: 'Status snapshot is not ready yet. Please refresh later or check the collector service.',
+    },
+    ja: {
+      page_title: 'Tailscale 管理',
+      status_running: '稼働中',
+      status_unknown: '不明',
+      btn_add_device: 'デバイス追加',
+      btn_local_setup: 'ローカル設定',
+      btn_backup: '設定バックアップ',
+      btn_refresh: '状態を更新',
+      aria_summary: 'メッシュ統計',
+      metric_total: '総デバイス',
+      metric_online: 'オンライン',
+      metric_direct: '直接接続',
+      metric_relay: 'リレー',
+      metric_keys: '有効なキー',
+      banner_created_key: '新しく作成されたキー（1回のみ表示）：',
+      btn_copy: 'コピー',
+      btn_join_cmd: '接続コマンド',
+      btn_dismiss: '閉じる',
+      aria_tabs: '機能ナビゲーション',
+      tab_nodes: 'ノード',
+      tab_users: 'ユーザー',
+      tab_keys: '認証キー',
+      tab_routes: 'ルート',
+      tab_dns: 'DNS',
+      tab_acl: 'ACL',
+      tab_diag: 'ネットワーク診断',
+      ph_search_nodes: 'ノード、IP、OS、タグを検索…',
+      aria_search_nodes: 'ノードを検索',
+      aria_filter_user: 'ユーザーで絞り込み',
+      opt_all_users: 'すべてのユーザー',
+      aria_filter_status: '状態で絞り込み',
+      filter_all: 'すべて',
+      filter_online: 'オンライン',
+      filter_offline: 'オフライン',
+      filter_direct: '直接',
+      filter_relay: 'リレー',
+      btn_ping_all: '一括Ping',
+      col_node: 'ノード',
+      col_os: 'OS',
+      col_tailnet_ip: 'Tailnet IP',
+      col_status: '状態',
+      col_connection: '接続方式',
+      col_latency: '遅延',
+      col_actions: '操作',
+      loading_mesh: 'メッシュ状態を読み込み中…',
+      users_subtitle: 'Tailnet ユーザーおよび配下のデバイス・認証キーを管理',
+      btn_create_user: '新規ユーザー',
+      col_username: 'ユーザー名',
+      col_user_meta: '表示名・メール',
+      col_user_nodes: '関連デバイス',
+      col_active_keys: '有効なキー',
+      col_created: '作成日時',
+      loading_users: 'ユーザー一覧を読み込み中…',
+      aria_filter_keys: 'キー状態で絞り込み',
+      key_active: '有効',
+      key_used: '使用済み',
+      key_expired: '期限切れ',
+      btn_create_key: '新規キー',
+      col_key: 'キー',
+      col_user: 'ユーザー',
+      col_props: '属性',
+      col_expires: '有効期限',
+      loading_keys: '認証キー一覧を読み込み中…',
+      aria_filter_routes: 'ルートを絞り込み',
+      route_exit: '出口ノード',
+      route_subnet: 'サブネットルート',
+      route_pending: '承認待ち',
+      btn_enable_local_exit: 'ローカル出口を有効化',
+      btn_disable_local_exit: 'ローカル出口を無効化',
+      btn_route_guide: 'ルート設定ガイド',
+      col_cidr: 'ルート CIDR',
+      col_type: '種別',
+      loading_routes: 'ルート一覧を読み込み中…',
+      state_enabled: '有効',
+      state_disabled: '無効',
+      dns_base_domain: 'ベースドメイン',
+      dns_global: 'グローバル DNS',
+      dns_override: 'ローカル DNS を上書き',
+      dns_split: 'スプリット DNS',
+      btn_dns_config: 'DNS 設定',
+      btn_add_record: 'レコード追加',
+      dns_custom_records_title: 'カスタム DNS レコード',
+      col_domain: 'ドメイン',
+      col_target_ip: '宛先 IP',
+      col_matched_node: '対応ノード',
+      loading_dns_records: 'DNS レコードを読み込み中…',
+      dns_node_domains_title: 'ノードドメイン（MagicDNS 自動割り当て）',
+      col_internal_domain: 'MagicDNS ドメイン',
+      col_ipv4: 'IPv4 アドレス',
+      col_ipv6: 'IPv6 アドレス',
+      loading_dns_nodes: 'ノードドメインを読み込み中…',
+      acl_mode: 'ポリシーモード',
+      acl_mode_allow_all: 'すべて許可',
+      acl_mode_block_all: 'すべて拒否',
+      acl_mode_custom: 'ルールベース',
+      acl_rules: '許可ルール',
+      acl_admin_group: '管理者グループ',
+      acl_tags: '利用可能なタグ',
+      aria_acl_template: 'プリセットモードを切り替え',
+      acl_tpl_placeholder: 'プリセットモードを適用…',
+      acl_tpl_allow_all: 'すべて許可（全デバイス相互アクセス）',
+      acl_tpl_tiered: '階層制御（管理者は全許可 + クライアントからサーバー）',
+      acl_tpl_guest: 'ゲスト分離（guest は Web のみ許可）',
+      btn_apply_mode: '適用',
+      btn_groups_tags: 'グループとタグ',
+      btn_policy_source: 'ポリシー JSON',
+      btn_add_rule: 'ルール追加',
+      acl_rules_table_title: 'アクセス許可ルール（一致しない通信はデフォルトで拒否）',
+      col_index: '#',
+      col_acl_src: '送信元',
+      col_acl_dst: '送信先',
+      col_acl_ports: '公開ポート / サービス',
+      col_proto: 'プロトコル',
+      loading_acl: 'アクセスルールを読み込み中…',
+      diag_udp: 'UDP 通信',
+      state_ok: '正常',
+      state_restricted: '制限あり',
+      diag_ip_stack: 'IP プロトコル',
+      diag_nat_type: 'NAT タイプ',
+      diag_global_v4: 'グローバルエンドポイント',
+      diag_pref_derp: '優先 DERP',
+      diag_derp_title: 'DERP リレーサーバー',
+      col_region_id: 'リージョン ID',
+      col_region_name: 'リージョン名',
+      col_server_addr: 'サーバーアドレス',
+      col_ports_stun_derp: 'ポート (STUN / DERP)',
+      col_verify_clients: 'クライアント検証',
+      col_relay_nodes: 'リレー中のノード',
+      col_local_latency: 'ローカル遅延',
+      loading_derp: 'DERP リレー情報を読み込み中…',
+      diag_peers_title: 'ピアリンクとトラフィック詳細',
+      col_public_ep: 'パブリックエンドポイント',
+      col_traffic: '累計トラフィック (受信 / 送信)',
+      col_last_hs: '最終ハンドシェイク',
+      loading_peers: 'ピアリンク詳細を読み込み中…',
+      drawer_title: 'ノード詳細',
+      btn_close: '閉じる',
+      act_ping: 'Ping',
+      act_rename_short: '名前変更',
+      act_edit_ip: 'IP 変更',
+      act_routes: 'ルート承認',
+      act_move_user: 'ユーザー移行',
+      act_tags_short: 'タグ',
+      act_expire_short: '失効',
+      act_delete_short: '削除',
+      lbl_node_name: 'ノード名',
+      ph_node_name: '新しいノード名を入力',
+      btn_save: '保存',
+      btn_cancel: 'キャンセル',
+      lbl_node_ip: 'ノードの Tailnet IPv4 アドレス（100.64.0.0/10）',
+      ph_node_ip: '例: 100.64.0.10',
+      chk_approve_exit: '出口ノードとして承認 (0.0.0.0/0, ::/0)',
+      lbl_approve_routes: '承認するサブネットルート（カンマ区切り、空欄の場合は上の出口設定のみ保存）',
+      ph_subnet: '例: 192.168.1.0/24',
+      lbl_move_user: '移行先ユーザー',
+      lbl_node_tags: 'ノードタグ（カンマ区切り）',
+      ph_node_tags: '例: tag:server, tag:prod',
+      confirm_delete_node: 'このノードを削除しますか？削除すると Tailnet から切断されます。',
+      btn_confirm_delete: '削除を確定',
+      sec_net_info: 'ネットワーク情報',
+      sec_basic_info: '基本情報',
+      modal_guide_title: 'デバイス追加',
+      modal_guide_sub: '認証キーコマンドまたは承認フローでクライアントを接続',
+      tab_guide_cmd: 'キーで接続',
+      tab_guide_approve: '承認して接続',
+      lbl_owner_user: '所有ユーザー',
+      lbl_key_exp: 'キー有効期限',
+      exp_1h: '1 時間',
+      exp_24h: '24 時間',
+      exp_7d: '7 日間',
+      exp_30d: '30 日間',
+      exp_90d: '90 日間',
+      exp_365d: '365 日間',
+      lbl_authkey: '事前認証キー',
+      ph_authkey: '右のボタンで生成するか既存のキーを貼り付け',
+      btn_gen_key: 'キーを生成',
+      lbl_opt_hostname: 'ホスト名（任意）',
+      ph_hostname: '例: edge-node-1',
+      lbl_opt_routes: 'サブネットルート（任意）',
+      chk_reusable: '再利用可能',
+      chk_ephemeral: '一時ノード',
+      chk_accept_routes: 'ルートを受信',
+      chk_exit_node: '出口ノード',
+      lbl_client_cmd: 'クライアント接続コマンド・手順',
+      pill_gui: 'GUI アプリ',
+      lbl_register_token: '登録 URL または Auth ID',
+      ph_register_token: 'クライアントで tailscale up 実行後に表示された URL または Auth ID を貼り付け',
+      hint_register_token: 'クライアントで認証キーなしのログインコマンドを実行後、出力された登録 URL をここに貼り付けるとそのまま承認できます。',
+      btn_copy_cmd: 'コマンドをコピー',
+      btn_copy_server_url: 'サーバー URL をコピー',
+      btn_approve_join: '参加を承認',
+      modal_create_key_title: '新規キー作成',
+      modal_create_key_sub: '一括デプロイや自動化スクリプト向けの事前認証キーを発行',
+      btn_submit_create_key: 'キーを作成',
+      modal_dns_record_add: 'DNS レコード追加',
+      modal_dns_record_edit: 'DNS レコード編集',
+      modal_dns_record_sub: '変更後は再起動なしでオンラインノードへ即時反映されます',
+      lbl_dns_domain: 'ドメイン名',
+      ph_dns_domain: '例: nas.nodes.internal または git.lan（短縮名はサフィックスを自動補完）',
+      lbl_dns_pick_node: 'ノードから選択（任意）',
+      opt_manual_ip: 'IP を手動入力',
+      lbl_dns_value: '宛先 IP アドレス（IPv4 / IPv6）',
+      ph_dns_value: '例: 100.64.0.2',
+      modal_dns_config_title: 'DNS 設定',
+      modal_dns_config_sub: 'MagicDNS、グローバル DNS、スプリット DNS ルールを設定',
+      chk_magic_dns: 'MagicDNS を有効化',
+      chk_override_dns: 'クライアントのローカル DNS を上書き',
+      lbl_dns_global: 'グローバル DNS サーバー（カンマ区切り、IP または https:// DoH 対応）',
+      ph_dns_global: '例: 1.1.1.1, 8.8.8.8',
+      lbl_dns_search: '検索ドメイン（任意・カンマ区切り）',
+      ph_dns_search: '例: home.lan, corp.internal',
+      lbl_dns_split: 'スプリット DNS（任意・1行に1件、形式：ドメイン=DNS）',
+      ph_dns_split: '例: corp.local=10.0.0.53',
+      modal_user_create: '新規ユーザー',
+      modal_user_rename: 'ユーザー名を変更',
+      modal_user_create_sub: 'デバイスと認証キーを分離するための新しい Tailnet ユーザーを作成',
+      modal_user_rename_sub: id => `ユーザー #${id} のログイン名を変更`,
+      lbl_username: 'ユーザー名（英字で開始）',
+      ph_username: '例: devops または guest',
+      lbl_user_display: '表示名（任意）',
+      ph_user_display: '例: 開発運用チーム',
+      lbl_user_email: 'メールアドレス（任意）',
+      ph_user_email: '例: ops@example.com',
+      modal_acl_rule_add: 'アクセスルール追加',
+      modal_acl_rule_edit: n => `ルール #${n} を編集`,
+      modal_acl_rule_sub: '許可する送信元・送信先・ポートを選択すると、保存後すぐに適用されます',
+      lbl_acl_step1: '1. アクセス元（送信元）',
+      lbl_acl_step2: '2. アクセス先（送信先）',
+      acl_all_devices: 'すべてのデバイス',
+      acl_custom_actors: '特定のユーザー / タグ / デバイス',
+      lbl_acl_step3: '3. 許可ポート範囲',
+      acl_all_ports: 'すべてのポート',
+      acl_custom_ports: '指定ポート / サービス',
+      lbl_acl_step4: '4. プロトコル',
+      proto_all_default: 'すべてのプロトコル（デフォルト）',
+      proto_all: 'すべて',
+      proto_tcp: 'TCP のみ',
+      proto_udp: 'UDP のみ',
+      proto_icmp: 'ICMP のみ (Ping)',
+      lbl_common_services: 'よく使うサービス（複数選択可）',
+      lbl_custom_ports: 'ポート番号（カンマ区切り、8080, 9000-9010 のような範囲指定可）',
+      ph_custom_ports: '例: 22, 80, 443',
+      btn_save_rule: 'ルールを保存',
+      modal_acl_meta_title: 'グループとタグ管理',
+      modal_acl_meta_sub: '設定ファイルを手書きせずにデバイスタグと管理者グループを管理',
+      lbl_meta_tags: '利用可能なデバイスタグ（サーバー、クライアント、ゲストなどの分類用）',
+      ph_meta_new_tag: '新しいタグ名を入力（例: nas, iot, prod）',
+      btn_add_tag: 'タグを追加',
+      lbl_meta_admins: '管理者グループメンバー（group:admin、最高管理権限を付与）',
+      btn_save_settings: '設定を保存',
+      modal_acl_raw_title: 'ポリシーソース (JSON)',
+      badge_unsaved: '未保存の変更',
+      modal_acl_raw_sub: 'ACL ポリシーファイルを直接確認・編集し、保存時にホットリロードで反映',
+      aria_acl_editor: 'ACL ポリシー設定エディター',
+      btn_format: '整形',
+      btn_reset: '元に戻す',
+      btn_check_syntax: '構文検証',
+      btn_save_source: 'ソースを保存',
+      modal_local_title: 'ローカル設定',
+      modal_local_sub: 'ローカルのサーバーコンポーネント・クライアント接続・内蔵リレーを管理',
+      tab_local_env: 'ローカル接続',
+      tab_local_derp: 'リレー設定',
+      kv_hs_comp: 'コントロールプレーン (Headscale)',
+      kv_ts_comp: 'クライアント (Tailscale)',
+      state_checking: '確認中…',
+      btn_install_client: 'クライアントをインストール',
+      kv_local_conn: 'ローカル接続状態',
+      lbl_server_url: 'サーバー URL',
+      ph_server_url: '例: https://hs.example.com',
+      lbl_local_prefs: 'ローカルクライアント接続オプション',
+      chk_allow_incoming: '着信接続を許可',
+      chk_accept_dns: 'Tailscale DNS を使用',
+      chk_accept_routes_full: 'サブネットルートを受信',
+      chk_run_exit: '出口ノードとして稼働',
+      chk_derp_enabled: '内蔵 DERP リレーを有効化',
+      chk_derp_verify: 'クライアント検証を有効化',
+      chk_derp_private: 'パブリックリレーを無効化',
+      lbl_region_code: 'リージョンコード',
+      ph_region_code: '例: local',
+      lbl_region_name: 'リージョン名',
+      ph_region_name: '例: local relay',
+      lbl_public_ipv4: 'パブリック IPv4 アドレス',
+      ph_public_ipv4: '例: 203.0.113.10',
+      lbl_stun_port: 'STUN ポート',
+      btn_connect_local: 'ローカル接続',
+      btn_reconnect_local: '再接続',
+      btn_save_config: '設定を保存',
+      modal_backup_title: '設定バックアップ',
+      modal_backup_sub: 'メッシュ設定スナップショットの書き出し、またはバックアップからの DNS・ACL・リレー復元',
+      tab_backup_export: 'エクスポート',
+      tab_backup_restore: '復元',
+      lbl_backup_json: '設定スナップショット (JSON)',
+      lbl_restore_input: 'バックアップファイルを選択または JSON を貼り付け',
+      btn_pick_file: 'ファイルを選択',
+      hint_pick_file: '.json バックアップファイル、または下に直接貼り付け可能',
+      ph_restore_json: 'エクスポートした JSON バックアップ内容を貼り付けるか、上の「ファイルを選択」から読み込み',
+      chk_restore_dns: 'DNS 設定とレコードを復元',
+      chk_restore_acl: 'ACL ポリシーを復元',
+      chk_restore_derp: 'DERP リレー設定を復元',
+      btn_copy_content: '内容をコピー',
+      btn_download_file: 'ダウンロード',
+      btn_restore_now: '今すぐ復元',
+      modal_rguide_title: 'ルート設定ガイド',
+      modal_rguide_sub: '任意の接続済みノードをグローバル出口ノードまたは LAN サブネットルーターに設定',
+      rguide_exit_step1: '1. 出口ノード側で出口転送を有効化',
+      rguide_exit_hint: 'このサーバーを出口にする場合は画面上の「ローカル出口を有効化」をクリックするだけで完了します。他のノードでは次を実行：',
+      rguide_exit_step2: '2. 管理画面で承認しクライアントで有効化',
+      rguide_kv_console: '管理画面で承認',
+      rguide_kv_console_val: '「ルート」タブまたはノード詳細の「ルート承認」で 0.0.0.0/0 を承認',
+      rguide_kv_gui: 'macOS / Windows / モバイル',
+      rguide_kv_gui_val: 'Tailscale アプリメニューの Exit Node から該当ノードを選択',
+      rguide_kv_linux: 'Linux クライアント',
+      rguide_kv_linux_val: 'tailscale set --exit-node=<EXIT_NODE_IP>',
+      rguide_subnet_step1: '1. LAN サブネット CIDR（編集してプレビュー可能）',
+      ph_rguide_subnet: '例: 192.168.1.0/24, 10.0.0.0/24',
+      rguide_subnet_step2: '2. LAN ゲートウェイノードでサブネットルートを広告',
+      rguide_subnet_hint: '実行後、このページの「⋯ -> ルートを承認」をクリックすると、「Use Tailscale subnets / サブネットルートを受信」を有効にした他のデバイスからそのサブネットへアクセスできます。',
+
+      // Dynamic JS strings
+      path_self: 'ローカル',
+      path_direct: '直接接続',
+      path_relay: 'リレー',
+      path_peer_relay: 'ピアリレー',
+      path_offline: 'オフライン',
+      path_unreachable: 'タイムアウト',
+      path_unknown: '不明',
+      copied_default: 'コピーしました',
+      copied_sep: '：',
+      rel_in_min: n => `${n} 分後`,
+      rel_in_hour: n => `${n} 時間後`,
+      rel_in_day: n => `${n} 日後`,
+      rel_just_now: 'たった今',
+      rel_min_ago: n => `${n} 分前`,
+      rel_hour_ago: n => `${n} 時間前`,
+      rel_day_ago: n => `${n} 日前`,
+      err_auth_expired: 'セッションが期限切れです。Komari 管理画面から再ログインしてください。',
+      err_http: code => `リクエストに失敗しました (HTTP ${code})。しばらくしてから再試行してください。`,
+      err_action_failed: '操作に失敗しました',
+      empty_nodes_filtered: '一致するノードがありません',
+      empty_nodes: 'ノードがありません',
+      badge_self: 'ローカル',
+      badge_exit: '出口',
+      title_copy_ip: 'クリックして IP をコピー',
+      toast_copied_ip: 'IP をコピーしました',
+      relay_with_code: code => `リレー · ${code}`,
+      aria_node_actions: 'ノード操作',
+      title_more_actions: 'その他の操作',
+      menu_node_detail: 'ノード詳細',
+      menu_ping_now: '今すぐ Ping',
+      menu_rename: '名前変更',
+      menu_set_tags: 'タグ設定',
+      menu_never_expire: '無期限に設定',
+      menu_force_offline: 'セッション失効',
+      menu_remove_node: 'ノード削除',
+      empty_keys_filtered: '一致するキーがありません',
+      empty_keys: '認証キーがありません',
+      badge_reusable: '再利用可',
+      badge_single_use: '単回',
+      badge_ephemeral: '一時',
+      aria_key_actions: 'キー操作',
+      menu_expire_key: 'キーを無効化',
+      menu_delete_record: '記録を削除',
+      empty_routes_filtered: '一致するルートがありません',
+      empty_routes: 'サブネットルートまたは出口ノードがありません',
+      empty_routes_hint: '右上の「ローカル出口を有効化」でこのサーバーを出口ノードに設定するか、「ルート設定ガイド」で手順を確認できます',
+      aria_route_actions: 'ルート操作',
+      menu_disable_route: 'ルートを無効化',
+      menu_approve_route: 'ルートを承認',
+      title_cannot_delete_self: 'ローカルノードは削除できません',
+      kv_ipv4: 'IPv4 アドレス',
+      kv_ipv6: 'IPv6 アドレス',
+      kv_dns_name: 'MagicDNS ドメイン',
+      kv_conn_type: '接続方式',
+      kv_latency: '現在の遅延',
+      kv_public_addr: 'パブリックアドレス',
+      kv_traffic: '累計トラフィック',
+      kv_subnet_routes: 'サブネットルート',
+      val_none: 'なし',
+      kv_node_id: 'ノード ID',
+      kv_hostname: 'ホスト名',
+      kv_owner: '所有ユーザー',
+      kv_os: 'OS',
+      kv_auth_method: '認証方式',
+      val_default: 'デフォルト',
+      kv_tags: 'タグ',
+      kv_joined_at: '登録日時',
+      kv_last_seen: '最終オンライン',
+      kv_last_hs: '最終ハンドシェイク',
+      kv_key_expiry: 'キー有効期限',
+      val_never_expires: '無期限',
+      guide_gui_text: url =>
+        `[macOS GUI] Option キーを押しながらメニューバーアイコンをクリック -> Debug -> Custom Login Server に ${url} を入力してログイン\n` +
+        `[iOS / Android] システム設定 -> Tailscale -> Alternate Server URL に ${url} を入力し、アプリに戻ってログイン後、上の「承認して接続」で承認`,
+      state_not_installed: '未インストール',
+      state_installed: ver => `インストール済み${ver ? ' · v' + ver : ''}`,
+      state_connected: (name, ip) => `接続済み · ${name}${ip ? ' (' + ip + ')' : ''}`,
+      state_disconnected: '未接続',
+      empty_users: 'ユーザーがいません',
+      count_devices: n => `${n} 台`,
+      count_online: n => `${n} オンライン`,
+      count_keys: n => `${n} 個`,
+      aria_user_actions: 'ユーザー操作',
+      menu_view_devices: 'デバイスを表示',
+      menu_delete_user: 'ユーザー削除',
+      toast_copied_suffix: 'サフィックスをコピーしました',
+      dns_follow_client: 'クライアント既定',
+      state_on: 'オン',
+      state_off: 'オフ',
+      dns_split_count: n => `${n} ドメイン`,
+      state_unset: '未設定',
+      empty_dns_records: 'カスタム DNS レコードがありません',
+      empty_dns_records_hint: '右上の「レコード追加」をクリックして内部ドメインを任意のデバイスや IP に割り当てできます',
+      toast_copied_domain: 'ドメインをコピーしました',
+      toast_copied_addr: 'アドレスをコピーしました',
+      dns_external_addr: '外部アドレス',
+      state_active: '有効',
+      state_inactive: '停止中',
+      aria_record_actions: 'レコード操作',
+      menu_edit_record: 'レコードを編集',
+      menu_copy_domain: 'ドメインをコピー',
+      menu_copy_addr: 'アドレスをコピー',
+      empty_nodes_short: 'ノードなし',
+      svc_rdp: 'リモートデスクトップ (3389)',
+      svc_smb: 'ファイル共有 SMB (445)',
+      port_rdp: '3389 (RDP)',
+      acl_actor_admin: '管理者グループ',
+      acl_actor_group: g => 'グループ：' + g,
+      acl_actor_tag: tag => 'タグ：' + tag,
+      acl_actor_user: u => 'ユーザー：' + u,
+      acl_actor_node: n => `デバイス：${n}`,
+      port_prefix: p => 'ポート ' + p,
+      list_sep: '、',
+      acl_rules_count: n => `${n} 件`,
+      empty_acl_rules: '許可ルールが設定されていません（デフォルトで全通信が拒否されます）。右上の「ルール追加」またはプリセットモードを選択してください',
+      aria_rule_actions: 'ルール操作',
+      menu_edit_rule: 'ルールを編集',
+      menu_move_up: '優先度を上げる',
+      menu_move_down: '優先度を下げる',
+      menu_delete_rule: 'ルールを削除',
+      toast_keep_one_rule: '全デバイスの接続不能を防ぐため、少なくとも1件の許可ルールを残してください',
+      picker_admin_group: '管理者グループ (group:admin)',
+      picker_sec_users: 'ユーザーまたはグループ',
+      picker_sec_tags: 'デバイスタグ',
+      picker_sec_nodes: '個別デバイス',
+      empty_meta_tags: 'タグが未定義です',
+      title_remove_tag: 'クリックしてこのタグを削除',
+      toast_keep_one_admin: '管理者グループには少なくとも1名のユーザーが必要です',
+      diag_outbound_v4: '送信専用 IPv4',
+      nat_normal: '通常 NAT（直接接続しやすい）',
+      nat_symmetric: '対称型 NAT（直接接続困難）',
+      nat_udp_ok: 'UDP マッピング正常',
+      nat_pending: '確認待ち',
+      toast_copied_global_v4: 'グローバルエンドポイントをコピーしました',
+      empty_derp: 'DERP リレーリージョンが未設定です',
+      badge_embedded: '内蔵リレー',
+      derp_external_node: '外部ノード',
+      derp_zero_relay: '0 台（すべて直接接続）',
+      toast_copied_ep: 'パブリックエンドポイントをコピーしました',
+      notice_stale: 'データが 45 秒以上更新されていません。コレクターサービスを確認してください。',
+      notice_ts_stopped: 'Tailscale サービスが停止中のため、接続方式を計測できません。',
+      err_bad_snapshot: '状態データの形式が不正です。コレクターサービスを確認してください。',
+      err_timeout: '状態の取得がタイムアウトしました。しばらくしてから再試行してください。',
+      toast_copied_server_url: 'サーバー URL をコピーしました',
+      toast_copied_cmd: 'コマンドをコピーしました',
+      toast_paste_register_token: '登録 URL、Auth ID、または NodeKey を貼り付けてください',
+      backup_kv_nodes_users: 'ノードとユーザー一覧',
+      backup_kv_nodes_users_val: (n, u) => `${n} ノード · ${u} ユーザー`,
+      backup_kv_dns: 'DNS 設定とカスタムレコード',
+      backup_kv_dns_val: (c, on) => `カスタムレコード ${c} 件 · MagicDNS ${on ? '有効' : '無効'}`,
+      backup_kv_acl_derp: 'ACL と DERP リレー設定',
+      backup_kv_acl_derp_val: hasAcl => `${hasAcl ? '完全な ACL ポリシーを含む' : 'デフォルトポリシー'} · 内蔵リレー設定を含む`,
+      toast_backup_empty: 'バックアップ内容が空です',
+      toast_download_started: name => 'ダウンロードを開始しました：' + name,
+      toast_download_fallback: 'ブラウザの制限により直接ダウンロードできないため、バックアップ JSON をコピーしました',
+      toast_copied_backup: '設定バックアップ JSON をコピーしました',
+      file_selected: name => `選択済み：${name}`,
+      toast_file_loaded: name => 'バックアップファイルを読み込みました：' + name,
+      toast_need_backup_input: 'バックアップファイルを選択するか、バックアップ JSON を貼り付けてください',
+      toast_need_restore_opt: '復元する設定項目を少なくとも1つ選択してください',
+      toast_copied_key: 'キーをコピーしました',
+      toast_pick_tpl: '先にプリセットモードを選択してください',
+      toast_need_src: '許可する送信元を少なくとも1つ選択してください',
+      toast_need_dst: '許可する送信先を少なくとも1つ選択してください',
+      toast_need_port: 'よく使うサービスを選択するか、開放ポート番号を入力してください',
+      toast_bad_port: p => `ポート形式が無効です：${p}（例: 80 または 8000-8010）`,
+      toast_bad_tag: 'タグ名には英数字、ドット、アンダースコア、ハイフンのみ使用できます',
+      toast_formatted: '整形しました',
+      banner_format_err: msg => `整形に失敗しました：JSON 構文エラー（${msg}）`,
+      toast_reset_policy: '現在有効なポリシーに戻しました',
+      banner_check_ok: '構文と権限ルールの検証に合格しました',
+      banner_check_fail: 'ポリシー検証に失敗しました',
+      banner_save_ok: 'ポリシーを保存しホットリロードで反映しました',
+      banner_save_fail: '保存に失敗しました',
+      btn_open_tunnel_check: 'ノード間テスト',
+      tunnel_card_title: 'ノード間接続テスト',
+      tunnel_modal_sub: '任意の2台のノード間の経路状態（直接接続または DERP リレー）を実測',
+      lbl_tunnel_pair: 'テストする2台のノードを選択',
+      aria_tunnel_src: '送信元ノード',
+      aria_tunnel_dst: '送信先ノード',
+      btn_swap_nodes: '方向を入れ替え',
+      btn_tunnel_test: 'テスト開始',
+      btn_fix_fw: 'ファイアウォールを開放して再テスト',
+      derp_port_notice: stun => `ヒント：内蔵リレーを有効にする場合は、サーバーのセキュリティグループ／ファイアウォールで TCP 443 と UDP ${stun} を開放してください（ノード間の直接 WireGuard 通信には UDP 41641 を使用します）。`,
+      tunnel_pick_two: '異なる2つのノードを選択してください',
+      tunnel_no_ip: '送信先ノードに Tailnet IP がありません',
+      tunnel_testing: (a, b) => `${a} → ${b} の接続性をテスト中…`,
+      tunnel_fixing_fw: names => `${names} のシステムファイアウォール (UDP 41641 / tailscale0) を開放して再テスト中…`,
+      tunnel_badge_direct: '直接接続',
+      tunnel_badge_relay: via => (via ? `リレー · ${via}` : 'DERP リレー'),
+      tunnel_badge_fail: '到達不可',
+      tunnel_badge_testing: 'テスト中',
+      tunnel_badge_manual: '手動テスト',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} → ${b} 直接接続を確立${ep ? '（' + ep + '）' : ''}${rev ? ' · 逆方向プローブ' : ''}`,
+      tunnel_direct_ok: '両ノード間でリレーを経由せず直接通信しています。追加設定は不要です。',
+      tunnel_res_relay: (a, b, via, rev) => `${a} → ${b} 接続済み（${via} リレー経由）${rev ? ' · 逆方向プローブ' : ''}`,
+      tunnel_fw_blocked: detail => `${detail} で OS ファイアウォールが有効になっており、直接接続ポート UDP 41641 が開放されていません。先に開放して再テストできます：`,
+      tunnel_fw_blocked_fail: detail => `${detail} で OS ファイアウォールが有効になっており、tailscale0 インターフェースが許可されていないため通信がブロックされている可能性があります：`,
+      tunnel_relay_lead_checked: names => `両ノードは通信可能です（${names} の OS ファイアウォールによるブロックなし）。低遅延の直接接続に切り替えるには、ノード種別に応じて設定してください：`,
+      tunnel_relay_lead_plain: '両ノードは通信可能です。低遅延の直接接続に切り替えるには、ノード種別に応じて設定してください：',
+      tunnel_step_stun_title: '先にリレーの STUN ポートを開放：',
+      tunnel_step_stun_body: stun => `このプラグインが稼働しているサーバーのクラウドコンソール →「セキュリティグループ / ファイアウォール」で、インバウンド UDP ${stun}（NAT 探索用）を開放してください。`,
+      tunnel_step_udp_title: 'ノードの UDP 通信を許可：',
+      tunnel_step_udp_body: (names, stun) => `${names} で UDP 送信がブロックされています。ネットワークで UDP が禁止されていないか、リレーサーバー側でインバウンド UDP ${stun} が開放されているか確認してください。`,
+      tunnel_step_cloud_title: 'いずれかがクラウドサーバーの場合：',
+      tunnel_step_cloud_body: (a, b) => `該当クラウドサーバー（${a} または ${b}）のクラウド管理画面 →「セキュリティグループ / ファイアウォール」→ インバウンド UDP 41641（送信元 0.0.0.0/0）を許可してください。片側のみの開放で直接接続できます。`,
+      tunnel_step_router_title: '両方が家庭／オフィスルーター配下の場合：',
+      tunnel_step_router_body: 'どちらかのルーター管理画面で UPnP を有効にするか、ポートフォワーディング（外部 UDP 41641 → 該当ノードの LAN IP）を設定してください。',
+      tunnel_step_sym_title: '対称型 NAT の注意：',
+      tunnel_step_sym_body: names => `${names} は厳格な（対称型）NAT 配下にあるため、対向ノード側で上記手順のパブリック UDP 41641 開放が必要です。双方とも条件を満たせない場合でも、現在のリレー接続のまま正常に利用できます。`,
+      tunnel_step_keep_title: '上記設定が難しい場合：',
+      tunnel_step_keep_body: '双方ともグローバル IP なしの回線、キャンパス／企業ネットワーク、モバイルテザリング等の環境ではホールパンチができないのが通常です。操作は不要で、現在のリレー接続のまま問題なく利用できます。',
+      tunnel_res_fail: (a, b) => `${a} → ${b} · 応答がありませんでした`,
+      tunnel_fail_offline: names => `${names} は現在オフラインです。該当デバイスでクライアントを起動（tailscale up を実行）してから再試行してください。`,
+      tunnel_fail_lead_checked: names => `${names} の OS ファイアウォールによるブロックはありません。以下を確認してください：`,
+      tunnel_fail_lead_plain: '両ノード間で通信できませんでした。以下を確認してください：',
+      tunnel_step_acl_title: 'アクセス制御 (ACL) を確認：',
+      tunnel_step_acl_body: (a, b) => `上の「ACL」タブを開き、現在のルールで ${a} から ${b} へのアクセスが許可されているか確認してください。`,
+      tunnel_step_derp_title: 'クライアントとリレーポートを確認：',
+      tunnel_step_derp_body: '両デバイスの Tailscale クライアントが稼働中で、リレーサーバーのクラウドセキュリティグループでインバウンド TCP 443 が開放されているか確認してください。',
+      tunnel_manual_hint: (a, b) => `${a} と ${b} の双方に Komari Agent が未導入のため、${a} のターミナルで下記コマンドを実行してください（via IP:ポート は直接接続、via DERP はリレー）：`,
+      tunnel_fw_done: names => `${names} のファイアウォールルールを開放しました。再テストしています…`,
+      tunnel_err_exec: msg => `テストに失敗しました：${msg}`,
+      unnamed_node: '名称未設定ノード',
+      err_collector_down: 'メッシュ状態を読み取れません。Headscale、Tailscale、およびコレクターサービスを確認してください。',
+      err_snapshot_not_ready: '状態スナップショットの準備がまだ完了していません。しばらくしてから更新するか、コレクターサービスを確認してください。',
+    },
+    id: {
+      page_title: 'Manajer Tailscale',
+      status_running: 'Berjalan',
+      status_unknown: 'Tidak Diketahui',
+      btn_add_device: 'Tambah Perangkat',
+      btn_local_setup: 'Pengaturan Lokal',
+      btn_backup: 'Cadangan',
+      btn_refresh: 'Segarkan Status',
+      aria_summary: 'Ringkasan Mesh',
+      metric_total: 'Total Perangkat',
+      metric_online: 'Online',
+      metric_direct: 'Langsung',
+      metric_relay: 'Relay',
+      metric_keys: 'Kunci Aktif',
+      banner_created_key: 'Kunci pra-auth baru (hanya ditampilkan sekali):',
+      btn_copy: 'Salin',
+      btn_join_cmd: 'Perintah Gabung',
+      btn_dismiss: 'Tutup',
+      aria_tabs: 'Navigasi',
+      tab_nodes: 'Node',
+      tab_users: 'Pengguna',
+      tab_keys: 'Kunci Auth',
+      tab_routes: 'Rute',
+      tab_dns: 'DNS',
+      tab_acl: 'ACL',
+      tab_diag: 'Diagnostik',
+      ph_search_nodes: 'Cari node, IP, OS, atau tag…',
+      aria_search_nodes: 'Cari node',
+      aria_filter_user: 'Filter menurut pengguna',
+      opt_all_users: 'Semua Pengguna',
+      aria_filter_status: 'Filter menurut status',
+      filter_all: 'Semua',
+      filter_online: 'Online',
+      filter_offline: 'Offline',
+      filter_direct: 'Langsung',
+      filter_relay: 'Relay',
+      btn_ping_all: 'Ping Semua',
+      col_node: 'Node',
+      col_os: 'OS',
+      col_tailnet_ip: 'IP Tailnet',
+      col_status: 'Status',
+      col_connection: 'Koneksi',
+      col_latency: 'Latensi',
+      col_actions: 'Tindakan',
+      loading_mesh: 'Memuat status mesh…',
+      users_subtitle: 'Kelola pengguna tailnet, perangkat, dan kunci pra-auth',
+      btn_create_user: 'Pengguna Baru',
+      col_username: 'Nama Pengguna',
+      col_user_meta: 'Nama Tampilan & Email',
+      col_user_nodes: 'Perangkat',
+      col_active_keys: 'Kunci Aktif',
+      col_created: 'Dibuat',
+      loading_users: 'Memuat daftar pengguna…',
+      aria_filter_keys: 'Filter kunci menurut status',
+      key_active: 'Aktif',
+      key_used: 'Terpakai',
+      key_expired: 'Kedaluwarsa',
+      btn_create_key: 'Kunci Baru',
+      col_key: 'Kunci',
+      col_user: 'Pengguna',
+      col_props: 'Atribut',
+      col_expires: 'Kedaluwarsa',
+      loading_keys: 'Memuat kunci auth…',
+      aria_filter_routes: 'Filter rute',
+      route_exit: 'Exit Node',
+      route_subnet: 'Rute Subnet',
+      route_pending: 'Menunggu',
+      btn_enable_local_exit: 'Aktifkan Exit Lokal',
+      btn_disable_local_exit: 'Nonaktifkan Exit Lokal',
+      btn_route_guide: 'Panduan Rute',
+      col_cidr: 'CIDR / Rute',
+      col_type: 'Jenis',
+      loading_routes: 'Memuat daftar rute…',
+      state_enabled: 'Diaktifkan',
+      state_disabled: 'Dinonaktifkan',
+      dns_base_domain: 'Domain Dasar',
+      dns_global: 'DNS Global',
+      dns_override: 'Timpa DNS Lokal',
+      dns_split: 'Split DNS',
+      btn_dns_config: 'Pengaturan DNS',
+      btn_add_record: 'Tambah Catatan',
+      dns_custom_records_title: 'Catatan DNS Kustom',
+      col_domain: 'Domain',
+      col_target_ip: 'IP Tujuan',
+      col_matched_node: 'Node',
+      loading_dns_records: 'Memuat catatan DNS…',
+      dns_node_domains_title: 'Domain Node (Otomatis oleh MagicDNS)',
+      col_internal_domain: 'Domain MagicDNS',
+      col_ipv4: 'Alamat IPv4',
+      col_ipv6: 'Alamat IPv6',
+      loading_dns_nodes: 'Memuat domain node…',
+      acl_mode: 'Mode Kebijakan',
+      acl_mode_allow_all: 'Izinkan Semua',
+      acl_mode_block_all: 'Tolak Semua',
+      acl_mode_custom: 'Berbasis Aturan',
+      acl_rules: 'Aturan Izinkan',
+      acl_admin_group: 'Grup Admin',
+      acl_tags: 'Tag Tersedia',
+      aria_acl_template: 'Ubah mode prasetel',
+      acl_tpl_placeholder: 'Terapkan mode prasetel…',
+      acl_tpl_allow_all: 'Izinkan Semua (Akses mesh penuh)',
+      acl_tpl_tiered: 'Bertingkat (Admin penuh + klien ke server)',
+      acl_tpl_guest: 'Isolasi Tamu (Tamu hanya HTTP/HTTPS)',
+      btn_apply_mode: 'Terapkan',
+      btn_groups_tags: 'Grup & Tag',
+      btn_policy_source: 'JSON Kebijakan',
+      btn_add_rule: 'Tambah Aturan',
+      acl_rules_table_title: 'Aturan Izinkan (Lalu lintas yang tidak cocok ditolak secara default)',
+      col_index: '#',
+      col_acl_src: 'Sumber',
+      col_acl_dst: 'Tujuan',
+      col_acl_ports: 'Port / Layanan',
+      col_proto: 'Protokol',
+      loading_acl: 'Memuat aturan ACL…',
+      diag_udp: 'UDP',
+      state_ok: 'Normal',
+      state_restricted: 'Terbatas',
+      diag_ip_stack: 'Protokol IP',
+      diag_nat_type: 'Jenis NAT',
+      diag_global_v4: 'Endpoint Publik',
+      diag_pref_derp: 'DERP Pilihan',
+      diag_derp_title: 'Server Relay DERP',
+      col_region_id: 'ID Wilayah',
+      col_region_name: 'Wilayah',
+      col_server_addr: 'Alamat',
+      col_ports_stun_derp: 'Port (STUN / DERP)',
+      col_verify_clients: 'Verifikasi Klien',
+      col_relay_nodes: 'Node Relay',
+      col_local_latency: 'Latensi',
+      loading_derp: 'Memuat relay DERP…',
+      diag_peers_title: 'Tautan Peer & Trafik',
+      col_public_ep: 'Endpoint Publik',
+      col_traffic: 'Trafik (Rx / Tx)',
+      col_last_hs: 'Handshake Terakhir',
+      loading_peers: 'Memuat tautan peer…',
+      drawer_title: 'Detail Node',
+      btn_close: 'Tutup',
+      act_ping: 'Ping',
+      act_rename_short: 'Ubah Nama',
+      act_edit_ip: 'Ubah IP',
+      act_routes: 'Rute',
+      act_move_user: 'Pindah Pengguna',
+      act_tags_short: 'Tag',
+      act_expire_short: 'Akhiri Sesi',
+      act_delete_short: 'Hapus',
+      lbl_node_name: 'Nama Node',
+      ph_node_name: 'Masukkan nama node baru',
+      btn_save: 'Simpan',
+      btn_cancel: 'Batal',
+      lbl_node_ip: 'Alamat IPv4 Tailnet (100.64.0.0/10)',
+      ph_node_ip: 'mis. 100.64.0.10',
+      chk_approve_exit: 'Setujui sebagai Exit Node (0.0.0.0/0, ::/0)',
+      lbl_approve_routes: 'CIDR Subnet yang Disetujui (pisahkan dengan koma; kosongkan untuk menyimpan pengaturan exit saja)',
+      ph_subnet: 'mis. 192.168.1.0/24',
+      lbl_move_user: 'Pindahkan ke Pengguna',
+      lbl_node_tags: 'Tag Node (pisahkan dengan koma)',
+      ph_node_tags: 'mis. tag:server, tag:prod',
+      confirm_delete_node: 'Hapus node ini? Perangkat akan terputus dari tailnet.',
+      btn_confirm_delete: 'Konfirmasi Hapus',
+      sec_net_info: 'Info Jaringan',
+      sec_basic_info: 'Info Dasar',
+      modal_guide_title: 'Tambah Perangkat',
+      modal_guide_sub: 'Hubungkan klien dengan perintah kunci pra-auth atau persetujuan manual',
+      tab_guide_cmd: 'Kunci Auth',
+      tab_guide_approve: 'Setujui Node',
+      lbl_owner_user: 'Pengguna',
+      lbl_key_exp: 'Masa Berlaku Kunci',
+      exp_1h: '1 jam',
+      exp_24h: '24 jam',
+      exp_7d: '7 hari',
+      exp_30d: '30 hari',
+      exp_90d: '90 hari',
+      exp_365d: '365 hari',
+      lbl_authkey: 'Kunci Pra-Auth',
+      ph_authkey: 'Buat kunci baru atau tempel kunci yang ada',
+      btn_gen_key: 'Buat Kunci',
+      lbl_opt_hostname: 'Nama Host (opsional)',
+      ph_hostname: 'mis. edge-node-1',
+      lbl_opt_routes: 'Rute Subnet (opsional)',
+      chk_reusable: 'Dapat Dipakai Ulang',
+      chk_ephemeral: 'Sementara',
+      chk_accept_routes: 'Terima Rute',
+      chk_exit_node: 'Exit Node',
+      lbl_client_cmd: 'Perintah Pengaturan Klien',
+      pill_gui: 'Aplikasi GUI',
+      lbl_register_token: 'URL Pendaftaran atau Auth ID',
+      ph_register_token: 'Tempel URL atau Auth ID yang ditampilkan oleh tailscale up',
+      hint_register_token: 'Jalankan tailscale up tanpa kunci auth di klien, lalu tempel URL pendaftaran di sini untuk menyetujuinya.',
+      btn_copy_cmd: 'Salin Perintah',
+      btn_copy_server_url: 'Salin URL Server',
+      btn_approve_join: 'Setujui Node',
+      modal_create_key_title: 'Kunci Pra-Auth Baru',
+      modal_create_key_sub: 'Terbitkan kunci pra-auth untuk deployment massal atau otomatisasi',
+      btn_submit_create_key: 'Buat Kunci',
+      modal_dns_record_add: 'Tambah Catatan DNS',
+      modal_dns_record_edit: 'Edit Catatan DNS',
+      modal_dns_record_sub: 'Diterapkan langsung ke semua node online tanpa me-restart Headscale',
+      lbl_dns_domain: 'Nama Domain',
+      ph_dns_domain: 'mis. nas.nodes.internal atau git.lan (nama pendek otomatis menambahkan akhiran)',
+      lbl_dns_pick_node: 'Pilih Node (opsional)',
+      opt_manual_ip: 'Masukkan IP secara manual',
+      lbl_dns_value: 'IP Tujuan (IPv4 / IPv6)',
+      ph_dns_value: 'mis. 100.64.0.2',
+      modal_dns_config_title: 'Pengaturan DNS',
+      modal_dns_config_sub: 'Konfigurasikan MagicDNS, nameserver global, dan Split DNS',
+      chk_magic_dns: 'Aktifkan MagicDNS',
+      chk_override_dns: 'Timpa DNS Lokal',
+      lbl_dns_global: 'Nameserver Global (IP dipisahkan koma atau https:// DoH)',
+      ph_dns_global: 'mis. 1.1.1.1, 8.8.8.8',
+      lbl_dns_search: 'Domain Pencarian (opsional, pisahkan dengan koma)',
+      ph_dns_search: 'mis. home.lan, corp.internal',
+      lbl_dns_split: 'Split DNS (opsional, satu per baris: domain=DNS)',
+      ph_dns_split: 'mis. corp.local=10.0.0.53',
+      modal_user_create: 'Pengguna Baru',
+      modal_user_rename: 'Ubah Nama Pengguna',
+      modal_user_create_sub: 'Buat pengguna tailnet untuk mengisolasi perangkat dan kunci auth',
+      modal_user_rename_sub: id => `Ubah nama login untuk pengguna #${id}`,
+      lbl_username: 'Nama Pengguna (diawali huruf)',
+      ph_username: 'mis. devops atau guest',
+      lbl_user_display: 'Nama Tampilan (opsional)',
+      ph_user_display: 'mis. Tim DevOps',
+      lbl_user_email: 'Email (opsional)',
+      ph_user_email: 'mis. ops@example.com',
+      modal_acl_rule_add: 'Tambah Aturan ACL',
+      modal_acl_rule_edit: n => `Edit Aturan #${n}`,
+      modal_acl_rule_sub: 'Pilih sumber, tujuan, dan port yang diizinkan; langsung berlaku setelah disimpan',
+      lbl_acl_step1: '1. Sumber yang Diizinkan',
+      lbl_acl_step2: '2. Tujuan yang Diizinkan',
+      acl_all_devices: 'Semua Perangkat',
+      acl_custom_actors: 'Pengguna / Tag / Perangkat Tertentu',
+      lbl_acl_step3: '3. Port yang Diizinkan',
+      acl_all_ports: 'Semua Port',
+      acl_custom_ports: 'Port / Layanan Tertentu',
+      lbl_acl_step4: '4. Protokol',
+      proto_all_default: 'Semua Protokol (default)',
+      proto_all: 'Semua',
+      proto_tcp: 'Hanya TCP',
+      proto_udp: 'Hanya UDP',
+      proto_icmp: 'Hanya ICMP (Ping)',
+      lbl_common_services: 'Pilihan Cepat Layanan Umum (bisa pilih banyak)',
+      lbl_custom_ports: 'Port (pisahkan dengan koma, mendukung rentang mis. 8080, 9000-9010)',
+      ph_custom_ports: 'mis. 22, 80, 443',
+      btn_save_rule: 'Simpan Aturan',
+      modal_acl_meta_title: 'Grup & Tag',
+      modal_acl_meta_sub: 'Kelola tag perangkat dan anggota grup admin secara visual',
+      lbl_meta_tags: 'Tag Tersedia (untuk mengelompokkan server, klien, tamu, dll.)',
+      ph_meta_new_tag: 'Masukkan nama tag, mis. nas, iot, prod',
+      btn_add_tag: 'Tambah Tag',
+      lbl_meta_admins: 'Anggota Grup Admin (group:admin)',
+      btn_save_settings: 'Simpan Pengaturan',
+      modal_acl_raw_title: 'Sumber Kebijakan (JSON)',
+      badge_unsaved: 'Belum Disimpan',
+      modal_acl_raw_sub: 'Lihat atau edit file kebijakan ACL mentah secara langsung; dimuat ulang otomatis saat disimpan',
+      aria_acl_editor: 'Editor Kebijakan ACL',
+      btn_format: 'Format',
+      btn_reset: 'Reset',
+      btn_check_syntax: 'Validasi',
+      btn_save_source: 'Simpan Kebijakan',
+      modal_local_title: 'Pengaturan Lokal',
+      modal_local_sub: 'Kelola komponen Headscale/Tailscale lokal dan relay DERP bawaan',
+      tab_local_env: 'Node Lokal',
+      tab_local_derp: 'Relay DERP',
+      kv_hs_comp: 'Control Plane (Headscale)',
+      kv_ts_comp: 'Daemon Klien (Tailscale)',
+      state_checking: 'Memeriksa…',
+      btn_install_client: 'Pasang Klien',
+      kv_local_conn: 'Koneksi Lokal',
+      lbl_server_url: 'URL Server',
+      ph_server_url: 'mis. https://hs.example.com',
+      lbl_local_prefs: 'Opsi Klien Lokal',
+      chk_allow_incoming: 'Izinkan koneksi masuk',
+      chk_accept_dns: 'Gunakan DNS Tailscale',
+      chk_accept_routes_full: 'Terima rute subnet',
+      chk_run_exit: 'Jalankan sebagai exit node',
+      chk_derp_enabled: 'Aktifkan DERP bawaan',
+      chk_derp_verify: 'Verifikasi klien',
+      chk_derp_private: 'Nonaktifkan relay publik',
+      lbl_region_code: 'Kode Wilayah',
+      ph_region_code: 'mis. local',
+      lbl_region_name: 'Nama Wilayah',
+      ph_region_name: 'mis. local relay',
+      lbl_public_ipv4: 'IPv4 Publik',
+      ph_public_ipv4: 'mis. 203.0.113.10',
+      lbl_stun_port: 'Port STUN',
+      btn_connect_local: 'Hubungkan Lokal',
+      btn_reconnect_local: 'Hubungkan Ulang',
+      btn_save_config: 'Simpan Konfigurasi',
+      modal_backup_title: 'Cadangan Konfigurasi',
+      modal_backup_sub: 'Ekspor snapshot konfigurasi mesh atau pulihkan pengaturan DNS, ACL, dan DERP',
+      tab_backup_export: 'Ekspor',
+      tab_backup_restore: 'Pulihkan',
+      lbl_backup_json: 'Snapshot Konfigurasi (JSON)',
+      lbl_restore_input: 'Pilih file cadangan atau tempel JSON',
+      btn_pick_file: 'Pilih File',
+      hint_pick_file: 'Mendukung file cadangan .json, atau tempel JSON di bawah',
+      ph_restore_json: 'Tempel konten JSON cadangan yang diekspor, atau klik "Pilih File" di atas',
+      chk_restore_dns: 'Pulihkan pengaturan & catatan DNS',
+      chk_restore_acl: 'Pulihkan kebijakan ACL',
+      chk_restore_derp: 'Pulihkan konfigurasi relay DERP',
+      btn_copy_content: 'Salin JSON',
+      btn_download_file: 'Unduh',
+      btn_restore_now: 'Pulihkan Sekarang',
+      modal_rguide_title: 'Panduan Pengaturan Rute',
+      modal_rguide_sub: 'Konfigurasikan node tailnet mana pun sebagai exit node atau router subnet',
+      rguide_exit_step1: '1. Umumkan exit node pada mesin target',
+      rguide_exit_hint: 'Untuk menjadikan server ini sebagai exit node, klik "Aktifkan Exit Lokal" pada halaman; untuk node Linux lain jalankan:',
+      rguide_exit_step2: '2. Setujui di konsol dan aktifkan di klien',
+      rguide_kv_console: 'Persetujuan Konsol',
+      rguide_kv_console_val: 'Setujui 0.0.0.0/0 di tab Rute atau Panel Node -> Rute',
+      rguide_kv_gui: 'macOS / Windows / Ponsel',
+      rguide_kv_gui_val: 'Pilih node tersebut pada menu Exit Node di aplikasi Tailscale',
+      rguide_kv_linux: 'Klien Linux',
+      rguide_kv_linux_val: 'tailscale set --exit-node=<IP_EXIT_NODE>',
+      rguide_subnet_step1: '1. CIDR Subnet LAN (pratinjau dapat diedit)',
+      ph_rguide_subnet: 'mis. 192.168.1.0/24, 10.0.0.0/24',
+      rguide_subnet_step2: '2. Umumkan rute subnet pada node gateway LAN',
+      rguide_subnet_hint: 'Setelah dijalankan, klik "⋯ -> Setujui Rute" di halaman Rute. Klien yang mengaktifkan "Use Tailscale subnets" kemudian dapat menjangkau subnet tersebut.',
+
+      // String JS dinamis
+      path_self: 'Lokal',
+      path_direct: 'Langsung',
+      path_relay: 'Relay',
+      path_peer_relay: 'Peer Relay',
+      path_offline: 'Offline',
+      path_unreachable: 'Timeout',
+      path_unknown: 'Tidak Diketahui',
+      copied_default: 'Disalin',
+      copied_sep: ': ',
+      rel_in_min: n => `${n} menit lagi`,
+      rel_in_hour: n => `${n} jam lagi`,
+      rel_in_day: n => `${n} hari lagi`,
+      rel_just_now: 'Baru saja',
+      rel_min_ago: n => `${n} menit lalu`,
+      rel_hour_ago: n => `${n} jam lalu`,
+      rel_day_ago: n => `${n} hari lalu`,
+      err_auth_expired: 'Sesi kedaluwarsa. Silakan masuk kembali ke Komari.',
+      err_http: code => `Permintaan gagal (HTTP ${code}). Silakan coba lagi.`,
+      err_action_failed: 'Tindakan gagal',
+      empty_nodes_filtered: 'Tidak ada node yang cocok',
+      empty_nodes: 'Tidak ada node ditemukan',
+      badge_self: 'Lokal',
+      badge_exit: 'Exit',
+      title_copy_ip: 'Klik untuk menyalin IP',
+      toast_copied_ip: 'IP disalin',
+      relay_with_code: code => `Relay · ${code}`,
+      aria_node_actions: 'Tindakan node',
+      title_more_actions: 'Tindakan lainnya',
+      menu_node_detail: 'Detail Node',
+      menu_ping_now: 'Ping Sekarang',
+      menu_rename: 'Ubah Nama',
+      menu_set_tags: 'Edit Tag',
+      menu_never_expire: 'Nonaktifkan Kedaluwarsa Kunci',
+      menu_force_offline: 'Akhiri Sesi',
+      menu_remove_node: 'Hapus Node',
+      empty_keys_filtered: 'Tidak ada kunci yang cocok',
+      empty_keys: 'Belum ada kunci pra-auth',
+      badge_reusable: 'Multi-pakai',
+      badge_single_use: 'Sekali pakai',
+      badge_ephemeral: 'Sementara',
+      aria_key_actions: 'Tindakan kunci',
+      menu_expire_key: 'Cabut Kunci',
+      menu_delete_record: 'Hapus Catatan',
+      empty_routes_filtered: 'Tidak ada rute yang cocok',
+      empty_routes: 'Tidak ada rute subnet atau exit node',
+      empty_routes_hint: 'Klik "Aktifkan Exit Lokal" untuk menjadikan server ini sebagai exit node, atau buka "Panduan Rute" untuk perintah pengaturan klien',
+      aria_route_actions: 'Tindakan rute',
+      menu_disable_route: 'Nonaktifkan Rute',
+      menu_approve_route: 'Setujui Rute',
+      title_cannot_delete_self: 'Node lokal tidak dapat dihapus',
+      kv_ipv4: 'Alamat IPv4',
+      kv_ipv6: 'Alamat IPv6',
+      kv_dns_name: 'Nama MagicDNS',
+      kv_conn_type: 'Koneksi',
+      kv_latency: 'Latensi',
+      kv_public_addr: 'Endpoint Publik',
+      kv_traffic: 'Trafik',
+      kv_subnet_routes: 'Rute',
+      val_none: 'Tidak ada',
+      kv_node_id: 'ID Node',
+      kv_hostname: 'Nama Host',
+      kv_owner: 'Pemilik',
+      kv_os: 'OS',
+      kv_auth_method: 'Metode Auth',
+      val_default: 'Default',
+      kv_tags: 'Tag',
+      kv_joined_at: 'Dibuat',
+      kv_last_seen: 'Terakhir Dilihat',
+      kv_last_hs: 'Handshake Terakhir',
+      kv_key_expiry: 'Masa Berlaku Kunci',
+      val_never_expires: 'Tidak pernah kedaluwarsa',
+      guide_gui_text: url =>
+        `[macOS GUI] Tahan Option dan klik ikon bilah menu -> Debug -> Custom Login Server, masukkan ${url} lalu masuk\n` +
+        `[iOS / Android] Pengaturan Sistem -> Tailscale -> Alternate Server URL: masukkan ${url}, lalu masuk dan setujui di tab "Setujui Node"`,
+      state_not_installed: 'Belum terpasang',
+      state_installed: ver => `Terpasang${ver ? ' · v' + ver : ''}`,
+      state_connected: (name, ip) => `Terhubung · ${name}${ip ? ' (' + ip + ')' : ''}`,
+      state_disconnected: 'Terputus',
+      empty_users: 'Tidak ada pengguna ditemukan',
+      count_devices: n => `${n}`,
+      count_online: n => `${n} online`,
+      count_keys: n => `${n}`,
+      aria_user_actions: 'Tindakan pengguna',
+      menu_view_devices: 'Lihat Perangkat',
+      menu_delete_user: 'Hapus Pengguna',
+      toast_copied_suffix: 'Akhiran domain disalin',
+      dns_follow_client: 'Default klien',
+      state_on: 'Aktif',
+      state_off: 'Nonaktif',
+      dns_split_count: n => `${n} domain`,
+      state_unset: 'Belum diatur',
+      empty_dns_records: 'Tidak ada catatan DNS kustom',
+      empty_dns_records_hint: 'Klik "Tambah Catatan" untuk memetakan domain internal ke perangkat atau IP mana pun',
+      toast_copied_domain: 'Domain disalin',
+      toast_copied_addr: 'Alamat IP disalin',
+      dns_external_addr: 'IP Eksternal',
+      state_active: 'Aktif',
+      state_inactive: 'Nonaktif',
+      aria_record_actions: 'Tindakan catatan',
+      menu_edit_record: 'Edit Catatan',
+      menu_copy_domain: 'Salin Domain',
+      menu_copy_addr: 'Salin Alamat',
+      empty_nodes_short: 'Tidak ada node',
+      svc_rdp: 'RDP (3389)',
+      svc_smb: 'SMB (445)',
+      port_rdp: '3389 (RDP)',
+      acl_actor_admin: 'Admin',
+      acl_actor_group: g => 'Grup: ' + g,
+      acl_actor_tag: tag => 'Tag: ' + tag,
+      acl_actor_user: u => 'Pengguna: ' + u,
+      acl_actor_node: n => `Node: ${n}`,
+      port_prefix: p => 'Port ' + p,
+      list_sep: ', ',
+      acl_rules_count: n => `${n}`,
+      empty_acl_rules: 'Belum ada aturan izinkan yang dikonfigurasi (semua lalu lintas ditolak secara default). Klik "Tambah Aturan" atau terapkan mode prasetel.',
+      aria_rule_actions: 'Tindakan aturan',
+      menu_edit_rule: 'Edit Aturan',
+      menu_move_up: 'Naikkan Prioritas',
+      menu_move_down: 'Turunkan Prioritas',
+      menu_delete_rule: 'Hapus Aturan',
+      toast_keep_one_rule: 'Pertahankan minimal satu aturan izinkan agar semua perangkat tidak terputus',
+      picker_admin_group: 'Admin (group:admin)',
+      picker_sec_users: 'Pengguna & Grup',
+      picker_sec_tags: 'Tag Perangkat',
+      picker_sec_nodes: 'Perangkat Tertentu',
+      empty_meta_tags: 'Belum ada tag yang ditentukan',
+      title_remove_tag: 'Klik untuk menghapus tag',
+      toast_keep_one_admin: 'Grup admin harus mempertahankan minimal satu pengguna',
+      diag_outbound_v4: 'Hanya IPv4 keluar',
+      nat_normal: 'NAT Normal (Mudah terhubung langsung)',
+      nat_symmetric: 'NAT Simetris (Sulit ditembus)',
+      nat_udp_ok: 'Pemetaan UDP normal',
+      nat_pending: 'Menunggu',
+      toast_copied_global_v4: 'Endpoint publik disalin',
+      empty_derp: 'Tidak ada wilayah DERP yang dikonfigurasi',
+      badge_embedded: 'Bawaan',
+      derp_external_node: 'Eksternal',
+      derp_zero_relay: '0 (Semua langsung)',
+      toast_copied_ep: 'Endpoint publik disalin',
+      notice_stale: 'Data tidak diperbarui lebih dari 45 detik. Harap periksa layanan kolektor.',
+      notice_ts_stopped: 'Daemon Tailscale tidak berjalan; tidak dapat memeriksa jalur koneksi.',
+      err_bad_snapshot: 'Format data snapshot status tidak valid. Harap periksa layanan kolektor.',
+      err_timeout: 'Permintaan status habis waktu. Silakan coba lagi.',
+      toast_copied_server_url: 'URL server disalin',
+      toast_copied_cmd: 'Perintah disalin',
+      toast_paste_register_token: 'Harap tempel URL pendaftaran, Auth ID, atau NodeKey terlebih dahulu',
+      backup_kv_nodes_users: 'Node & Pengguna',
+      backup_kv_nodes_users_val: (n, u) => `${n} node · ${u} pengguna`,
+      backup_kv_dns: 'DNS & Catatan Kustom',
+      backup_kv_dns_val: (c, on) => `${c} catatan kustom · MagicDNS ${on ? 'Aktif' : 'Nonaktif'}`,
+      backup_kv_acl_derp: 'ACL & Relay DERP',
+      backup_kv_acl_derp_val: hasAcl => `${hasAcl ? 'Kebijakan ACL lengkap disertakan' : 'Kebijakan default'} · Pengaturan DERP bawaan disertakan`,
+      toast_backup_empty: 'Konten cadangan kosong',
+      toast_download_started: name => 'Unduhan dimulai: ' + name,
+      toast_download_fallback: 'Unduhan langsung diblokir; JSON cadangan disalin ke papan klip',
+      toast_copied_backup: 'JSON cadangan disalin',
+      file_selected: name => `Dipilih: ${name}`,
+      toast_file_loaded: name => 'File cadangan dimuat: ' + name,
+      toast_need_backup_input: 'Silakan pilih file cadangan atau tempel JSON cadangan terlebih dahulu',
+      toast_need_restore_opt: 'Silakan pilih minimal satu bagian konfigurasi untuk dipulihkan',
+      toast_copied_key: 'Kunci disalin',
+      toast_pick_tpl: 'Silakan pilih mode prasetel terlebih dahulu',
+      toast_need_src: 'Silakan pilih minimal satu sumber yang diizinkan',
+      toast_need_dst: 'Silakan pilih minimal satu tujuan yang diizinkan',
+      toast_need_port: 'Silakan pilih layanan umum atau masukkan nomor port',
+      toast_bad_port: p => `Port tidak valid: ${p} (mis. 80 atau 8000-8010)`,
+      toast_bad_tag: 'Nama tag hanya boleh berisi huruf, angka, titik, garis bawah, atau tanda hubung',
+      toast_formatted: 'Diformat',
+      banner_format_err: msg => `Gagal memformat: JSON tidak valid (${msg})`,
+      toast_reset_policy: 'Dikembalikan ke kebijakan aktif saat ini',
+      banner_check_ok: 'Sintaks dan aturan kebijakan lolos validasi',
+      banner_check_fail: 'Validasi kebijakan gagal',
+      banner_save_ok: 'Kebijakan disimpan dan dimuat ulang otomatis',
+      banner_save_fail: 'Gagal menyimpan',
+      btn_open_tunnel_check: 'Cek Antar Node',
+      tunnel_card_title: 'Pemeriksaan Konektivitas Antar Node',
+      tunnel_modal_sub: 'Uji jalur WireGuard langsung antara dua node (Langsung atau relay DERP)',
+      lbl_tunnel_pair: 'Pilih dua node untuk diuji',
+      aria_tunnel_src: 'Node sumber',
+      aria_tunnel_dst: 'Node tujuan',
+      btn_swap_nodes: 'Tukar arah',
+      btn_tunnel_test: 'Mulai Cek',
+      btn_fix_fw: 'Buka Firewall & Uji Ulang',
+      derp_port_notice: stun => `Tips: Buka TCP 443 dan UDP ${stun} pada firewall/security group server ini (node menggunakan UDP 41641 untuk koneksi langsung WireGuard).`,
+      tunnel_pick_two: 'Silakan pilih dua node yang berbeda',
+      tunnel_no_ip: 'Node tujuan tidak memiliki IP tailnet',
+      tunnel_testing: (a, b) => `Memeriksa konektivitas ${a} → ${b}…`,
+      tunnel_fixing_fw: names => `Membuka UDP 41641 & tailscale0 di firewall ${names} dan menguji ulang…`,
+      tunnel_badge_direct: 'Langsung',
+      tunnel_badge_relay: via => (via ? `Relay · ${via}` : 'Relay DERP'),
+      tunnel_badge_fail: 'Tidak Terjangkau',
+      tunnel_badge_testing: 'Memeriksa',
+      tunnel_badge_manual: 'Cek Manual',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} → ${b} terhubung langsung${ep ? ' (' + ep + ')' : ''}${rev ? ' · uji balik' : ''}`,
+      tunnel_direct_ok: 'Trafik mengalir langsung di antara kedua node tanpa relay. Tidak diperlukan pengaturan tambahan.',
+      tunnel_res_relay: (a, b, via, rev) => `${a} → ${b} terhubung (melalui relay ${via})${rev ? ' · uji balik' : ''}`,
+      tunnel_fw_blocked: detail => `Firewall host aktif pada ${detail} belum mengizinkan UDP 41641. Izinkan terlebih dahulu lalu uji ulang:`,
+      tunnel_fw_blocked_fail: detail => `Firewall host aktif pada ${detail} belum mengizinkan antarmuka tailscale0 dan mungkin memblokir trafik:`,
+      tunnel_relay_lead_checked: names => `Kedua node sudah dapat berkomunikasi (tidak ada pemblokiran firewall OS pada ${names}). Untuk beralih ke koneksi langsung berlatensi lebih rendah:`,
+      tunnel_relay_lead_plain: 'Kedua node sudah dapat berkomunikasi. Untuk beralih ke koneksi langsung berlatensi lebih rendah:',
+      tunnel_step_stun_title: 'Buka port STUN relay terlebih dahulu: ',
+      tunnel_step_stun_body: stun => `Di security group/firewall cloud server Headscale ini, izinkan UDP ${stun} masuk (digunakan untuk penemuan NAT).`,
+      tunnel_step_udp_title: 'Buka blokir UDP keluar: ',
+      tunnel_step_udp_body: (names, stun) => `UDP keluar gagal pada ${names}; periksa apakah jaringannya memblokir UDP atau pastikan UDP ${stun} masuk terbuka di server relay.`,
+      tunnel_step_cloud_title: 'Jika salah satu node adalah server cloud: ',
+      tunnel_step_cloud_body: (a, b) => `Di konsol cloud-nya (${a} atau ${b}) → Security Group / Firewall → izinkan UDP 41641 masuk (0.0.0.0/0). Hanya satu sisi yang perlu membukanya untuk koneksi langsung.`,
+      tunnel_step_router_title: 'Jika keduanya berada di belakang router rumah/kantor: ',
+      tunnel_step_router_body: 'Aktifkan UPnP pada salah satu router, atau teruskan port eksternal UDP 41641 ke IP LAN node tersebut.',
+      tunnel_step_sym_title: 'NAT simetris terdeteksi: ',
+      tunnel_step_sym_body: names => `${names} berada di balik NAT ketat (simetris), sehingga node lawan harus membuka UDP 41641 publik di atas; jika kedua sisi tidak bisa, tetap menggunakan relay sudah berjalan normal.`,
+      tunnel_step_keep_title: 'Jika tidak ada yang berlaku: ',
+      tunnel_step_keep_body: 'Pada CGNAT operator, Wi-Fi kampus/kantor, atau hotspot seluler yang memblokir hole-punching, penggunaan relay adalah hal normal—tidak perlu tindakan apa pun.',
+      tunnel_res_fail: (a, b) => `${a} → ${b} · Tidak ada respons yang diterima`,
+      tunnel_fail_offline: names => `${names} saat ini sedang offline. Jalankan Tailscale di perangkat tersebut (eksekusi tailscale up) lalu coba lagi.`,
+      tunnel_fail_lead_checked: names => `Tidak ada pemblokiran firewall OS pada ${names}. Silakan periksa hal berikut:`,
+      tunnel_fail_lead_plain: 'Node tidak dapat saling menjangkau. Silakan periksa hal berikut:',
+      tunnel_step_acl_title: 'Periksa kebijakan ACL: ',
+      tunnel_step_acl_body: (a, b) => `Buka tab ACL di atas dan pastikan aturan Anda mengizinkan ${a} untuk menjangkau ${b}.`,
+      tunnel_step_derp_title: 'Periksa klien & port relay: ',
+      tunnel_step_derp_body: 'Pastikan Tailscale berjalan di kedua perangkat dan TCP 443 masuk terbuka pada security group server relay.',
+      tunnel_manual_hint: (a, b) => `Baik ${a} maupun ${b} belum memasang Komari Agent. Jalankan perintah ini di ${a} ("via IP:port" = Langsung, "via DERP" = Relay):`,
+      tunnel_fw_done: names => `Aturan firewall pada ${names} diperbarui. Menguji ulang…`,
+      tunnel_err_exec: msg => `Pemeriksaan gagal: ${msg}`,
+      unnamed_node: 'Node Tanpa Nama',
+      err_collector_down: 'Tidak dapat membaca status mesh. Harap periksa Headscale, Tailscale, dan layanan kolektor.',
+      err_snapshot_not_ready: 'Snapshot status belum siap. Silakan segarkan nanti atau periksa layanan kolektor.',
     },
   };
+
+  function normalizeLangCode(raw) {
+    const s = String(raw || '').trim().toLowerCase().replace(/_/g, '-');
+    if (
+      s === 'zh-tw' ||
+      s === 'zh-hk' ||
+      s === 'zh-mo' ||
+      s === 'zh-hant' ||
+      s.startsWith('zh-tw-') ||
+      s.startsWith('zh-hk-') ||
+      s.startsWith('zh-mo-') ||
+      s.startsWith('zh-hant-')
+    ) {
+      return 'zh-TW';
+    }
+    if (s === 'zh' || s.startsWith('zh-')) return 'zh';
+    if (s === 'ja' || s.startsWith('ja-')) return 'ja';
+    if (s === 'id' || s === 'in' || s.startsWith('id-') || s.startsWith('in-')) return 'id';
+    return 'en';
+  }
 
   function detectLanguage() {
     let raw = '';
@@ -3544,25 +5267,34 @@
     if (!raw && typeof navigator !== 'undefined') {
       raw = navigator.language || '';
     }
-    return /^zh/i.test(raw) ? 'zh' : 'en';
+    return raw ? normalizeLangCode(raw) : 'en';
+  }
+
+  function getIntlLocale() {
+    if (currentLang === 'zh') return 'zh-CN';
+    if (currentLang === 'zh-TW') return 'zh-TW';
+    if (currentLang === 'ja') return 'ja-JP';
+    if (currentLang === 'id') return 'id-ID';
+    return 'en-US';
   }
 
   let currentLang = detectLanguage();
 
   function t(key, ...args) {
     const dict = I18N[currentLang] || I18N.en;
-    const entry = dict[key] !== undefined ? dict[key] : I18N.zh[key];
+    const entry = dict[key] !== undefined ? dict[key] : (I18N.en[key] !== undefined ? I18N.en[key] : I18N.zh[key]);
     if (typeof entry === 'function') return entry(...args);
     return entry !== undefined ? entry : key;
   }
 
   function translateSnapshotError(msg) {
-    if (currentLang !== 'en' || !msg) return msg;
+    if (!msg || currentLang === 'zh') return msg;
     const map = {
-      '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': 'Unable to read mesh status. Please check Headscale, Tailscale, and the collector service.',
-      '状态采集尚未就绪，请稍后刷新或检查采集服务。': 'Status snapshot is not ready yet. Please refresh later or check the collector service.',
+      '无法读取组网状态，请检查 Headscale、Tailscale 和采集服务。': 'err_collector_down',
+      '状态采集尚未就绪，请稍后刷新或检查采集服务。': 'err_snapshot_not_ready',
     };
-    return map[msg] || msg;
+    const key = map[msg];
+    return key ? t(key) : msg;
   }
 
   function getPathLabel(conn) {
@@ -3579,7 +5311,7 @@
   }
 
   function applyStaticI18n() {
-    document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+    document.documentElement.lang = getIntlLocale();
     document.title = t('page_title');
     for (const elNode of document.querySelectorAll('[data-i18n]')) {
       const key = elNode.dataset.i18n;
@@ -3879,7 +5611,7 @@
     if (!iso) return '—';
     const ms = Date.parse(iso);
     if (!Number.isFinite(ms)) return '—';
-    return new Date(ms).toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', {
+    return new Date(ms).toLocaleString(getIntlLocale(), {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -4010,7 +5742,7 @@
       const tdName = el('td', undefined, 'cell-primary');
       tdName.dataset.label = t('col_node');
       const primary = el('div', undefined, 'node-primary');
-      primary.append(el('span', n.name === '未命名节点' && currentLang === 'en' ? 'Unnamed Node' : n.name, 'node-name'));
+      primary.append(el('span', n.name === '未命名节点' ? t('unnamed_node') : n.name, 'node-name'));
       if (n.is_observer) primary.append(el('span', t('badge_self'), 'badge badge-accent'));
       if (n.exit_node) primary.append(el('span', t('badge_exit'), 'badge badge-ok'));
       for (const tag of n.tags || []) {
@@ -4072,7 +5804,7 @@
       tdLat.dataset.label = t('col_latency');
       if (typeof n.latency_ms === 'number') {
         tdLat.append(
-          el('strong', n.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 }), 'latency-val'),
+          el('strong', n.latency_ms.toLocaleString(getIntlLocale(), { maximumFractionDigits: 1 }), 'latency-val'),
           el('span', 'ms', 'unit')
         );
       } else {
@@ -4261,7 +5993,7 @@
 
   function populateNodeDrawer(node) {
     if (!node) return;
-    $('drawer-title').textContent = node.name === '未命名节点' && currentLang === 'en' ? 'Unnamed Node' : node.name;
+    $('drawer-title').textContent = node.name === '未命名节点' ? t('unnamed_node') : node.name;
     const ob = $('drawer-online-badge');
     ob.className = 'badge ' + (node.online === true ? 'badge-ok' : node.online === false ? 'badge-bad' : '');
     ob.textContent = node.online === true ? t('filter_online') : node.online === false ? t('filter_offline') : t('status_unknown');
@@ -5519,7 +7251,73 @@
         dstSel.value = String(second.id);
       }
     }
-    $('tunnel-port-hint').textContent = t('tunnel_port_hint', getCurrentStunPort());
+  }
+
+  const PAIR_INSPECT_CMD =
+    'if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi "Status: active"; then ' +
+    '  if ufw status 2>/dev/null | grep -q "41641/udp" && ufw status 2>/dev/null | grep -q "tailscale0"; then echo "FW:ufw:ok"; else echo "FW:ufw:blocked"; fi; ' +
+    'elif command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then ' +
+    '  if firewall-cmd --list-ports 2>/dev/null | grep -q "41641/udp"; then echo "FW:firewalld:ok"; else echo "FW:firewalld:blocked"; fi; ' +
+    'else echo "FW:none"; fi; ' +
+    'if command -v timeout >/dev/null 2>&1 && command -v tailscale >/dev/null 2>&1; then timeout 3 tailscale netcheck --format=json 2>/dev/null || true; ' +
+    'elif command -v tailscale >/dev/null 2>&1; then tailscale netcheck --format=json 2>/dev/null || true; fi';
+
+  async function inspectPairContext(nodeA, nodeB) {
+    const empty = { checkedNames: [], blockedNodes: [], udpBlockedNames: [], symNatNames: [] };
+    const entries = [];
+    for (const n of [nodeA, nodeB]) {
+      const c = matchKomariClient(n);
+      if (c && !entries.some(e => e.uuid === c.uuid)) {
+        entries.push({ uuid: c.uuid, name: n.name });
+      }
+    }
+    if (!entries.length) return empty;
+    try {
+      const results = await runKomariExec(entries.map(e => e.uuid), PAIR_INSPECT_CMD);
+      const checkedNames = [];
+      const blockedNodes = [];
+      const udpBlockedNames = [];
+      const symNatNames = [];
+      for (const e of entries) {
+        const res = results.find(r => r.client === e.uuid);
+        if (!res) continue;
+        const out = String(res.result || '');
+        if (!out && !res.finished_at) continue;
+        checkedNames.push(e.name);
+        const m = out.match(/FW:(ufw|firewalld):blocked/);
+        if (m) blockedNodes.push({ uuid: e.uuid, name: e.name, fw: m[1] });
+        const jsonMatch = out.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const nc = JSON.parse(jsonMatch[0]);
+            if (nc.UDP === false) udpBlockedNames.push(e.name);
+            if (nc.MappingVariesByDestIP === true) symNatNames.push(e.name);
+          } catch (_) {}
+        }
+      }
+      return { checkedNames, blockedNodes, udpBlockedNames, symNatNames };
+    } catch (_) {
+      return empty;
+    }
+  }
+
+  function createTunnelStep(titleKey, body) {
+    const li = document.createElement('li');
+    li.append(el('strong', t(titleKey)));
+    li.append(document.createTextNode(body));
+    return li;
+  }
+
+  function appendFirewallFixRow(container, blockedNodes, key) {
+    const detail = blockedNodes.map(b => `${b.name} (${b.fw})`).join(t('list_sep'));
+    const fixRow = el('div', undefined, 'tunnel-result-row');
+    fixRow.append(el('span', t(key, detail), 'sub-line'));
+    const fixBtn = el('button', t('btn_fix_fw'), 'btn btn-sm');
+    fixBtn.type = 'button';
+    fixBtn.disabled = tunnelBusy;
+    fixBtn.addEventListener('click', () => runFixDetectedFirewalls(blockedNodes));
+    fixRow.append(fixBtn);
+    container.append(fixRow);
   }
 
   function renderTunnelResult() {
@@ -5535,29 +7333,74 @@
     const stunPort = getCurrentStunPort();
 
     const row = el('div', undefined, 'tunnel-result-row');
-    if (r.type === 'testing' || r.type === 'boosting') {
+    if (r.type === 'testing' || r.type === 'fixing_fw') {
       row.append(el('span', t('tunnel_badge_testing'), 'badge badge-accent'));
-      row.append(el('span', r.type === 'boosting' ? t('tunnel_boosting', r.names) : t('tunnel_testing', r.a, r.b)));
+      row.append(el('span', r.type === 'fixing_fw' ? t('tunnel_fixing_fw', r.names) : t('tunnel_testing', r.a, r.b)));
       box.append(row);
       return;
     }
     if (r.type === 'direct') {
       row.append(el('span', t('tunnel_badge_direct'), 'badge badge-ok'));
       if (typeof r.latency_ms === 'number') {
-        row.append(el('strong', `${r.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 })} ms`, 'mono'));
+        row.append(el('strong', `${r.latency_ms.toLocaleString(getIntlLocale(), { maximumFractionDigits: 1 })} ms`, 'mono'));
       }
       row.append(el('span', t('tunnel_res_direct', r.a, r.b, r.via, r.reversed)));
       box.append(row);
+      box.append(el('div', t('tunnel_direct_ok'), 'sub-line'));
       return;
     }
     if (r.type === 'relay') {
-      row.append(el('span', t('tunnel_badge_relay'), 'badge badge-warn'));
+      row.append(el('span', t('tunnel_badge_relay', r.via), 'badge badge-warn'));
       if (typeof r.latency_ms === 'number') {
-        row.append(el('strong', `${r.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 })} ms`, 'mono'));
+        row.append(el('strong', `${r.latency_ms.toLocaleString(getIntlLocale(), { maximumFractionDigits: 1 })} ms`, 'mono'));
       }
       row.append(el('span', t('tunnel_res_relay', r.a, r.b, r.via || 'DERP', r.reversed)));
       box.append(row);
-      box.append(el('div', t('tunnel_res_relay_hint', stunPort), 'sub-line'));
+
+      const guide = el('div', undefined, 'tunnel-guide');
+      if (Array.isArray(r.blockedNodes) && r.blockedNodes.length) {
+        appendFirewallFixRow(guide, r.blockedNodes, 'tunnel_fw_blocked');
+      } else {
+        const checkedStr = (r.checkedNames || []).join(t('list_sep'));
+        guide.append(el('div', checkedStr ? t('tunnel_relay_lead_checked', checkedStr) : t('tunnel_relay_lead_plain'), 'tunnel-guide-lead'));
+        const steps = el('ol', undefined, 'tunnel-steps');
+        const obsNetcheck = (snapshot && snapshot.diagnostics && snapshot.diagnostics.netcheck) || {};
+        if (obsNetcheck.udp === false) {
+          steps.append(createTunnelStep('tunnel_step_stun_title', t('tunnel_step_stun_body', stunPort)));
+        } else if (r.udpBlockedNames && r.udpBlockedNames.length) {
+          steps.append(createTunnelStep('tunnel_step_udp_title', t('tunnel_step_udp_body', r.udpBlockedNames.join(t('list_sep')), stunPort)));
+        }
+        steps.append(createTunnelStep('tunnel_step_cloud_title', t('tunnel_step_cloud_body', r.a, r.b)));
+        steps.append(createTunnelStep('tunnel_step_router_title', t('tunnel_step_router_body')));
+        if (r.symNatNames && r.symNatNames.length) {
+          steps.append(createTunnelStep('tunnel_step_sym_title', t('tunnel_step_sym_body', r.symNatNames.join(t('list_sep')))));
+        } else {
+          steps.append(createTunnelStep('tunnel_step_keep_title', t('tunnel_step_keep_body')));
+        }
+        guide.append(steps);
+      }
+      box.append(guide);
+      return;
+    }
+    if (r.type === 'fail') {
+      row.append(el('span', t('tunnel_badge_fail'), 'badge badge-bad'));
+      row.append(el('span', t('tunnel_res_fail', r.a, r.b)));
+      box.append(row);
+
+      const guide = el('div', undefined, 'tunnel-guide');
+      if (Array.isArray(r.offlineNames) && r.offlineNames.length) {
+        guide.append(el('div', t('tunnel_fail_offline', r.offlineNames.join(t('list_sep'))), 'tunnel-guide-lead'));
+      } else if (Array.isArray(r.blockedNodes) && r.blockedNodes.length) {
+        appendFirewallFixRow(guide, r.blockedNodes, 'tunnel_fw_blocked_fail');
+      } else {
+        const checkedStr = (r.checkedNames || []).join(t('list_sep'));
+        guide.append(el('div', checkedStr ? t('tunnel_fail_lead_checked', checkedStr) : t('tunnel_fail_lead_plain'), 'tunnel-guide-lead'));
+        const steps = el('ol', undefined, 'tunnel-steps');
+        steps.append(createTunnelStep('tunnel_step_acl_title', t('tunnel_step_acl_body', r.a, r.b)));
+        steps.append(createTunnelStep('tunnel_step_derp_title', t('tunnel_step_derp_body')));
+        guide.append(steps);
+      }
+      box.append(guide);
       return;
     }
     if (r.type === 'manual') {
@@ -5579,9 +7422,6 @@
       box.append(row);
       return;
     }
-    row.append(el('span', t('tunnel_badge_fail'), 'badge badge-bad'));
-    row.append(el('span', t('tunnel_res_fail', r.a, r.b)));
-    box.append(row);
   }
 
   function getSelectedTunnelNodes() {
@@ -5595,7 +7435,7 @@
     return { nodeA, nodeB };
   }
 
-  async function runPeerTunnelTest(fromBoost = false) {
+  async function runPeerTunnelTest(fromFix = false) {
     const pair = getSelectedTunnelNodes();
     if (!pair) return;
     const { nodeA, nodeB } = pair;
@@ -5605,10 +7445,9 @@
       showToast(t('tunnel_no_ip'), true);
       return;
     }
-    if (!fromBoost) {
+    if (!fromFix) {
       tunnelBusy = true;
       $('btn-tunnel-test').disabled = true;
-      $('btn-tunnel-boost').disabled = true;
     }
     lastTunnelResult = { type: 'testing', a: nodeA.name, b: nodeB.name };
     renderTunnelResult();
@@ -5617,102 +7456,77 @@
       await ensureKomariClients();
       const clientA = matchKomariClient(nodeA);
       const clientB = matchKomariClient(nodeB);
+      let resObj = null;
 
       if (nodeA.is_observer) {
         const res = await rpcCall('plugin:tailscaleAction', { action: 'ping', node_id: nodeB.id });
         const p = (res && res.probe) || {};
         if (p.connection === 'direct') {
-          lastTunnelResult = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeB.active_endpoint || '', latency_ms: p.latency_ms, reversed: false };
+          resObj = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeB.active_endpoint || '', latency_ms: p.latency_ms, reversed: false };
         } else if (p.connection === 'relay' || p.connection === 'peer-relay') {
-          lastTunnelResult = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: false };
+          resObj = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: false };
         } else {
-          lastTunnelResult = { type: 'fail', a: nodeA.name, b: nodeB.name };
+          resObj = { type: 'fail', a: nodeA.name, b: nodeB.name };
         }
         if (res && res.snapshot) draw(res.snapshot);
-        renderTunnelResult();
-        return;
-      }
-
-      if (clientA) {
+      } else if (clientA) {
         const results = await runKomariExec([clientA.uuid], `tailscale ping -c 4 --until-direct=true ${ipB}`);
         const item = results.find(r => r.client === clientA.uuid) || results[0];
         const parsed = parseTailscalePingOutput(item && item.result);
-        lastTunnelResult = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: false };
-        renderTunnelResult();
-        return;
-      }
-
-      if (nodeB.is_observer && ipA) {
+        resObj = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: false };
+      } else if (nodeB.is_observer && ipA) {
         const res = await rpcCall('plugin:tailscaleAction', { action: 'ping', node_id: nodeA.id });
         const p = (res && res.probe) || {};
         if (p.connection === 'direct') {
-          lastTunnelResult = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeA.active_endpoint || '', latency_ms: p.latency_ms, reversed: true };
+          resObj = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeA.active_endpoint || '', latency_ms: p.latency_ms, reversed: true };
         } else if (p.connection === 'relay' || p.connection === 'peer-relay') {
-          lastTunnelResult = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: true };
+          resObj = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: true };
         } else {
-          lastTunnelResult = { type: 'fail', a: nodeA.name, b: nodeB.name };
+          resObj = { type: 'fail', a: nodeA.name, b: nodeB.name };
         }
         if (res && res.snapshot) draw(res.snapshot);
-        renderTunnelResult();
-        return;
-      }
-
-      if (clientB && ipA) {
+      } else if (clientB && ipA) {
         const results = await runKomariExec([clientB.uuid], `tailscale ping -c 4 --until-direct=true ${ipA}`);
         const item = results.find(r => r.client === clientB.uuid) || results[0];
         const parsed = parseTailscalePingOutput(item && item.result);
-        lastTunnelResult = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: true };
-        renderTunnelResult();
-        return;
+        resObj = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: true };
+      } else {
+        resObj = { type: 'manual', a: nodeA.name, b: nodeB.name, cmd: `tailscale ping -c 4 --until-direct=true ${ipB}` };
       }
 
-      lastTunnelResult = { type: 'manual', a: nodeA.name, b: nodeB.name, cmd: `tailscale ping -c 4 --until-direct=true ${ipB}` };
+      if (resObj && resObj.type === 'fail') {
+        resObj.offlineNames = [nodeA, nodeB].filter(n => n.online === false).map(n => n.name);
+      }
+      if (resObj && (resObj.type === 'relay' || (resObj.type === 'fail' && !(resObj.offlineNames && resObj.offlineNames.length)))) {
+        Object.assign(resObj, await inspectPairContext(nodeA, nodeB));
+      }
+      lastTunnelResult = resObj;
       renderTunnelResult();
     } catch (err) {
       lastTunnelResult = { type: 'error', message: err.message || t('err_action_failed') };
       renderTunnelResult();
     } finally {
-      if (!fromBoost) {
+      if (!fromFix) {
         tunnelBusy = false;
         $('btn-tunnel-test').disabled = false;
-        $('btn-tunnel-boost').disabled = false;
       }
     }
   }
 
-  async function runPeerTunnelBoost() {
-    const pair = getSelectedTunnelNodes();
-    if (!pair) return;
-    const { nodeA, nodeB } = pair;
+  async function runFixDetectedFirewalls(blockedNodes) {
+    if (!Array.isArray(blockedNodes) || !blockedNodes.length || tunnelBusy) return;
     tunnelBusy = true;
     $('btn-tunnel-test').disabled = true;
-    $('btn-tunnel-boost').disabled = true;
     try {
-      await ensureKomariClients();
-      const targets = [];
-      const names = [];
-      for (const n of [nodeA, nodeB]) {
-        const c = matchKomariClient(n);
-        if (c && !targets.includes(c.uuid)) {
-          targets.push(c.uuid);
-          names.push(n.name);
-        }
-      }
-      if (!targets.length) {
-        showToast(t('tunnel_boost_none'), true);
-        await runPeerTunnelTest(true);
-        return;
-      }
-      const joinedNames = names.join(' & ');
-      lastTunnelResult = { type: 'boosting', names: joinedNames };
+      const names = blockedNodes.map(b => b.name).join(' & ');
+      lastTunnelResult = { type: 'fixing_fw', names };
       renderTunnelResult();
-      const boostCmd =
-        '(systemctl start tailscaled 2>/dev/null || true); ' +
-        '(command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi active && ufw allow 41641/udp >/dev/null 2>&1 && ufw allow in on tailscale0 >/dev/null 2>&1 || true); ' +
+      const fixCmd =
+        '(command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi "Status: active" && ufw allow 41641/udp >/dev/null 2>&1 && ufw allow in on tailscale0 >/dev/null 2>&1 || true); ' +
         '(command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1 && firewall-cmd --add-port=41641/udp --permanent >/dev/null 2>&1 && firewall-cmd --zone=trusted --add-interface=tailscale0 --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null 2>&1 || true); ' +
-        'echo TUNNEL_BOOST_OK';
-      await runKomariExec(targets, boostCmd);
-      showToast(t('tunnel_boost_done', joinedNames));
+        'echo FW_ALLOW_OK';
+      await runKomariExec(blockedNodes.map(b => b.uuid), fixCmd);
+      showToast(t('tunnel_fw_done', names));
       await runPeerTunnelTest(true);
     } catch (err) {
       lastTunnelResult = { type: 'error', message: err.message || t('err_action_failed') };
@@ -5720,7 +7534,6 @@
     } finally {
       tunnelBusy = false;
       $('btn-tunnel-test').disabled = false;
-      $('btn-tunnel-boost').disabled = false;
     }
   }
 
@@ -5828,7 +7641,7 @@
         tdLat.dataset.label = t('col_local_latency');
         if (typeof reg.latency_ms === 'number') {
           tdLat.append(
-            el('strong', reg.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 }), 'latency-val'),
+            el('strong', reg.latency_ms.toLocaleString(getIntlLocale(), { maximumFractionDigits: 1 }), 'latency-val'),
             el('span', 'ms', 'unit')
           );
         } else {
@@ -5865,7 +7678,7 @@
       const tdNode = el('td');
       tdNode.dataset.label = t('col_node');
       const pWrap = el('div', undefined, 'node-primary');
-      pWrap.append(el('span', n.name === '未命名节点' && currentLang === 'en' ? 'Unnamed Node' : n.name, 'node-name'));
+      pWrap.append(el('span', n.name === '未命名节点' ? t('unnamed_node') : n.name, 'node-name'));
       if (n.is_observer) pWrap.append(el('span', t('badge_self'), 'badge badge-accent'));
       tdNode.append(pWrap);
 
@@ -5902,7 +7715,7 @@
       tdLat.dataset.label = t('col_latency');
       if (typeof n.latency_ms === 'number') {
         tdLat.append(
-          el('strong', n.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 }), 'latency-val'),
+          el('strong', n.latency_ms.toLocaleString(getIntlLocale(), { maximumFractionDigits: 1 }), 'latency-val'),
           el('span', 'ms', 'unit')
         );
       } else {
@@ -6813,17 +8626,24 @@
   $('btn-ping-all-nodes').addEventListener('click', () => {
     runAction({ action: 'ping_all' }, $('btn-ping-all-nodes'));
   });
-  $('btn-run-netcheck').addEventListener('click', () => {
-    runAction({ action: 'run_netcheck' }, $('btn-run-netcheck'));
-  });
   $('btn-diag-ping-all').addEventListener('click', () => {
     runAction({ action: 'ping_all' }, $('btn-diag-ping-all'));
   });
+  $('btn-open-tunnel-check').addEventListener('click', () => {
+    syncTunnelSelectors((snapshot && snapshot.nodes) || []);
+    renderTunnelResult();
+    const dialog = $('modal-tunnel-check');
+    if (!dialog.open) dialog.showModal();
+  });
+  $('modal-tunnel-check-close').addEventListener('click', () => $('modal-tunnel-check').close());
+  $('btn-tunnel-swap').addEventListener('click', () => {
+    const a = $('tunnel-src-select').value;
+    const b = $('tunnel-dst-select').value;
+    $('tunnel-src-select').value = b;
+    $('tunnel-dst-select').value = a;
+  });
   $('btn-tunnel-test').addEventListener('click', () => {
     if (!tunnelBusy) runPeerTunnelTest(false);
-  });
-  $('btn-tunnel-boost').addEventListener('click', () => {
-    if (!tunnelBusy) runPeerTunnelBoost();
   });
   $('derp-cfg-stun').addEventListener('input', updateDerpPortNotice);
   $('btn-open-local-setup').addEventListener('click', () => openDerpConfigModal('env'));

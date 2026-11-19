@@ -1,12 +1,18 @@
 {
   "name": {
     "zh-CN": "Tailscale 管理",
-    "en": "Tailscale Manager"
+    "zh-TW": "Tailscale 管理",
+    "en": "Tailscale Manager",
+    "ja-JP": "Tailscale 管理",
+    "id-ID": "Manajer Tailscale"
   },
   "short": "tailscale-status",
   "description": {
     "zh-CN": "Headscale / Tailscale 可视化组网管理台：支持节点监控与管控、用户与授权密钥管理、子网路由与出口节点、MagicDNS 与自定义解析、可视化 ACL 访问控制及 DERP 中继网络诊断。",
-    "en": "Visual Headscale / Tailscale mesh console: node monitoring and control, users and pre-auth keys, subnet routes and exit nodes, MagicDNS and custom records, visual ACLs, and DERP diagnostics."
+    "zh-TW": "Headscale / Tailscale 視覺化組網管理台：支援節點監控與管控、使用者與授權金鑰管理、子網路路由與出口節點、MagicDNS 與自訂解析、視覺化 ACL 存取控制及 DERP 中繼網路診斷。",
+    "en": "Visual Headscale / Tailscale mesh console: node monitoring and control, users and pre-auth keys, subnet routes and exit nodes, MagicDNS and custom records, visual ACLs, and DERP diagnostics.",
+    "ja-JP": "Headscale / Tailscale ビジュアルメッシュ管理コンソール：ノード監視・制御、ユーザー・事前認証キー管理、サブネットルート・Exit Node、MagicDNS・カスタムレコード、ビジュアル ACL、DERP リレー診断に対応。",
+    "id-ID": "Konsol manajemen jaringan Headscale / Tailscale visual: pemantauan & kontrol node, pengguna & kunci pra-autentikasi, rute subnet & exit node, MagicDNS & catatan kustom, ACL visual, serta diagnostik relai DERP."
   },
   "author": "smartcat999",
   "version": "1.1.0",
@@ -20,7 +26,10 @@
       "file": "status.html",
       "title": {
         "zh-CN": "Tailscale 管理",
-        "en": "Tailscale Manager"
+        "zh-TW": "Tailscale 管理",
+        "en": "Tailscale Manager",
+        "ja-JP": "Tailscale 管理",
+        "id-ID": "Manajer Tailscale"
       },
       "type": "iframe",
       "visibility": "admin"
