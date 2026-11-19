@@ -1011,6 +1011,75 @@
     gap: 6px;
   }
 
+  .tunnel-card {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tunnel-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+  }
+
+  .tunnel-card-title {
+    font-size: 13.5px;
+    font-weight: 620;
+    color: var(--text);
+  }
+
+  .tunnel-port-hint {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .tunnel-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tunnel-controls .select-input {
+    min-width: 150px;
+    max-width: 220px;
+    flex: 1 1 150px;
+  }
+
+  .tunnel-arrow {
+    color: var(--muted);
+    font-size: 13px;
+    user-select: none;
+  }
+
+  .tunnel-result {
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tunnel-result[hidden] {
+    display: none;
+  }
+
+  .tunnel-result-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    font-size: 13px;
+  }
+
   .section-bar {
     display: flex;
     align-items: center;
@@ -1651,6 +1720,21 @@
       </div>
     </div>
 
+    <div class="tunnel-card">
+      <div class="tunnel-card-head">
+        <span class="tunnel-card-title" data-i18n="tunnel_card_title">节点间隧道测试与直连加速</span>
+        <span id="tunnel-port-hint" class="tunnel-port-hint mono"></span>
+      </div>
+      <div class="tunnel-controls">
+        <select id="tunnel-src-select" class="select-input" aria-label="源节点" data-i18n-aria="aria_tunnel_src"></select>
+        <span class="tunnel-arrow" aria-hidden="true">↔</span>
+        <select id="tunnel-dst-select" class="select-input" aria-label="目标节点" data-i18n-aria="aria_tunnel_dst"></select>
+        <button type="button" id="btn-tunnel-test" class="btn btn-primary btn-sm" data-i18n="btn_tunnel_test">测试隧道</button>
+        <button type="button" id="btn-tunnel-boost" class="btn btn-sm" data-i18n="btn_tunnel_boost">一键优化直连</button>
+      </div>
+      <div id="tunnel-result-box" class="tunnel-result" hidden></div>
+    </div>
+
     <div class="section-bar" style="margin-top:0">
       <h3 data-i18n="diag_derp_title">DERP 中继服务器</h3>
     </div>
@@ -2271,6 +2355,7 @@
               <input id="derp-cfg-stun" type="number" class="text-input mono" min="1" max="65535" value="3478" required>
             </div>
           </div>
+          <div id="derp-port-notice" class="sub-line"></div>
         </div>
       </div>
     </div>
@@ -2900,6 +2985,30 @@
       banner_check_fail: '策略校验未通过',
       banner_save_ok: '策略已保存并热重载生效',
       banner_save_fail: '保存失败',
+      tunnel_card_title: '节点间隧道测试与直连加速',
+      aria_tunnel_src: '源节点',
+      aria_tunnel_dst: '目标节点',
+      btn_tunnel_test: '测试隧道',
+      btn_tunnel_boost: '一键优化直连',
+      tunnel_port_hint: stun => `端口提示：中心机 TCP 443 · UDP ${stun} ｜ 节点 UDP 41641`,
+      derp_port_notice: stun => `提示：启用内置中继请在服务器安全组/防火墙放行 TCP 443 与 UDP ${stun}（WireGuard 节点直连端口为 UDP 41641）。`,
+      tunnel_pick_two: '请选择两个不同的节点',
+      tunnel_no_ip: '目标节点缺少内网 IP',
+      tunnel_testing: (a, b) => `正在实测 ${a} ↔ ${b} 的 WireGuard 隧道路径…`,
+      tunnel_boosting: names => `正在为 ${names} 启动服务并放行直连端口 (UDP 41641 / tailscale0)…`,
+      tunnel_badge_direct: '已直连加速',
+      tunnel_badge_relay: 'DERP 中继',
+      tunnel_badge_fail: '隧道未通',
+      tunnel_badge_testing: '检测中',
+      tunnel_badge_manual: '手动验证',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} ↔ ${b} 已通过公网 UDP 直连${ep ? ' (' + ep + ')' : ''}${rev ? '（反向探测）' : ''}`,
+      tunnel_res_relay: (a, b, via, rev) => `${a} ↔ ${b} 已连通，当前经 DERP (${via}) 中继${rev ? '（反向探测）' : ''}。`,
+      tunnel_res_relay_hint: stun => `若长期未升级为直连，请点击「一键优化直连」，并确认云安全组已放行节点 UDP 41641 与中心机 UDP ${stun}。`,
+      tunnel_res_fail: (a, b) => `${a} ↔ ${b} 未收到响应，请确认节点在线、ACL 已放行，并点击「一键优化直连」放行本机防火墙。`,
+      tunnel_manual_hint: (a, b) => `${a} 与 ${b} 均未由 Komari 纳管，请在 ${a} 终端执行下方命令验证（显示 via IP:端口 即直连，via DERP 即中继）：`,
+      tunnel_boost_none: '选中的两台设备均未安装 Komari Agent，无法远程放行防火墙；请在设备各自放行 UDP 41641 及 tailscale0 网卡。',
+      tunnel_boost_done: names => `已完成 ${names} 的本机直连端口放行，正在验证最新隧道状态…`,
+      tunnel_err_exec: msg => `远程测试失败：${msg}`,
     },
     en: {
       page_title: 'Tailscale Manager',
@@ -3395,6 +3504,30 @@
       banner_check_fail: 'Policy validation failed',
       banner_save_ok: 'Policy saved and hot-reloaded',
       banner_save_fail: 'Save failed',
+      tunnel_card_title: 'Peer Tunnel Check & Direct Boost',
+      aria_tunnel_src: 'Source node',
+      aria_tunnel_dst: 'Target node',
+      btn_tunnel_test: 'Test Tunnel',
+      btn_tunnel_boost: 'Boost Direct',
+      tunnel_port_hint: stun => `Ports: Server TCP 443 · UDP ${stun} | Nodes UDP 41641`,
+      derp_port_notice: stun => `Tip: Open TCP 443 and UDP ${stun} on this server's firewall/security group (nodes use UDP 41641 for direct WireGuard).`,
+      tunnel_pick_two: 'Please select two different nodes',
+      tunnel_no_ip: 'Target node has no tailnet IP',
+      tunnel_testing: (a, b) => `Probing live WireGuard tunnel between ${a} ↔ ${b}…`,
+      tunnel_boosting: names => `Starting tailscaled and opening direct ports (UDP 41641 / tailscale0) on ${names}…`,
+      tunnel_badge_direct: 'Direct Tunnel',
+      tunnel_badge_relay: 'DERP Relayed',
+      tunnel_badge_fail: 'Unreachable',
+      tunnel_badge_testing: 'Testing',
+      tunnel_badge_manual: 'Manual Check',
+      tunnel_res_direct: (a, b, ep, rev) => `${a} ↔ ${b} connected via direct UDP${ep ? ' (' + ep + ')' : ''}${rev ? ' (reverse probe)' : ''}`,
+      tunnel_res_relay: (a, b, via, rev) => `${a} ↔ ${b} reachable via DERP (${via})${rev ? ' (reverse probe)' : ''}.`,
+      tunnel_res_relay_hint: stun => `To upgrade to direct P2P, click "Boost Direct" and ensure cloud security groups allow UDP 41641 (nodes) and UDP ${stun} (server).`,
+      tunnel_res_fail: (a, b) => `No response between ${a} ↔ ${b}. Check that both nodes are online, ACLs allow traffic, and click "Boost Direct" to open host firewalls.`,
+      tunnel_manual_hint: (a, b) => `Neither ${a} nor ${b} has Komari Agent installed. Run this on ${a} ("via IP:port" = Direct, "via DERP" = Relayed):`,
+      tunnel_boost_none: 'Neither selected node has Komari Agent installed. Please open UDP 41641 and allow tailscale0 on each device manually.',
+      tunnel_boost_done: names => `Opened local direct ports on ${names}. Re-testing tunnel path…`,
+      tunnel_err_exec: msg => `Remote probe failed: ${msg}`,
     },
   };
 
@@ -3523,6 +3656,8 @@
         const firstOpt = $('dns-record-node-pick').options[0];
         if (firstOpt && firstOpt.value === '') firstOpt.textContent = t('opt_manual_ip');
       }
+      if ($('modal-derp-config').open) updateDerpPortNotice();
+      if (lastTunnelResult) renderTunnelResult();
     }
   }
 
@@ -3777,14 +3912,14 @@
   }
 
   async function rpcCall(method, params = {}) {
-    const reqParams = { ...(params || {}), lang: currentLang };
+    const reqParams = method.startsWith('plugin:') ? { ...(params || {}), lang: currentLang } : (params || {});
     const response = await fetch('/api/rpc2', {
       method: 'POST',
       credentials: 'same-origin',
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params: reqParams }),
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(15000),
     });
     if (response.status === 401 || response.status === 403) {
       throw new Error(t('err_auth_expired'));
@@ -4336,6 +4471,11 @@
     }
   }
 
+  function updateDerpPortNotice() {
+    const port = Number($('derp-cfg-stun').value) || 3478;
+    $('derp-port-notice').textContent = t('derp_port_notice', port);
+  }
+
   function openDerpConfigModal(initialTab = 'env') {
     const diag = (snapshot && snapshot.diagnostics) || {};
     const loc = (snapshot && snapshot.local_node) || {};
@@ -4361,6 +4501,7 @@
     $('derp-cfg-name').value = (cfg.region_name && cfg.region_name !== 'Embedded DERP') ? cfg.region_name : (embeddedReg.region_name || 'local relay');
     $('derp-cfg-ipv4').value = cfg.ipv4 || embeddedReg.ipv4 || embeddedReg.hostname || detectedIp;
     $('derp-cfg-stun').value = String(stunPort);
+    updateDerpPortNotice();
     const dialog = $('modal-derp-config');
     if (!dialog.open) dialog.showModal();
   }
@@ -5263,10 +5404,331 @@
     if (!dialog.open) dialog.showModal();
   }
 
+  let komariClients = null;
+  let lastTunnelResult = null;
+  let tunnelBusy = false;
+
+  async function ensureKomariClients() {
+    if (Array.isArray(komariClients)) return komariClients;
+    try {
+      const res = await rpcCall('admin:listClients', {});
+      komariClients = Array.isArray(res) ? res : [];
+    } catch (_) {
+      komariClients = [];
+    }
+    return komariClients;
+  }
+
+  function matchKomariClient(node) {
+    if (!node || !Array.isArray(komariClients) || !komariClients.length) return null;
+    const names = [node.name, node.hostname].filter(Boolean).map(s => String(s).trim().toLowerCase());
+    for (const c of komariClients) {
+      const cn = String(c.name || '').trim().toLowerCase();
+      if (cn && names.includes(cn)) return c;
+    }
+    const epIp = String(node.active_endpoint || '').split(':')[0].trim();
+    const nodeIps = new Set([...(node.ips || []), ...(epIp ? [epIp] : [])]);
+    for (const c of komariClients) {
+      if (c.ipv4 && nodeIps.has(String(c.ipv4).trim())) return c;
+    }
+    return null;
+  }
+
+  function getCurrentStunPort() {
+    const diag = (snapshot && snapshot.diagnostics) || {};
+    const cfg = diag.derp_server || diag.derp_config || {};
+    const reg = (diag.derp_regions || []).find(r => r.is_embedded) || (diag.derp_regions || [])[0] || {};
+    const stunStr = String(cfg.stun_listen_addr || '');
+    return Number(stunStr.split(':').pop()) || reg.stun_port || 3478;
+  }
+
+  function parseTailscalePingOutput(stdout) {
+    const lines = String(stdout || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    let bestDirect = null;
+    let bestRelay = null;
+    for (const line of lines) {
+      const m = line.match(/^pong from .*? via (.+?) in ([0-9.]+)\s*(ms|s|µs|us)\b/i);
+      if (!m) continue;
+      const via = m[1].trim();
+      let ms = parseFloat(m[2]);
+      const unit = m[3].toLowerCase();
+      if (unit === 's') ms *= 1000;
+      else if (unit === 'µs' || unit === 'us') ms /= 1000;
+      const lat = Math.round(ms * 10) / 10;
+      const derpMatch = via.match(/^DERP\(([^)]+)\)/i);
+      if (derpMatch) {
+        bestRelay = { mode: 'relay', via: derpMatch[1], latency_ms: lat };
+      } else {
+        bestDirect = { mode: 'direct', via, latency_ms: lat };
+      }
+    }
+    if (bestDirect) return bestDirect;
+    if (bestRelay) return bestRelay;
+    return { mode: 'fail', via: '', latency_ms: null };
+  }
+
+  async function runKomariExec(uuids, command) {
+    const execRes = await rpcCall('admin:exec', { command, clients: uuids });
+    const taskId = execRes && execRes.task_id;
+    if (!taskId) throw new Error('Missing task_id');
+    for (let i = 0; i < 25; i++) {
+      await new Promise(r => setTimeout(r, 600));
+      let task = null;
+      try {
+        task = await rpcCall('admin:getTaskById', { task_id: taskId });
+      } catch (_) {
+        continue;
+      }
+      const results = (task && task.results) || [];
+      const done = uuids.every(uid => {
+        const item = results.find(r => r.client === uid);
+        return item && (item.finished_at || item.result);
+      });
+      if (done) return results;
+    }
+    const finalTask = await rpcCall('admin:getTaskById', { task_id: taskId });
+    return (finalTask && finalTask.results) || [];
+  }
+
+  function syncTunnelSelectors(nodes) {
+    const srcSel = $('tunnel-src-select');
+    const dstSel = $('tunnel-dst-select');
+    const list = nodes || [];
+    const prevSrc = srcSel.value;
+    const prevDst = dstSel.value;
+    srcSel.replaceChildren();
+    dstSel.replaceChildren();
+    for (const n of list) {
+      const ip = (n.ips || [])[0] || '';
+      const label = ip ? `${n.name} (${ip})` : n.name;
+      const optA = el('option', label);
+      optA.value = String(n.id);
+      const optB = el('option', label);
+      optB.value = String(n.id);
+      srcSel.append(optA);
+      dstSel.append(optB);
+    }
+    if (list.length) {
+      const hasPrevSrc = list.some(n => String(n.id) === prevSrc);
+      const hasPrevDst = list.some(n => String(n.id) === prevDst);
+      srcSel.value = hasPrevSrc ? prevSrc : String(list[0].id);
+      if (hasPrevDst && prevDst !== srcSel.value) {
+        dstSel.value = prevDst;
+      } else {
+        const second = list.find(n => String(n.id) !== srcSel.value) || list[0];
+        dstSel.value = String(second.id);
+      }
+    }
+    $('tunnel-port-hint').textContent = t('tunnel_port_hint', getCurrentStunPort());
+  }
+
+  function renderTunnelResult() {
+    const box = $('tunnel-result-box');
+    if (!lastTunnelResult) {
+      box.hidden = true;
+      box.replaceChildren();
+      return;
+    }
+    box.hidden = false;
+    box.replaceChildren();
+    const r = lastTunnelResult;
+    const stunPort = getCurrentStunPort();
+
+    const row = el('div', undefined, 'tunnel-result-row');
+    if (r.type === 'testing' || r.type === 'boosting') {
+      row.append(el('span', t('tunnel_badge_testing'), 'badge badge-accent'));
+      row.append(el('span', r.type === 'boosting' ? t('tunnel_boosting', r.names) : t('tunnel_testing', r.a, r.b)));
+      box.append(row);
+      return;
+    }
+    if (r.type === 'direct') {
+      row.append(el('span', t('tunnel_badge_direct'), 'badge badge-ok'));
+      if (typeof r.latency_ms === 'number') {
+        row.append(el('strong', `${r.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 })} ms`, 'mono'));
+      }
+      row.append(el('span', t('tunnel_res_direct', r.a, r.b, r.via, r.reversed)));
+      box.append(row);
+      return;
+    }
+    if (r.type === 'relay') {
+      row.append(el('span', t('tunnel_badge_relay'), 'badge badge-warn'));
+      if (typeof r.latency_ms === 'number') {
+        row.append(el('strong', `${r.latency_ms.toLocaleString(currentLang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 1 })} ms`, 'mono'));
+      }
+      row.append(el('span', t('tunnel_res_relay', r.a, r.b, r.via || 'DERP', r.reversed)));
+      box.append(row);
+      box.append(el('div', t('tunnel_res_relay_hint', stunPort), 'sub-line'));
+      return;
+    }
+    if (r.type === 'manual') {
+      row.append(el('span', t('tunnel_badge_manual'), 'badge'));
+      row.append(el('span', t('tunnel_manual_hint', r.a, r.b)));
+      box.append(row);
+      const cmdRow = el('div', undefined, 'inline-row');
+      cmdRow.append(el('div', r.cmd, 'cmd-box'));
+      const copyBtn = el('button', t('btn_copy_cmd'), 'btn btn-sm');
+      copyBtn.type = 'button';
+      copyBtn.addEventListener('click', () => copyText(r.cmd, t('toast_copied_cmd')));
+      cmdRow.append(copyBtn);
+      box.append(cmdRow);
+      return;
+    }
+    if (r.type === 'error') {
+      row.append(el('span', t('tunnel_badge_fail'), 'badge badge-bad'));
+      row.append(el('span', t('tunnel_err_exec', r.message)));
+      box.append(row);
+      return;
+    }
+    row.append(el('span', t('tunnel_badge_fail'), 'badge badge-bad'));
+    row.append(el('span', t('tunnel_res_fail', r.a, r.b)));
+    box.append(row);
+  }
+
+  function getSelectedTunnelNodes() {
+    const nodes = (snapshot && snapshot.nodes) || [];
+    const nodeA = nodes.find(n => String(n.id) === $('tunnel-src-select').value);
+    const nodeB = nodes.find(n => String(n.id) === $('tunnel-dst-select').value);
+    if (!nodeA || !nodeB || nodeA.id === nodeB.id) {
+      showToast(t('tunnel_pick_two'), true);
+      return null;
+    }
+    return { nodeA, nodeB };
+  }
+
+  async function runPeerTunnelTest(fromBoost = false) {
+    const pair = getSelectedTunnelNodes();
+    if (!pair) return;
+    const { nodeA, nodeB } = pair;
+    const ipA = (nodeA.ips || [])[0] || '';
+    const ipB = (nodeB.ips || [])[0] || '';
+    if (!ipB) {
+      showToast(t('tunnel_no_ip'), true);
+      return;
+    }
+    if (!fromBoost) {
+      tunnelBusy = true;
+      $('btn-tunnel-test').disabled = true;
+      $('btn-tunnel-boost').disabled = true;
+    }
+    lastTunnelResult = { type: 'testing', a: nodeA.name, b: nodeB.name };
+    renderTunnelResult();
+
+    try {
+      await ensureKomariClients();
+      const clientA = matchKomariClient(nodeA);
+      const clientB = matchKomariClient(nodeB);
+
+      if (nodeA.is_observer) {
+        const res = await rpcCall('plugin:tailscaleAction', { action: 'ping', node_id: nodeB.id });
+        const p = (res && res.probe) || {};
+        if (p.connection === 'direct') {
+          lastTunnelResult = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeB.active_endpoint || '', latency_ms: p.latency_ms, reversed: false };
+        } else if (p.connection === 'relay' || p.connection === 'peer-relay') {
+          lastTunnelResult = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: false };
+        } else {
+          lastTunnelResult = { type: 'fail', a: nodeA.name, b: nodeB.name };
+        }
+        if (res && res.snapshot) draw(res.snapshot);
+        renderTunnelResult();
+        return;
+      }
+
+      if (clientA) {
+        const results = await runKomariExec([clientA.uuid], `tailscale ping -c 4 --until-direct=true ${ipB}`);
+        const item = results.find(r => r.client === clientA.uuid) || results[0];
+        const parsed = parseTailscalePingOutput(item && item.result);
+        lastTunnelResult = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: false };
+        renderTunnelResult();
+        return;
+      }
+
+      if (nodeB.is_observer && ipA) {
+        const res = await rpcCall('plugin:tailscaleAction', { action: 'ping', node_id: nodeA.id });
+        const p = (res && res.probe) || {};
+        if (p.connection === 'direct') {
+          lastTunnelResult = { type: 'direct', a: nodeA.name, b: nodeB.name, via: nodeA.active_endpoint || '', latency_ms: p.latency_ms, reversed: true };
+        } else if (p.connection === 'relay' || p.connection === 'peer-relay') {
+          lastTunnelResult = { type: 'relay', a: nodeA.name, b: nodeB.name, via: p.relay || 'DERP', latency_ms: p.latency_ms, reversed: true };
+        } else {
+          lastTunnelResult = { type: 'fail', a: nodeA.name, b: nodeB.name };
+        }
+        if (res && res.snapshot) draw(res.snapshot);
+        renderTunnelResult();
+        return;
+      }
+
+      if (clientB && ipA) {
+        const results = await runKomariExec([clientB.uuid], `tailscale ping -c 4 --until-direct=true ${ipA}`);
+        const item = results.find(r => r.client === clientB.uuid) || results[0];
+        const parsed = parseTailscalePingOutput(item && item.result);
+        lastTunnelResult = { type: parsed.mode, a: nodeA.name, b: nodeB.name, via: parsed.via, latency_ms: parsed.latency_ms, reversed: true };
+        renderTunnelResult();
+        return;
+      }
+
+      lastTunnelResult = { type: 'manual', a: nodeA.name, b: nodeB.name, cmd: `tailscale ping -c 4 --until-direct=true ${ipB}` };
+      renderTunnelResult();
+    } catch (err) {
+      lastTunnelResult = { type: 'error', message: err.message || t('err_action_failed') };
+      renderTunnelResult();
+    } finally {
+      if (!fromBoost) {
+        tunnelBusy = false;
+        $('btn-tunnel-test').disabled = false;
+        $('btn-tunnel-boost').disabled = false;
+      }
+    }
+  }
+
+  async function runPeerTunnelBoost() {
+    const pair = getSelectedTunnelNodes();
+    if (!pair) return;
+    const { nodeA, nodeB } = pair;
+    tunnelBusy = true;
+    $('btn-tunnel-test').disabled = true;
+    $('btn-tunnel-boost').disabled = true;
+    try {
+      await ensureKomariClients();
+      const targets = [];
+      const names = [];
+      for (const n of [nodeA, nodeB]) {
+        const c = matchKomariClient(n);
+        if (c && !targets.includes(c.uuid)) {
+          targets.push(c.uuid);
+          names.push(n.name);
+        }
+      }
+      if (!targets.length) {
+        showToast(t('tunnel_boost_none'), true);
+        await runPeerTunnelTest(true);
+        return;
+      }
+      const joinedNames = names.join(' & ');
+      lastTunnelResult = { type: 'boosting', names: joinedNames };
+      renderTunnelResult();
+      const boostCmd =
+        '(systemctl start tailscaled 2>/dev/null || true); ' +
+        '(command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi active && ufw allow 41641/udp >/dev/null 2>&1 && ufw allow in on tailscale0 >/dev/null 2>&1 || true); ' +
+        '(command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1 && firewall-cmd --add-port=41641/udp --permanent >/dev/null 2>&1 && firewall-cmd --zone=trusted --add-interface=tailscale0 --permanent >/dev/null 2>&1 && firewall-cmd --reload >/dev/null 2>&1 || true); ' +
+        'echo TUNNEL_BOOST_OK';
+      await runKomariExec(targets, boostCmd);
+      showToast(t('tunnel_boost_done', joinedNames));
+      await runPeerTunnelTest(true);
+    } catch (err) {
+      lastTunnelResult = { type: 'error', message: err.message || t('err_action_failed') };
+      renderTunnelResult();
+    } finally {
+      tunnelBusy = false;
+      $('btn-tunnel-test').disabled = false;
+      $('btn-tunnel-boost').disabled = false;
+    }
+  }
+
   function renderDiagPanel(diagnostics, nodes) {
     const diag = diagnostics || {};
     const nc = diag.netcheck || {};
     const regions = diag.derp_regions || [];
+    syncTunnelSelectors(nodes);
 
     const udpOk = Boolean(nc.udp);
     const udpBadge = $('diag-udp-badge');
@@ -6357,6 +6819,13 @@
   $('btn-diag-ping-all').addEventListener('click', () => {
     runAction({ action: 'ping_all' }, $('btn-diag-ping-all'));
   });
+  $('btn-tunnel-test').addEventListener('click', () => {
+    if (!tunnelBusy) runPeerTunnelTest(false);
+  });
+  $('btn-tunnel-boost').addEventListener('click', () => {
+    if (!tunnelBusy) runPeerTunnelBoost();
+  });
+  $('derp-cfg-stun').addEventListener('input', updateDerpPortNotice);
   $('btn-open-local-setup').addEventListener('click', () => openDerpConfigModal('env'));
   $('tab-local-env').addEventListener('click', () => setLocalSetupTab('env'));
   $('tab-local-derp').addEventListener('click', () => setLocalSetupTab('derp'));
